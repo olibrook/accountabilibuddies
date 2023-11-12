@@ -14,3 +14,13 @@ export const db =
   });
 
 if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+
+
+
+// Namespace for typing Prisma JSON fields.
+// https://www.npmjs.com/package/prisma-json-types-generator
+declare global {
+  namespace PrismaJson {
+    type ExampleType = { foo: string; bar: number };
+  }
+}

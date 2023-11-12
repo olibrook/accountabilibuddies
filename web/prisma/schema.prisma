@@ -5,6 +5,10 @@ generator client {
     provider = "prisma-client-js"
 }
 
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
 datasource db {
     provider = "sqlite"
     // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
@@ -15,7 +19,7 @@ datasource db {
 }
 
 model Post {
-    id        Int      @id @default(autoincrement())
+    id        String      @id @default(uuid())
     name      String
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -28,7 +32,7 @@ model Post {
 
 // Necessary for Next auth
 model Account {
-    id                String  @id @default(cuid())
+    id                String  @id @default(uuid())
     userId            String
     type              String
     provider          String
@@ -47,7 +51,7 @@ model Account {
 }
 
 model Session {
-    id           String   @id @default(cuid())
+    id           String   @id @default(uuid())
     sessionToken String   @unique
     userId       String
     expires      DateTime
@@ -55,7 +59,7 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String    @id @default(uuid())
     name          String?
     email         String?   @unique
     emailVerified DateTime?
@@ -63,6 +67,8 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    stats         Stat[]
+    tracks        Track[]
 }
 
 model VerificationToken {
@@ -71,4 +77,41 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+
+enum StatType {
+  STAT
+  GOAL
+}
+
+
+model Stat {
+    id           String   @id @default(uuid())
+    userId       String
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    type         StatType @default(STAT)
+    trackId       String
+    track         Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+    // Stats are boolean or numeric
+    check        Boolean
+    value        Decimal
+
+    // Date, not datetime!
+    date         DateTime   @db.Date
+
+    // One Stat per user, per track, per day
+    @@unique([userId, trackId, date])
+}
+
+
+model Track {
+    id           String   @id @default(uuid())
+    userId       String
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    name         String
+    stats        Stat[]
+
+    @@unique([userId, name])
 }
