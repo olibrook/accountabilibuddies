@@ -1,6 +1,7 @@
-import { postRouter } from "@buds/server/api/routers/post";
-import { createTRPCRouter } from "@buds/server/api/trpc";
+import {postRouter} from "@buds/server/api/routers/post";
+import {createTRPCRouter} from "@buds/server/api/trpc";
 import {statRouter} from "@buds/server/api/routers/stat";
+import {trackRouter} from "@buds/server/api/routers/track";
 
 /**
  * This is the primary router for your server.
@@ -10,6 +11,7 @@ import {statRouter} from "@buds/server/api/routers/stat";
 export const appRouter = createTRPCRouter({
   post: postRouter,
   stat: statRouter,
+  track: trackRouter,
 });
 
 // export type definition of API

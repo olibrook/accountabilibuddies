@@ -6,7 +6,8 @@ import {
 } from "@buds/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { endOfToday, startOfToday, subDays } from "date-fns";
-import { PrismaClient, StatType } from "@prisma/client";
+import { StatType } from "@prisma/client";
+import { isFollowingOrThrow, unauthorized } from "@buds/server/api/common";
 
 export const windowInDays = 30;
 
@@ -25,42 +26,6 @@ const ListStatsInput = z.object({
 const ListGoalsInput = z.object({
   followingId: z.string().uuid(),
 });
-
-type followingParams = {
-  db: PrismaClient;
-  followerId: string;
-  followingId: string;
-};
-
-const isFollowing = async (params: followingParams): Promise<boolean> => {
-  const { db, followerId, followingId } = params;
-
-  if (followerId === followingId) {
-    return true;
-  } else {
-    const follow = await db.follows.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId,
-        },
-      },
-    });
-    return Boolean(follow);
-  }
-};
-
-const unauthorized = () => new TRPCError({ code: "UNAUTHORIZED" });
-
-const isFollowingOrThrow = async (
-  params: followingParams,
-): Promise<boolean> => {
-  const following = await isFollowing(params);
-  if (!following) {
-    throw unauthorized();
-  }
-  return true;
-};
 
 const CreateInput = z
   .object({
