@@ -106,6 +106,9 @@ model Stat {
   // Date, not datetime!
   date DateTime @db.Date
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // One STAT or GOAL per user, per track, per day
   @@unique([type, userId, trackId, date])
 }
@@ -116,6 +119,9 @@ model Track {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   name   String
   stats  Stat[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, name])
 }
