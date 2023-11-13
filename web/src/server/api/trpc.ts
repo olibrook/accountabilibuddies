@@ -7,13 +7,13 @@
  * need to use are documented accordingly near the end.
  */
 
-import { initTRPC, TRPCError } from "@trpc/server";
-import { type NextRequest } from "next/server";
+import {inferAsyncReturnType, initTRPC, TRPCError} from "@trpc/server";
+import {type NextRequest} from "next/server";
 import superjson from "superjson";
-import { ZodError } from "zod";
+import {ZodError} from "zod";
 
-import { getServerAuthSession } from "@buds/server/auth";
-import { db } from "@buds/server/db";
+import {getServerAuthSession} from "@buds/server/auth";
+import {db} from "@buds/server/db";
 
 /**
  * 1. CONTEXT
@@ -60,6 +60,8 @@ export const createTRPCContext = async (opts: { req: NextRequest }) => {
     headers: opts.req.headers,
   });
 };
+
+export type Context = inferAsyncReturnType<typeof createTRPCContext>;
 
 /**
  * 2. INITIALIZATION
