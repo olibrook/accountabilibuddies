@@ -1,5 +1,4 @@
 // Prisma docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -54,9 +53,9 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(uuid())
+  id            String     @id @default(uuid())
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -64,6 +63,7 @@ model User {
   posts         Post[]
   stats         Stat[]
   tracks        Track[]
+  schedules     Schedule[]
 
   followedBy Follows[] @relation("following")
   following  Follows[] @relation("follower")
@@ -114,14 +114,38 @@ model Stat {
 }
 
 model Track {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name   String
-  stats  Stat[]
+  id       String    @id @default(uuid())
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name     String
+  stats    Stat[]
+  schedule Schedule?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, name])
+}
+
+// Schedule->Track is 1-1 because I think it might expand to N-1 in future.
+// Otherwise I'd put put the fields on Track directly.
+model Schedule {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Gloriously dumb
+  monday    Boolean @default(false)
+  tuesday   Boolean @default(false)
+  wednesday Boolean @default(false)
+  thursday  Boolean @default(false)
+  friday    Boolean @default(false)
+  saturday  Boolean @default(false)
+  sunday    Boolean @default(false)
+
+  track   Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  trackId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
