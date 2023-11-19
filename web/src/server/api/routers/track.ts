@@ -19,7 +19,7 @@ const CreateTrackInput = z.object({
   }),
 });
 
-const select = { schedule: true };
+const include = { schedule: true };
 
 export const trackRouter = createTRPCRouter({
   list: protectedProcedure
@@ -34,7 +34,7 @@ export const trackRouter = createTRPCRouter({
           userId: followingId,
         },
         orderBy: [{ createdAt: "desc" }],
-        select,
+        include,
       });
     }),
 
@@ -56,13 +56,10 @@ export const trackRouter = createTRPCRouter({
         data: {
           ...trackData,
           schedule: {
-            upsert: {
-              create: scheduleData,
-              update: scheduleData,
-            },
+            create: scheduleData,
           },
         },
-        select,
+        include,
       });
     }),
 });
