@@ -17,6 +17,12 @@
 ![An exquisite app design](./design-goal.png)
 
 
+## Simple
+- Support settings page that allows you to switch
+  between imperial and metric units.
+
+
+
 ### "My Tracks"
 
 - Exactly the same as the Accountabilibuddies
