@@ -20,12 +20,12 @@ test("Creating and listing tracks", async () => {
   });
 
   const firstCaller = await trpcCaller(first);
-  const firstFolling = await firstCaller.user.listFollowing();
-  expect(new Set(firstFolling.map((u) => u.id))).toEqual(
+  const firstFollowing = await firstCaller.user.listFollowing();
+  expect(new Set(firstFollowing.map((u) => u.id))).toEqual(
     new Set([second.id, third.id]),
   );
 
   const thirdCaller = await trpcCaller(third);
-  const thirdFolling = await thirdCaller.user.listFollowing();
-  expect(new Set(thirdFolling.map((u) => u.id))).toEqual(new Set([first.id]));
+  const thirdFollowing = await thirdCaller.user.listFollowing();
+  expect(new Set(thirdFollowing.map((u) => u.id))).toEqual(new Set([first.id]));
 });

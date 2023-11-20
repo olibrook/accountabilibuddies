@@ -8,8 +8,17 @@
 
 
 ## TODO:
-- Build a UI for mobile, make it nice.
-- Private/public tracks and goals.
+ - Next up: You've fetched users and their tracks on /tracks.
+   Now create an API to list a whole batch stats for tracks
+   and render those in a crappy spreadheet view.
+
+   Eg.
+
+   const followingIds = getFollowing().map(user => user.id)
+   const stats = listStates(followingIds, start=123, end=456)
+
+   This, with some seed data, is enough to start building
+   some UI with.
 
 
 ## 😍Design
@@ -54,3 +63,9 @@ Eg.
 
    Gym
    Oli  Mike  Noah
+
+
+## Nice
+
+- Build a UI for mobile, make it nice.
+- Private/public tracks and goals.

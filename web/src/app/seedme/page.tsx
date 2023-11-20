@@ -5,18 +5,11 @@ export default async function Home() {
   const session = await getServerAuthSession();
 
   if (!session?.user) return null;
-
-  const following = await api.user.listFollowing.query();
-
-  const tracks = await api.track.list.query({
-    followingId: session.user.id,
-  });
+  await api.user.seedMe.query();
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <h1>This is the thing</h1>
-      <pre>{JSON.stringify(tracks, null, 4)}</pre>
-      <pre>{JSON.stringify(following, null, 4)}</pre>
+      <h1>Seeded You</h1>
     </main>
   );
 }
