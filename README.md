@@ -8,17 +8,11 @@
 
 
 ## TODO:
- - Next up: You've fetched users and their tracks on /tracks.
-   Now create an API to list a whole batch stats for tracks
-   and render those in a crappy spreadsheet view.
+ - DUMB: Drop the "check" field on stat – it's a waste. Replace with value 1/0,
+ - The output of the mega-list stats API is massive. Could compress it
+   way smaller my reformatting the response to return lists of numbers per-user,
+   instead of an object per-stat, with all the associated keys and UUIDs.
 
-   Eg.
-
-   const followingIds = getFollowing().map(user => user.id)
-   const stats = listStates(followingIds, start=123, end=456)
-
-   This, with some seed data, is enough to start building
-   some UI with.
 
 
 ## 😍Design

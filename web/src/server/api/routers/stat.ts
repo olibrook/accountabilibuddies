@@ -9,7 +9,7 @@ import { endOfToday, startOfToday, subDays } from "date-fns";
 import { StatType } from "@prisma/client";
 import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
 
-export const windowInDays = 90;
+export const windowInDays = 30;
 
 const ListStatsInput = z.object({
   followingIds: z.array(z.string().uuid()),
