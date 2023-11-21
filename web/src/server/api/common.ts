@@ -4,35 +4,36 @@ import { TRPCError } from "@trpc/server";
 export type followingParams = {
   db: PrismaClient;
   followerId: string;
-  followingId: string;
+  followingIds: string[];
 };
 
-export const isFollowing = async (
+export const isFollowingAll = async (
   params: followingParams,
 ): Promise<boolean> => {
-  const { db, followerId, followingId } = params;
+  const { db, followerId, followingIds } = params;
 
-  if (followerId === followingId) {
-    return true;
-  } else {
-    const follow = await db.follows.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId,
-        },
+  // Everyone "follows" themselves, exclude from check.
+  const otherIds = followingIds.filter((id) => id !== followerId);
+  const count = await db.follows.count({
+    where: {
+      followerId,
+      followingId: {
+        in: otherIds,
       },
-    });
-    return Boolean(follow);
-  }
+    },
+  });
+
+  // There was a record for each followingId, so followerId is
+  // following everyone in the list of ids.
+  return count === otherIds.length;
 };
 
 export const unauthorized = () => new TRPCError({ code: "UNAUTHORIZED" });
 
-export const isFollowingOrThrow = async (
+export const isFollowingAllOrThrow = async (
   params: followingParams,
 ): Promise<boolean> => {
-  const following = await isFollowing(params);
+  const following = await isFollowingAll(params);
   if (!following) {
     throw unauthorized();
   }

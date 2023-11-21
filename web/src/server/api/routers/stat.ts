@@ -7,12 +7,12 @@ import {
 import { TRPCError } from "@trpc/server";
 import { endOfToday, startOfToday, subDays } from "date-fns";
 import { StatType } from "@prisma/client";
-import { isFollowingOrThrow, unauthorized } from "@buds/server/api/common";
+import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
 
 export const windowInDays = 90;
 
 const ListStatsInput = z.object({
-  followingId: z.string().uuid(),
+  followingIds: z.array(z.string().uuid()),
   start: z
     .date()
     .optional()
@@ -24,7 +24,7 @@ const ListStatsInput = z.object({
 });
 
 const ListGoalsInput = z.object({
-  followingId: z.string().uuid(),
+  followingIds: z.array(z.string().uuid()),
 });
 
 const CreateInput = z
@@ -40,29 +40,43 @@ const CreateInput = z
   );
 
 type listInput = {
-  followingId: string;
+  followingIds: string[];
   start?: Date;
   end?: Date;
   type: StatType;
 };
 
 const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
-  const { start, end, followingId, type } = input;
+  const { start, end, followingIds, type } = input;
   const followerId = ctx?.session?.user.id;
   if (!followerId) {
     throw unauthorized();
   }
-  await isFollowingOrThrow({ db: ctx.db, followerId, followingId });
+  await isFollowingAllOrThrow({
+    db: ctx.db,
+    followerId,
+    followingIds,
+  });
 
   return ctx.db.stat.findMany({
     where: {
-      userId: followingId,
+      userId: { in: followingIds },
       type,
       date: {
         gte: start,
         lte: end,
       },
     },
+    select: {
+      check: true,
+      value: true,
+      date: true,
+    },
+    orderBy: [
+      {
+        date: "desc",
+      },
+    ],
   });
 };
 
