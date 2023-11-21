@@ -10,7 +10,7 @@
 ## TODO:
  - Next up: You've fetched users and their tracks on /tracks.
    Now create an API to list a whole batch stats for tracks
-   and render those in a crappy spreadheet view.
+   and render those in a crappy spreadsheet view.
 
    Eg.
 

@@ -101,7 +101,7 @@ model Stat {
 
   // Stats are boolean or numeric
   check Boolean @default(false)
-  value Decimal @default(0)
+  value Float   @default(0)
 
   // Date, not datetime!
   date DateTime @db.Date

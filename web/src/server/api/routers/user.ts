@@ -1,5 +1,8 @@
 import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
 import { unauthorized } from "@buds/server/api/common";
+import { subDays } from "date-fns";
+import { Stat } from "@prisma/client";
+import { v4 as uuid4 } from "uuid";
 
 const select = {
   name: true,
@@ -63,6 +66,45 @@ export const userRouter = createTRPCRouter({
         });
       }
     }
+
+    await db.stat.deleteMany();
+    const stats: Stat[] = [];
+    for (const user of includingMe) {
+      const tracks = await db.track.findMany({ where: { userId: user.id } });
+      for (const track of tracks) {
+        for (let i = 0; i < 120; i++) {
+          let value = 0;
+          let check = false;
+          switch (track.name) {
+            case "weight":
+              value = Math.round(Math.random() * 120);
+              break;
+            case "mood":
+              value = Math.round(Math.random() * 10);
+              break;
+            case "food":
+            case "gym":
+              check = Boolean(Math.round(Math.random() * 1));
+              break;
+            default:
+              throw new Error();
+          }
+          const now = new Date();
+          stats.push({
+            id: uuid4(),
+            type: "STAT",
+            userId: user.id,
+            trackId: track.id,
+            check,
+            value,
+            date: subDays(now, i),
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+      }
+    }
+    await db.stat.createMany({ data: stats });
   }),
   me: protectedProcedure.query(async ({ ctx }) => {
     const { db } = ctx;
