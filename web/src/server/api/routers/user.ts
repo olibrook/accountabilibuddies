@@ -5,6 +5,7 @@ import { Stat } from "@prisma/client";
 import { v4 as uuid4 } from "uuid";
 
 const select = {
+  id: true,
   name: true,
   email: true,
   image: true,

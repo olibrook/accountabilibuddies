@@ -68,9 +68,15 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
       },
     },
     select: {
+      userId: true,
       check: true,
       value: true,
       date: true,
+      track: {
+        select: {
+          name: true,
+        },
+      },
     },
     orderBy: [
       {
