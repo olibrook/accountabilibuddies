@@ -8,9 +8,7 @@
 
 
 ## TODO:
- - The output of the mega-list stats API is massive. Could compress it
-   way smaller my reformatting the response to return lists of numbers per-user,
-   instead of an object per-stat, with all the associated keys and UUIDs.
+ - Whoops – private tracks. Don't show these!
 
 
 

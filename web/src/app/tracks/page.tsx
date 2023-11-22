@@ -7,7 +7,7 @@ import { ReactNode } from "react";
 type StatList = RouterOutputs["stat"]["listStats"];
 type RowAccessor = (sl: StatList, offset: number) => number | undefined;
 
-const formatDate = (date: Date) => format(date, "PPPP");
+const formatDate = (date: Date) => format(date, "P");
 
 export default async function Home() {
   const session = await getServerAuthSession();
@@ -16,15 +16,18 @@ export default async function Home() {
 
   const following = await api.user.listFollowing.query();
 
+  // TODO: This limits the number of buddies displayed, remove!
+  const sliced = following.slice(0, 3);
+
   const stats = await api.stat.listStats.query({
     followingIds: (following || []).map((f) => f.id),
   });
 
-  const l1Headers: ReactNode[] = [];
-  const headers: ReactNode[] = ["Date"];
+  const l1Headers: ReactNode[] = [<th key="date"></th>];
+  const headers: ReactNode[] = [<th key="date">Date</th>];
   const rowAccessors: RowAccessor[] = [];
 
-  following.forEach((user) => {
+  sliced.forEach((user) => {
     l1Headers.push(
       <th key={user.id} colSpan={user.tracks.length}>
         {user.name}
