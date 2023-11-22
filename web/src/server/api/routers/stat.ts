@@ -27,17 +27,11 @@ const ListGoalsInput = z.object({
   followingIds: z.array(z.string().uuid()),
 });
 
-const CreateInput = z
-  .object({
-    date: z.date(),
-    trackId: z.string().uuid(),
-    check: z.boolean().optional(),
-    value: z.number().optional(),
-  })
-  .refine(
-    (data) => !!data.check || !!data.value,
-    "Either check or value should be filled in.",
-  );
+const CreateInput = z.object({
+  date: z.date(),
+  trackId: z.string().uuid(),
+  value: z.number(),
+});
 
 type listInput = {
   followingIds: string[];

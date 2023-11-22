@@ -75,7 +75,6 @@ export const userRouter = createTRPCRouter({
       for (const track of tracks) {
         for (let i = 0; i < 120; i++) {
           let value = 0;
-          let check = false;
           switch (track.name) {
             case "weight":
               value = Math.round(Math.random() * 120);
@@ -85,7 +84,7 @@ export const userRouter = createTRPCRouter({
               break;
             case "food":
             case "gym":
-              check = Boolean(Math.round(Math.random() * 1));
+              value = Math.round(Math.random() * 1);
               break;
             default:
               throw new Error();
@@ -96,7 +95,6 @@ export const userRouter = createTRPCRouter({
             type: "STAT",
             userId: user.id,
             trackId: track.id,
-            check,
             value,
             date: subDays(now, i),
             createdAt: now,

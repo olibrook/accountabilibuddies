@@ -8,7 +8,6 @@
 
 
 ## TODO:
- - DUMB: Drop the "check" field on stat – it's a waste. Replace with value 1/0,
  - The output of the mega-list stats API is massive. Could compress it
    way smaller my reformatting the response to return lists of numbers per-user,
    instead of an object per-stat, with all the associated keys and UUIDs.
