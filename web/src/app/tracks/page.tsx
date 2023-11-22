@@ -2,9 +2,10 @@ import { getServerAuthSession } from "@buds/server/auth";
 import { api } from "@buds/trpc/server";
 import { differenceInDays, format, subDays } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
+import { ReactNode } from "react";
 
 type StatList = RouterOutputs["stat"]["listStats"];
-type Accessor = (sl: StatList, offset: number) => number | undefined;
+type RowAccessor = (sl: StatList, offset: number) => number | undefined;
 
 const formatDate = (date: Date) => format(date, "PPPP");
 
@@ -19,11 +20,19 @@ export default async function Home() {
     followingIds: (following || []).map((f) => f.id),
   });
 
-  const accessors: Accessor[] = [];
+  const l1Headers: ReactNode[] = [];
+  const headers: ReactNode[] = ["Date"];
+  const rowAccessors: RowAccessor[] = [];
 
   following.forEach((user) => {
+    l1Headers.push(
+      <th key={user.id} colSpan={user.tracks.length}>
+        {user.name}
+      </th>,
+    );
     user.tracks.forEach((track) => {
-      accessors.push((sl: StatList, offset: number) => {
+      headers.push(<th key={track.id}>{track.name}</th>);
+      rowAccessors.push((sl: StatList, offset: number) => {
         return sl?.stats?.[user.id]?.[track.id].data[offset] ?? undefined;
       });
     });
@@ -36,12 +45,15 @@ export default async function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
       <h1>Buddies</h1>
       <table>
-        <thead></thead>
+        <thead>
+          <tr>{l1Headers}</tr>
+          <tr>{headers}</tr>
+        </thead>
         <tbody>
           {rowsMap.map((_, dateOffset) => (
             <tr>
               <td>{formatDate(subDays(stats.end, dateOffset))}</td>
-              {accessors.map((accessor, columnOffset) => (
+              {rowAccessors.map((accessor, columnOffset) => (
                 <td key={`${dateOffset}-${columnOffset}`}>
                   {accessor(stats, dateOffset)}
                 </td>
