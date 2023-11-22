@@ -5,7 +5,7 @@ import {
   protectedProcedure,
 } from "@buds/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { endOfToday, startOfToday, subDays } from "date-fns";
+import { differenceInDays, endOfToday, startOfToday, subDays } from "date-fns";
 import { StatType } from "@prisma/client";
 import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
 
@@ -35,9 +35,22 @@ const CreateInput = z.object({
 
 type listInput = {
   followingIds: string[];
-  start?: Date;
-  end?: Date;
+  start: Date;
+  end: Date;
   type: StatType;
+};
+
+type StatList = {
+  start: Date;
+  end: Date;
+  stats: {
+    [userId: string]: {
+      [trackId: string]: {
+        name: string;
+        data: (number | undefined)[];
+      };
+    };
+  };
 };
 
 const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
@@ -52,7 +65,7 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     followingIds,
   });
 
-  return ctx.db.stat.findMany({
+  const stats = await ctx.db.stat.findMany({
     where: {
       userId: { in: followingIds },
       type,
@@ -63,11 +76,11 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     },
     select: {
       userId: true,
-      check: true,
       value: true,
       date: true,
       track: {
         select: {
+          id: true,
           name: true,
         },
       },
@@ -78,6 +91,26 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
       },
     ],
   });
+
+  const ret: StatList = { start, end, stats: {} };
+
+  const dataLength = differenceInDays(end, start);
+
+  stats.forEach((stat) => {
+    if (ret["stats"][stat.userId] === undefined) {
+      ret["stats"][stat.userId] = {};
+    }
+    if (ret["stats"][stat.userId][stat.track.id] === undefined) {
+      ret["stats"][stat.userId][stat.track.id] = {
+        name: stat.track.name,
+        data: Array.from(new Array(dataLength)).map(() => undefined),
+      };
+    }
+    const offset = differenceInDays(stat.date, start);
+    ret["stats"][stat.userId][stat.track.id]["data"][offset] = stat.value;
+  });
+
+  return ret;
 };
 
 type createInput = z.infer<typeof CreateInput> & { type: StatType };

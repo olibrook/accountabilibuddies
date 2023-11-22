@@ -1,5 +1,12 @@
 import { getServerAuthSession } from "@buds/server/auth";
 import { api } from "@buds/trpc/server";
+import { differenceInDays, format, subDays } from "date-fns";
+import { RouterOutputs } from "@buds/trpc/shared";
+
+type StatList = RouterOutputs["stat"]["listStats"];
+type Accessor = (sl: StatList, offset: number) => number | undefined;
+
+const formatDate = (date: Date) => format(date, "PPPP");
 
 export default async function Home() {
   const session = await getServerAuthSession();
@@ -12,11 +19,37 @@ export default async function Home() {
     followingIds: (following || []).map((f) => f.id),
   });
 
+  const accessors: Accessor[] = [];
+
+  following.forEach((user) => {
+    user.tracks.forEach((track) => {
+      accessors.push((sl: StatList, offset: number) => {
+        return sl?.stats?.[user.id]?.[track.id].data[offset] ?? undefined;
+      });
+    });
+  });
+
+  const numRows = differenceInDays(stats.end, stats.start);
+  const rowsMap = Array.from(new Array(numRows));
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <h1>This is the thing</h1>
-      <pre>{JSON.stringify(following, null, 4)}</pre>
-      <pre>{JSON.stringify(stats, null, 4)}</pre>
+      <h1>Buddies</h1>
+      <table>
+        <thead></thead>
+        <tbody>
+          {rowsMap.map((_, dateOffset) => (
+            <tr>
+              <td>{formatDate(subDays(stats.end, dateOffset))}</td>
+              {accessors.map((accessor, columnOffset) => (
+                <td key={`${dateOffset}-${columnOffset}`}>
+                  {accessor(stats, dateOffset)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </main>
   );
 }
