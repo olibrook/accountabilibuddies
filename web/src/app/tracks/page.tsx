@@ -36,7 +36,7 @@ export default async function Home() {
     user.tracks.forEach((track) => {
       headers.push(<th key={track.id}>{track.name}</th>);
       rowAccessors.push((sl: StatList, offset: number) => {
-        return sl?.stats?.[user.id]?.[track.id].data[offset] ?? undefined;
+        return sl?.stats?.[user.id]?.[track.name].data[offset] ?? undefined;
       });
     });
   });
@@ -54,7 +54,7 @@ export default async function Home() {
         </thead>
         <tbody>
           {rowsMap.map((_, dateOffset) => (
-            <tr>
+            <tr key={`${dateOffset}`}>
               <td>{formatDate(subDays(stats.end, dateOffset))}</td>
               {rowAccessors.map((accessor, columnOffset) => (
                 <td key={`${dateOffset}-${columnOffset}`}>

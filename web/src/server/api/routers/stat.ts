@@ -45,8 +45,8 @@ type StatList = {
   end: Date;
   stats: {
     [userId: string]: {
-      [trackId: string]: {
-        name: string;
+      [trackName: string]: {
+        trackId: string;
         data: (number | undefined)[];
       };
     };
@@ -100,14 +100,14 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     if (ret["stats"][stat.userId] === undefined) {
       ret["stats"][stat.userId] = {};
     }
-    if (ret["stats"][stat.userId][stat.track.id] === undefined) {
-      ret["stats"][stat.userId][stat.track.id] = {
-        name: stat.track.name,
+    if (ret["stats"][stat.userId][stat.track.name] === undefined) {
+      ret["stats"][stat.userId][stat.track.name] = {
+        trackId: stat.track.id,
         data: Array.from(new Array(dataLength)).map(() => undefined),
       };
     }
     const offset = differenceInDays(stat.date, start);
-    ret["stats"][stat.userId][stat.track.id]["data"][offset] = stat.value;
+    ret["stats"][stat.userId][stat.track.name]["data"][offset] = stat.value;
   });
 
   return ret;

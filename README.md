@@ -8,6 +8,8 @@
 
 
 ## TODO:
+ - Make a Venn diagram of you and your buddies and the
+   tracks you have in common!!
  - Whoops – private tracks. Don't show these!
 
 
