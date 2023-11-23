@@ -60,6 +60,16 @@ const UserSettingProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+const trackIcons: { [trackName: string]: string } = {
+  alcohol: "🍺",
+  weight: "⚖️",
+  mood: "🙂",
+  food: "🍔",
+  gym: "🏋️",
+  pushups: "🤗",
+  meditation: "☯",
+};
+
 const formatDate = (date: Date) => format(date, "P");
 
 const cmp = (a: string, b: string): number => {
@@ -92,13 +102,15 @@ const CellValue = ({
   const { settings } = useContext(UserSettingsContext);
   switch (trackName) {
     case "weight":
-      return value
+      const suffix = settings.measurements === "metric" ? "kg" : "lb";
+      const display = value
         ? convertWeight(value, "metric", settings.measurements).toFixed(1)
-        : value;
-    case "mood":
+        : "";
+      return value ? `${display} ${suffix}` : value;
     case "food":
     case "gym":
       return value === 1 ? settings.checkIcon : undefined;
+    case "mood":
     default:
       return value;
   }
@@ -144,9 +156,13 @@ const sortByTrack = (a: Grouper, b: Grouper): number => {
 const Header = ({ show, grouper }: { show: GroupBy; grouper: Grouper }) => {
   const user = grouper[2];
   const track = grouper[3];
-  const key = show === "user" ? user.id : track.id;
-  const content = show === "user" ? user.name ?? "Anon" : track.name;
-  return <th key={key}>{content}</th>;
+
+  switch (show) {
+    case "track":
+      return <th key={track.id}>{trackIcons[track.name] ?? track.name}</th>;
+    case "user":
+      return <th key={user.id}>{user.name ?? "Anon"}</th>;
+  }
 };
 
 export default function Home() {
@@ -222,8 +238,10 @@ export function TrackList() {
         <ToggleButton
           value={groupByUser}
           onChange={setGroupByUser}
-          label="User/Track"
+          label="Track/User"
         />
+      </div>
+      <div>
         <ToggleButton
           value={displayMetric}
           onChange={setDisplayMetric}
