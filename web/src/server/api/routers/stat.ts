@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  Context,
+  type Context,
   createTRPCRouter,
   protectedProcedure,
 } from "@buds/server/api/trpc";
@@ -43,14 +43,16 @@ type listInput = {
 type StatList = {
   start: Date;
   end: Date;
-  stats: {
-    [userId: string]: {
-      [trackName: string]: {
+  stats: Record<
+    string,
+    Record<
+      string,
+      {
         trackId: string;
         data: (number | undefined)[];
-      };
-    };
-  };
+      }
+    >
+  >;
 };
 
 const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
@@ -97,17 +99,16 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   const dataLength = differenceInDays(end, start);
 
   stats.forEach((stat) => {
-    if (ret["stats"][stat.userId] === undefined) {
-      ret["stats"][stat.userId] = {};
-    }
-    if (ret["stats"][stat.userId][stat.track.name] === undefined) {
-      ret["stats"][stat.userId][stat.track.name] = {
-        trackId: stat.track.id,
-        data: Array.from(new Array(dataLength)).map(() => undefined),
-      };
-    }
+    const userId = stat.userId;
+    const trackName = stat.track.name;
     const offset = differenceInDays(stat.date, start);
-    ret["stats"][stat.userId][stat.track.name]["data"][offset] = stat.value;
+
+    ret.stats[userId] = ret.stats[userId] ?? {};
+    ret.stats[userId][trackName] = ret.stats[userId][trackName] ?? {
+      trackId: stat.track.id,
+      data: Array.from(new Array(dataLength)).map(() => undefined),
+    };
+    ret.stats[stat.userId][stat.track.name].data[offset] = stat.value;
   });
 
   return ret;

@@ -1,6 +1,12 @@
 import { getServerAuthSession } from "@buds/server/auth";
 import { api } from "@buds/trpc/server";
-import { differenceInDays, format, subDays } from "date-fns";
+import {
+  differenceInDays,
+  format,
+  isSaturday,
+  isSunday,
+  subDays,
+} from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { ReactNode } from "react";
 
@@ -36,7 +42,7 @@ export default async function Home() {
     user.tracks.forEach((track) => {
       headers.push(<th key={track.id}>{track.name}</th>);
       rowAccessors.push((sl: StatList, offset: number) => {
-        return sl?.stats?.[user.id]?.[track.name].data[offset] ?? undefined;
+        return sl?.stats?.[user.id]?.[track.name]?.data[offset] ?? undefined;
       });
     });
   });
@@ -53,16 +59,23 @@ export default async function Home() {
           <tr>{headers}</tr>
         </thead>
         <tbody>
-          {rowsMap.map((_, dateOffset) => (
-            <tr key={`${dateOffset}`}>
-              <td>{formatDate(subDays(stats.end, dateOffset))}</td>
-              {rowAccessors.map((accessor, columnOffset) => (
-                <td key={`${dateOffset}-${columnOffset}`}>
-                  {accessor(stats, dateOffset)}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {rowsMap.map((_, dateOffset) => {
+            const date = subDays(stats.end, dateOffset);
+            const isWeekend = isSaturday(date) || isSunday(date);
+            return (
+              <tr
+                key={`${dateOffset}`}
+                className={isWeekend ? "bg-blue-800" : ""}
+              >
+                <td>{formatDate(date)}</td>
+                {rowAccessors.map((accessor, columnOffset) => (
+                  <td key={`${dateOffset}-${columnOffset}`}>
+                    {accessor(stats, dateOffset)}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </main>
