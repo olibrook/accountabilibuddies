@@ -15,7 +15,10 @@ type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
 type User = FollowingList[0];
 type Track = FollowingList[0]["tracks"][0];
-type RowAccessor = (sl: StatList, offset: number) => number | undefined;
+type RowAccessor = (
+  sl: StatList,
+  offset: number,
+) => [string, number | undefined];
 type Grouper = [string, string, User, Track, RowAccessor];
 type GroupBy = "user" | "track";
 type Measurements = "metric" | "imperial";
@@ -32,14 +35,47 @@ const cmp = (a: string, b: string): number => {
   }
 };
 
-const groupByUser = (a: Grouper, b: Grouper): number => {
+const CellValue = ({
+  trackName,
+  value,
+}: {
+  trackName: string;
+  value: number | undefined;
+}) => {
+  return value;
+};
+
+const ToggleButton = ({
+  value,
+  onChange,
+  label,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+}) => {
+  return (
+    <label className="relative inline-flex cursor-pointer items-center">
+      <input
+        type="checkbox"
+        checked={value}
+        className="peer sr-only"
+        onChange={() => onChange(!value)}
+      />
+      <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"></div>
+      <span className="ms-3 text-sm font-medium">{label}</span>
+    </label>
+  );
+};
+
+const sortByUser = (a: Grouper, b: Grouper): number => {
   const [userKeyA, trackKeyA, ...restA] = a;
   const [userKeyB, trackKeyB, ...restB] = b;
   const outerCmp = cmp(userKeyA, userKeyB);
   return outerCmp === 0 ? cmp(trackKeyA, trackKeyB) : outerCmp;
 };
 
-const groupByTrack = (a: Grouper, b: Grouper): number => {
+const sortByTrack = (a: Grouper, b: Grouper): number => {
   const [userKeyA, trackKeyA, ...restA] = a;
   const [userKeyB, trackKeyB, ...restB] = b;
   const outerCmp = cmp(trackKeyA, trackKeyB);
@@ -55,8 +91,11 @@ const Header = ({ show, grouper }: { show: GroupBy; grouper: Grouper }) => {
 };
 
 export default function Home() {
-  const [groupBy, setGroupBy] = useState<GroupBy>("track");
-  const [measurement, setMeasurement] = useState<Measurements>("imperial");
+  const [groupByUser, setGroupByUser] = useState<boolean>(true);
+  const [displayMetric, setDisplayMetric] = useState<boolean>(true);
+
+  const groupBy: GroupBy = groupByUser ? "user" : "track";
+  const measurements: Measurements = displayMetric ? "metric" : "imperial";
 
   const { data: following } = api.user.listFollowing.useQuery();
 
@@ -79,7 +118,9 @@ export default function Home() {
   sliced.forEach((user) => {
     user.tracks.forEach((track) => {
       const accessor = (sl: StatList, offset: number) => {
-        return sl?.stats?.[user.id]?.[track.name]?.data[offset] ?? undefined;
+        const value =
+          sl?.stats?.[user.id]?.[track.name]?.data[offset] ?? undefined;
+        return [track.name, value];
       };
       groupers.push([
         `${user.name ?? ""}-${user.id}`,
@@ -91,7 +132,7 @@ export default function Home() {
     });
   });
 
-  const sortFunc = groupBy === "user" ? groupByUser : groupByTrack;
+  const sortFunc = groupBy === "user" ? sortByUser : sortByTrack;
   groupers.sort(sortFunc);
 
   const numRows = differenceInDays(stats.end, stats.start);
@@ -103,6 +144,18 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
       <h1>Buddies</h1>
+      <div>
+        <ToggleButton
+          value={groupByUser}
+          onChange={setGroupByUser}
+          label="User/Track"
+        />
+        <ToggleButton
+          value={displayMetric}
+          onChange={setDisplayMetric}
+          label="Use metric?"
+        />
+      </div>
       <table>
         <thead>
           <tr>
@@ -130,9 +183,10 @@ export default function Home() {
                 <td>{formatDate(date)}</td>
                 {groupers.map((grouper, columnOffset) => {
                   const accessor = grouper[4];
+                  const [trackName, value] = accessor(stats, dateOffset);
                   return (
                     <td key={`${dateOffset}-${columnOffset}`}>
-                      {accessor(stats, dateOffset)}
+                      <CellValue trackName={trackName} value={value} />
                     </td>
                   );
                 })}
