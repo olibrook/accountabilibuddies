@@ -9,7 +9,7 @@ import {
   subDays,
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import { useState } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -25,7 +25,40 @@ type Grouper = [
   RowAccessor,
 ];
 type GroupBy = "user" | "track";
-type Measurements = "metric" | "imperial";
+type Measurement = "metric" | "imperial";
+
+type UserSettings = {
+  measurements: Measurement;
+  checkIcon: string;
+};
+const defaultUserSettings: UserSettings = {
+  measurements: "metric",
+  checkIcon: "⭐",
+};
+
+type UserSettingsContextType = {
+  settings: UserSettings;
+  setUserSettings: (settings: UserSettings) => void;
+};
+const defaultUserSettingsContext = {
+  settings: defaultUserSettings,
+  setUserSettings: () => {
+    return;
+  },
+};
+const UserSettingsContext = createContext<UserSettingsContextType>(
+  defaultUserSettingsContext,
+);
+
+const UserSettingProvider = ({ children }: { children: ReactNode }) => {
+  const [settings, setUserSettings] =
+    useState<UserSettings>(defaultUserSettings);
+  return (
+    <UserSettingsContext.Provider value={{ settings, setUserSettings }}>
+      {children}
+    </UserSettingsContext.Provider>
+  );
+};
 
 const formatDate = (date: Date) => format(date, "P");
 
@@ -39,6 +72,16 @@ const cmp = (a: string, b: string): number => {
   }
 };
 
+const convertWeight = (val: number, from: Measurement, to: Measurement) => {
+  let multiplier = 1;
+  if (from == "metric" && to === "imperial") {
+    multiplier = 2.20462;
+  } else if (from == "imperial" && to === "metric") {
+    multiplier = 0.453592;
+  }
+  return val * multiplier;
+};
+
 const CellValue = ({
   trackName,
   value,
@@ -46,7 +89,19 @@ const CellValue = ({
   trackName: string;
   value: number | undefined;
 }) => {
-  return value;
+  const { settings } = useContext(UserSettingsContext);
+  switch (trackName) {
+    case "weight":
+      return value
+        ? convertWeight(value, "metric", settings.measurements).toFixed(1)
+        : value;
+    case "mood":
+    case "food":
+    case "gym":
+      return value === 1 ? settings.checkIcon : undefined;
+    default:
+      return value;
+  }
 };
 
 const ToggleButton = ({
@@ -95,11 +150,26 @@ const Header = ({ show, grouper }: { show: GroupBy; grouper: Grouper }) => {
 };
 
 export default function Home() {
+  return (
+    <UserSettingProvider>
+      <TrackList />
+    </UserSettingProvider>
+  );
+}
+
+export function TrackList() {
+  const { settings, setUserSettings } = useContext(UserSettingsContext);
+
+  const displayMetric = settings.measurements === "metric";
+  const setDisplayMetric = (useMetric: boolean) =>
+    setUserSettings({
+      ...settings,
+      measurements: useMetric ? "metric" : "imperial",
+    });
+
   const [groupByUser, setGroupByUser] = useState<boolean>(true);
-  const [displayMetric, setDisplayMetric] = useState<boolean>(true);
 
   const groupBy: GroupBy = groupByUser ? "user" : "track";
-  const measurements: Measurements = displayMetric ? "metric" : "imperial";
 
   const { data: following } = api.user.listFollowing.useQuery();
 
