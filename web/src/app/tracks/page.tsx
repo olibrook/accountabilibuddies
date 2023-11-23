@@ -1,5 +1,6 @@
-import { getServerAuthSession } from "@buds/server/auth";
-import { api } from "@buds/trpc/server";
+"use client";
+
+import { api } from "@buds/trpc/react";
 import {
   differenceInDays,
   format,
@@ -8,6 +9,7 @@ import {
   subDays,
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
+import { useState } from "react";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -16,6 +18,7 @@ type Track = FollowingList[0]["tracks"][0];
 type RowAccessor = (sl: StatList, offset: number) => number | undefined;
 type Grouper = [string, string, User, Track, RowAccessor];
 type GroupBy = "user" | "track";
+type Measurements = "metric" | "imperial";
 
 const formatDate = (date: Date) => format(date, "P");
 
@@ -43,19 +46,33 @@ const groupByTrack = (a: Grouper, b: Grouper): number => {
   return outerCmp === 0 ? cmp(userKeyA, userKeyB) : outerCmp;
 };
 
-export default async function Home() {
-  const session = await getServerAuthSession();
+const Header = ({ show, grouper }: { show: GroupBy; grouper: Grouper }) => {
+  const user = grouper[2];
+  const track = grouper[3];
+  const key = show === "user" ? user.id : track.id;
+  const content = show === "user" ? user.name ?? "Anon" : track.name;
+  return <th key={key}>{content}</th>;
+};
 
-  if (!session?.user) return null;
+export default function Home() {
+  const [groupBy, setGroupBy] = useState<GroupBy>("track");
+  const [measurement, setMeasurement] = useState<Measurements>("imperial");
 
-  const following = await api.user.listFollowing.query();
+  const { data: following } = api.user.listFollowing.useQuery();
+
+  const { data: stats } = api.stat.listStats.useQuery(
+    {
+      followingIds: (following ?? []).map((f) => f.id),
+    },
+    { enabled: !!following },
+  );
+
+  if (!(following && stats)) {
+    return <div>Loading</div>;
+  }
 
   // TODO: This limits the number of buddies displayed, remove!
   const sliced = following.slice(0, 3);
-
-  const stats = await api.stat.listStats.query({
-    followingIds: (following || []).map((f) => f.id),
-  });
 
   const groupers: Grouper[] = [];
 
@@ -74,26 +91,14 @@ export default async function Home() {
     });
   });
 
-  const groupBy: GroupBy = "track";
   const sortFunc = groupBy === "user" ? groupByUser : groupByTrack;
   groupers.sort(sortFunc);
 
   const numRows = differenceInDays(stats.end, stats.start);
   const rowsMap = Array.from(new Array(numRows));
 
-  const headerExtractor = (show: GroupBy) => {
-    // eslint-disable-next-line react/display-name
-    return (grouper: Grouper) => {
-      const user = grouper[2];
-      const track = grouper[3];
-      const key = show === "user" ? user.id : track.id;
-      const content = show === "user" ? user.name ?? "Anon" : track.name;
-      return <th key={key}>{content}</th>;
-    };
-  };
-
-  const extractUserHeader = headerExtractor("user");
-  const extractTrackHeader = headerExtractor("track");
+  const l1Header = groupBy;
+  const l2Header = groupBy === "user" ? "track" : "user";
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
@@ -102,15 +107,15 @@ export default async function Home() {
         <thead>
           <tr>
             <th></th>
-            {groupers.map(
-              groupBy === "user" ? extractUserHeader : extractTrackHeader,
-            )}
+            {groupers.map((gr, idx) => (
+              <Header key={`${gr[0]}-${idx}`} show={l1Header} grouper={gr} />
+            ))}
           </tr>
           <tr>
             <th>Date</th>
-            {groupers.map(
-              groupBy === "user" ? extractTrackHeader : extractUserHeader,
-            )}
+            {groupers.map((gr, idx) => (
+              <Header key={`${gr[0]}-${idx}`} show={l2Header} grouper={gr} />
+            ))}
           </tr>
         </thead>
         <tbody>
