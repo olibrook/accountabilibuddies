@@ -9,6 +9,7 @@ const main = async () => {
       data: {
         email: faker.internet.email(),
         name: faker.person.fullName(),
+        image: faker.internet.avatar(),
       },
     });
   }

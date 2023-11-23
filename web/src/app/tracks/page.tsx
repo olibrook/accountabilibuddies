@@ -153,6 +153,37 @@ const sortByTrack = (a: Grouper, b: Grouper): number => {
   return outerCmp === 0 ? cmp(userKeyA, userKeyB) : outerCmp;
 };
 
+interface AvatarProps {
+  imageUrl?: string | null;
+  userName: string;
+}
+
+const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName }) => {
+  const getInitials = (name: string): string => {
+    const nameArray = name.split(" ");
+    return nameArray
+      .map((part) => part.charAt(0))
+      .join("")
+      .toUpperCase();
+  };
+
+  return (
+    <div className="h-12 w-12 overflow-hidden rounded-full">
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={userName}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-gray-300 text-lg font-bold text-gray-600">
+          {getInitials(userName)}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Header = ({ show, grouper }: { show: GroupBy; grouper: Grouper }) => {
   const user = grouper[2];
   const track = grouper[3];
@@ -161,7 +192,11 @@ const Header = ({ show, grouper }: { show: GroupBy; grouper: Grouper }) => {
     case "track":
       return <th key={track.id}>{trackIcons[track.name] ?? track.name}</th>;
     case "user":
-      return <th key={user.id}>{user.name ?? "Anon"}</th>;
+      return (
+        <th key={user.id}>
+          <Avatar imageUrl={user.image} userName={user.name ?? "Anon"} />
+        </th>
+      );
   }
 };
 
@@ -277,7 +312,10 @@ export function TrackList() {
                   const accessor = grouper[4];
                   const [trackName, value] = accessor(stats, dateOffset);
                   return (
-                    <td key={`${dateOffset}-${columnOffset}`}>
+                    <td
+                      key={`${dateOffset}-${columnOffset}`}
+                      className="text-center"
+                    >
                       <CellValue trackName={trackName} value={value} />
                     </td>
                   );
