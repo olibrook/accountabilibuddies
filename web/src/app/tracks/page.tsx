@@ -33,7 +33,7 @@ type UserSettings = {
 };
 const defaultUserSettings: UserSettings = {
   measurements: "metric",
-  checkIcon: "⭐",
+  checkIcon: "💖",
 };
 
 type UserSettingsContextType = {
@@ -60,7 +60,7 @@ const UserSettingProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const trackIcons: { [trackName: string]: string } = {
+const trackIcons: Record<string, string> = {
   alcohol: "🍺",
   weight: "⚖️",
   mood: "🙂",
@@ -184,20 +184,54 @@ const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName }) => {
   );
 };
 
-const Header = ({ show, grouper }: { show: GroupBy; grouper: Grouper }) => {
-  const user = grouper[2];
-  const track = grouper[3];
+const UserHeaders = ({ groupers }: { groupers: Grouper[] }) => {
+  type User = Grouper[2];
+  type ColSpan = [User, number];
 
-  switch (show) {
-    case "track":
-      return <th key={track.id}>{trackIcons[track.name] ?? track.name}</th>;
-    case "user":
-      return (
-        <th key={user.id}>
-          <Avatar imageUrl={user.image} userName={user.name ?? "Anon"} />
-        </th>
-      );
-  }
+  const colSpans: ColSpan[] = [];
+
+  groupers.forEach((gr: Grouper) => {
+    const curr = gr[2];
+    const prev = colSpans.pop();
+    if (prev?.[0]?.id === curr.id) {
+      colSpans.push([prev[0], prev[1] + 1]);
+    } else {
+      prev && colSpans.push(prev);
+      colSpans.push([curr, 1]);
+    }
+  });
+
+  return colSpans.map(([user, colSpan]) => (
+    <th key={user.id} colSpan={colSpan}>
+      <div className="flex items-center justify-center">
+        <Avatar imageUrl={user.image} userName={user.name ?? "Anon"} />
+      </div>
+    </th>
+  ));
+};
+
+const TrackHeaders = ({ groupers }: { groupers: Grouper[] }) => {
+  type Track = Grouper[3];
+  type ColSpan = [Track, number];
+
+  const colSpans: ColSpan[] = [];
+
+  groupers.forEach((gr: Grouper) => {
+    const curr = gr[3];
+    const prev = colSpans.pop();
+    if (prev?.[0]?.name === curr.name) {
+      colSpans.push([prev[0], prev[1] + 1]);
+    } else {
+      prev && colSpans.push(prev);
+      colSpans.push([curr, 1]);
+    }
+  });
+
+  return colSpans.map(([track, colSpan]) => (
+    <th key={track.name} colSpan={colSpan} className="text-center">
+      {trackIcons[track.name] ?? track.name}
+    </th>
+  ));
 };
 
 export default function Home() {
@@ -263,9 +297,8 @@ export function TrackList() {
   const numRows = differenceInDays(stats.end, stats.start);
   const rowsMap = Array.from(new Array(numRows));
 
-  const l1Header = groupBy;
-  const l2Header = groupBy === "user" ? "track" : "user";
-
+  const userHeaders = <UserHeaders groupers={groupers} />;
+  const trackHeaders = <TrackHeaders groupers={groupers} />;
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
       <h1>Buddies</h1>
@@ -287,15 +320,11 @@ export function TrackList() {
         <thead>
           <tr>
             <th></th>
-            {groupers.map((gr, idx) => (
-              <Header key={`${gr[0]}-${idx}`} show={l1Header} grouper={gr} />
-            ))}
+            {groupBy === "user" ? userHeaders : trackHeaders}
           </tr>
           <tr>
             <th>Date</th>
-            {groupers.map((gr, idx) => (
-              <Header key={`${gr[0]}-${idx}`} show={l2Header} grouper={gr} />
-            ))}
+            {groupBy === "user" ? trackHeaders : userHeaders}
           </tr>
         </thead>
         <tbody>
@@ -314,7 +343,7 @@ export function TrackList() {
                   return (
                     <td
                       key={`${dateOffset}-${columnOffset}`}
-                      className="text-center"
+                      className="min-w-[70px] text-center"
                     >
                       <CellValue trackName={trackName} value={value} />
                     </td>
