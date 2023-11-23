@@ -15,11 +15,15 @@ type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
 type User = FollowingList[0];
 type Track = FollowingList[0]["tracks"][0];
-type RowAccessor = (
-  sl: StatList,
-  offset: number,
-) => [string, number | undefined];
-type Grouper = [string, string, User, Track, RowAccessor];
+type AccessorReturn = [trackName: string, value: number | undefined];
+type RowAccessor = (sl: StatList, offset: number) => AccessorReturn;
+type Grouper = [
+  userSortKey: string,
+  trackSortKey: string,
+  User,
+  Track,
+  RowAccessor,
+];
 type GroupBy = "user" | "track";
 type Measurements = "metric" | "imperial";
 
@@ -117,7 +121,7 @@ export default function Home() {
 
   sliced.forEach((user) => {
     user.tracks.forEach((track) => {
-      const accessor = (sl: StatList, offset: number) => {
+      const accessor = (sl: StatList, offset: number): AccessorReturn => {
         const value =
           sl?.stats?.[user.id]?.[track.name]?.data[offset] ?? undefined;
         return [track.name, value];
