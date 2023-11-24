@@ -33,7 +33,7 @@ type UserSettings = {
 };
 const defaultUserSettings: UserSettings = {
   measurements: "metric",
-  checkIcon: "💖",
+  checkIcon: "⭐",
 };
 
 type UserSettingsContextType = {
@@ -246,10 +246,17 @@ export function TrackList() {
   const { settings, setUserSettings } = useContext(UserSettingsContext);
 
   const displayMetric = settings.measurements === "metric";
+
   const setDisplayMetric = (useMetric: boolean) =>
     setUserSettings({
       ...settings,
       measurements: useMetric ? "metric" : "imperial",
+    });
+
+  const toggleStarHeart = (useStar: boolean) =>
+    setUserSettings({
+      ...settings,
+      checkIcon: useStar ? "⭐" : "💖",
     });
 
   const [groupByUser, setGroupByUser] = useState<boolean>(true);
@@ -307,6 +314,13 @@ export function TrackList() {
           value={groupByUser}
           onChange={setGroupByUser}
           label="Track/User"
+        />
+      </div>
+      <div>
+        <ToggleButton
+          value={settings.checkIcon === "⭐"}
+          onChange={toggleStarHeart}
+          label="💖/⭐"
         />
       </div>
       <div>
