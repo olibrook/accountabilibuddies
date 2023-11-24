@@ -346,7 +346,7 @@ export function TrackList() {
         />
       </div>
       <table>
-        <thead className="sticky top-0">
+        <thead className="sticky top-0 bg-white	bg-opacity-30 backdrop-blur-md">
           <tr>
             <th></th>
             {groupBy === "user" ? userHeaders : trackHeaders}
