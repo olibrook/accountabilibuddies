@@ -295,6 +295,76 @@ export function TrackList() {
   // TODO: This limits the number of buddies displayed, remove!
   const sliced = following.slice(0, 3);
 
+  type SortKey = {
+    kind: "user" | "track";
+    key: string;
+    id: string;
+    name: string;
+  };
+
+  type SortKeyList = [userSortKey: SortKey, trackSortKey: SortKey];
+
+  const sortKeys: SortKeyList[] = [];
+
+  for (const user of sliced) {
+    for (const track of user.tracks) {
+      const userKey: SortKey = {
+        kind: "user",
+        key: `${user.name ?? "Anon"}-${user.id}`,
+        id: user.id,
+        name: user.name ?? "Anon",
+      };
+      const trackKey: SortKey = {
+        kind: "track",
+        key: track.name,
+        id: track.id,
+        name: track.name,
+      };
+      sortKeys.push(
+        groupBy === "user" ? [userKey, trackKey] : [trackKey, userKey],
+      );
+    }
+  }
+
+  type KeyGroup = { sortKey: SortKey; childKeys: SortKey[] };
+
+  const groupEmUp = (sortKeyLists: SortKeyList[]): KeyGroup[] => {
+    const ret: KeyGroup[] = [];
+    for (const sortKeyList of sortKeyLists) {
+      const [outerSortKey, innerSortKey] = sortKeyList;
+      const prev = ret.pop();
+      if (prev && prev.sortKey.key === outerSortKey.key) {
+        prev.childKeys.push(innerSortKey);
+        ret.push(prev);
+      } else {
+        prev && ret.push(prev);
+        ret.push({ sortKey: outerSortKey, childKeys: [innerSortKey] });
+      }
+    }
+    return ret;
+  };
+
+  sortKeys.sort();
+
+  const groups = groupEmUp(sortKeys);
+
+  sliced.forEach((user) => {
+    user.tracks.forEach((track) => {
+      const accessor = (sl: StatList, offset: number): AccessorReturn => {
+        const value =
+          sl?.stats?.[user.id]?.[track.name]?.data[offset] ?? undefined;
+        return [track.name, value];
+      };
+      groupers.push([
+        `${user.name ?? ""}-${user.id}`,
+        track.name,
+        user,
+        track,
+        accessor,
+      ]);
+    });
+  });
+
   const groupers: Grouper[] = [];
 
   sliced.forEach((user) => {
