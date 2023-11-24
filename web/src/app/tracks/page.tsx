@@ -263,15 +263,25 @@ const Headers = ({
 }) => {
   const children: ReactNode[] = [];
 
+  // TODO: Make a TH component for spacer
+
   if (level === 0) {
-    keyGroups.forEach((keyGroup) => {
+    keyGroups.forEach((keyGroup, idx) => {
+      const isLast = idx === keyGroups.length - 1;
       children.push(<Header keyGroup={keyGroup} level={level} />);
+      if (!isLast) {
+        children.push(<th key={`spacer-${idx}`}></th>);
+      }
     });
   } else if (level === 1) {
-    keyGroups.forEach((outerKeyGroup) => {
+    keyGroups.forEach((outerKeyGroup, idx) => {
+      const isLast = idx === keyGroups.length - 1;
       outerKeyGroup.childKeys.forEach((keyGroup) => {
         children.push(<Header keyGroup={keyGroup} level={level} />);
       });
+      if (!isLast) {
+        children.push(<th key={`spacer-${idx}`}></th>);
+      }
     });
   }
 
@@ -398,39 +408,45 @@ export function TrackList() {
           {rowsMap.map((_, dateOffset) => {
             const date = subDays(stats.end, dateOffset);
             const isWeekend = isSaturday(date) || isSunday(date);
+            const children: ReactNode[] = [];
+
+            keyGroups.forEach((outerKeyGroup, i) => {
+              const last = i === keyGroups.length - 1;
+              outerKeyGroup.childKeys.forEach((keyGroup) => {
+                const sk = keyGroup.sortKey;
+                const value = accessor(
+                  stats,
+                  sk.user.id,
+                  sk.track.name,
+                  dateOffset,
+                );
+                // TODO: Make a TD component
+                children.push(
+                  <td
+                    key={`${sk.user.id}-${sk.track.name}`}
+                    className={`h-[45px] min-w-[70px] text-center`}
+                  >
+                    <CellValue trackName={sk.track.name} value={value} />
+                  </td>,
+                );
+              });
+              if (!last) {
+                children.push(
+                  <td
+                    key={`spacer-${i}`}
+                    className={`h-[45px] min-w-[70px] text-center`}
+                  ></td>,
+                );
+              }
+            });
+
             return (
               <tr
                 key={`${dateOffset}`}
                 className={isWeekend ? "bg-blue-800" : ""}
               >
                 <td>{formatDate(date)}</td>
-                {keyGroups.map((outerKeyGroup) => (
-                  <>
-                    {outerKeyGroup.childKeys.map((keyGroup, idx) => {
-                      const first = idx === 0;
-                      const last = idx === outerKeyGroup.childKeys.length - 1;
-                      const sk = keyGroup.sortKey;
-                      const value = accessor(
-                        stats,
-                        sk.user.id,
-                        sk.track.name,
-                        dateOffset,
-                      );
-
-                      // TODO: Padding
-                      const pl = first ? " " : "";
-                      const pr = last ? " " : "";
-                      return (
-                        <td
-                          key={`${dateOffset}-${idx}`}
-                          className={`h-[45px] min-w-[70px] text-center ${pl} ${pr}`}
-                        >
-                          <CellValue trackName={sk.track.name} value={value} />
-                        </td>
-                      );
-                    })}
-                  </>
-                ))}
+                {children}
               </tr>
             );
           })}
