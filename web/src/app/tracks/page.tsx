@@ -199,35 +199,48 @@ const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName }) => {
   );
 };
 
-const UserHeader = ({ user, colSpan }: { user: User; colSpan: number }) => (
-  <th key={user.id} colSpan={colSpan}>
+// TODO: padding
+const UserHeader = ({
+  user,
+  colSpan,
+  level,
+}: {
+  user: User;
+  colSpan: number;
+  level: 0 | 1;
+}) => (
+  <th key={user.id} colSpan={colSpan} className={level === 0 ? " " : ""}>
     <div className="flex items-center justify-center">
       <Avatar imageUrl={user.image} userName={user.name ?? "Anon"} />
     </div>
   </th>
 );
 
-const TrackHeader = ({ track, colSpan }: { track: Track; colSpan: number }) => (
-  <th key={track.name} colSpan={colSpan}>
+// TODO: padding
+const TrackHeader = ({
+  track,
+  colSpan,
+  level,
+}: {
+  track: Track;
+  colSpan: number;
+  level: 0 | 1;
+}) => (
+  <th key={track.name} colSpan={colSpan} className={level === 0 ? " " : ""}>
     <div className="flex items-center justify-center">
       <Hexagon emoji={trackIcons[track.name] ?? "?"} hexagonColor="blue-800" />
     </div>
   </th>
 );
 
-const Header = ({
-  keyGroup,
-  statList,
-}: {
-  keyGroup: KeyGroup;
-  statList: StatList;
-}) => {
+const Header = ({ keyGroup, level }: { keyGroup: KeyGroup; level: 0 | 1 }) => {
   switch (keyGroup.sortKey.kind) {
     case "track":
       return (
         <TrackHeader
           track={keyGroup.sortKey.track}
           colSpan={keyGroup.childKeys.length}
+          level={level}
         />
       );
     case "user":
@@ -235,6 +248,7 @@ const Header = ({
         <UserHeader
           user={keyGroup.sortKey.user}
           colSpan={keyGroup.childKeys.length}
+          level={level}
         />
       );
   }
@@ -242,23 +256,21 @@ const Header = ({
 
 const Headers = ({
   level,
-  statList,
   keyGroups,
 }: {
   level: 0 | 1;
-  statList: StatList;
   keyGroups: KeyGroup[];
 }) => {
   const children: ReactNode[] = [];
 
   if (level === 0) {
     keyGroups.forEach((keyGroup) => {
-      children.push(<Header keyGroup={keyGroup} statList={statList} />);
+      children.push(<Header keyGroup={keyGroup} level={level} />);
     });
   } else if (level === 1) {
     keyGroups.forEach((outerKeyGroup) => {
       outerKeyGroup.childKeys.forEach((keyGroup) => {
-        children.push(<Header keyGroup={keyGroup} statList={statList} />);
+        children.push(<Header keyGroup={keyGroup} level={level} />);
       });
     });
   }
@@ -375,11 +387,11 @@ export function TrackList() {
         <thead className="sticky top-0 bg-white	bg-opacity-30 backdrop-blur-md">
           <tr>
             <th></th>
-            <Headers level={0} statList={stats} keyGroups={keyGroups} />
+            <Headers level={0} keyGroups={keyGroups} />
           </tr>
           <tr>
             <th>Date</th>
-            <Headers level={1} statList={stats} keyGroups={keyGroups} />
+            <Headers level={1} keyGroups={keyGroups} />
           </tr>
         </thead>
         <tbody>
@@ -395,6 +407,8 @@ export function TrackList() {
                 {keyGroups.map((outerKeyGroup) => (
                   <>
                     {outerKeyGroup.childKeys.map((keyGroup, idx) => {
+                      const first = idx === 0;
+                      const last = idx === outerKeyGroup.childKeys.length - 1;
                       const sk = keyGroup.sortKey;
                       const value = accessor(
                         stats,
@@ -402,10 +416,14 @@ export function TrackList() {
                         sk.track.name,
                         dateOffset,
                       );
+
+                      // TODO: Padding
+                      const pl = first ? " " : "";
+                      const pr = last ? " " : "";
                       return (
                         <td
                           key={`${dateOffset}-${idx}`}
-                          className="h-[45px] min-w-[70px] text-center"
+                          className={`h-[45px] min-w-[70px] text-center ${pl} ${pr}`}
                         >
                           <CellValue trackName={sk.track.name} value={value} />
                         </td>
