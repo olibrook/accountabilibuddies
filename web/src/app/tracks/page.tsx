@@ -10,6 +10,7 @@ import {
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { createContext, ReactNode, useContext, useState } from "react";
+import { Hexagon } from "@buds/app/tracks/components";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -100,13 +101,23 @@ const CellValue = ({
   value: number | undefined;
 }) => {
   const { settings } = useContext(UserSettingsContext);
+  if (!value) {
+    return undefined;
+  }
   switch (trackName) {
     case "weight":
       const suffix = settings.measurements === "metric" ? "kg" : "lb";
-      const display = value
-        ? convertWeight(value, "metric", settings.measurements).toFixed(1)
-        : "";
-      return value ? `${display} ${suffix}` : value;
+      const display = convertWeight(
+        value,
+        "metric",
+        settings.measurements,
+      ).toFixed(1);
+      return (
+        <>
+          <span>{display}</span>
+          <span className="text-xs">{suffix}</span>
+        </>
+      );
     case "food":
     case "gym":
       return value === 1 ? settings.checkIcon : undefined;
@@ -228,8 +239,13 @@ const TrackHeaders = ({ groupers }: { groupers: Grouper[] }) => {
   });
 
   return colSpans.map(([track, colSpan]) => (
-    <th key={track.name} colSpan={colSpan} className="text-center">
-      {trackIcons[track.name] ?? track.name}
+    <th key={track.name} colSpan={colSpan}>
+      <div className="flex items-center justify-center">
+        <Hexagon
+          emoji={trackIcons[track.name] ?? "?"}
+          hexagonColor="blue-800"
+        />
+      </div>
     </th>
   ));
 };
@@ -308,7 +324,6 @@ export function TrackList() {
   const trackHeaders = <TrackHeaders groupers={groupers} />;
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <h1>Buddies</h1>
       <div>
         <ToggleButton
           value={groupByUser}
@@ -331,7 +346,7 @@ export function TrackList() {
         />
       </div>
       <table>
-        <thead>
+        <thead className="sticky top-0">
           <tr>
             <th></th>
             {groupBy === "user" ? userHeaders : trackHeaders}
@@ -357,7 +372,7 @@ export function TrackList() {
                   return (
                     <td
                       key={`${dateOffset}-${columnOffset}`}
-                      className="min-w-[70px] text-center"
+                      className="h-[45px] min-w-[70px] text-center"
                     >
                       <CellValue trackName={trackName} value={value} />
                     </td>
