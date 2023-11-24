@@ -62,7 +62,7 @@ const trackIcons: Record<string, string> = {
   meditation: "☯",
 };
 
-const formatDate = (date: Date) => format(date, "P");
+const formatDate = (date: Date) => format(date, "E d");
 
 const convertWeight = (val: number, from: Measurement, to: Measurement) => {
   let multiplier = 1;
@@ -125,7 +125,7 @@ const ToggleButton = ({
         className="peer sr-only"
         onChange={() => onChange(!value)}
       />
-      <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"></div>
+      <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-gray-50 after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"></div>
       <span className="ms-3 text-sm font-medium">{label}</span>
     </label>
   );
@@ -199,7 +199,6 @@ const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName }) => {
   );
 };
 
-// TODO: padding
 const UserHeader = ({
   user,
   colSpan,
@@ -216,7 +215,6 @@ const UserHeader = ({
   </th>
 );
 
-// TODO: padding
 const TrackHeader = ({
   track,
   colSpan,
@@ -228,7 +226,10 @@ const TrackHeader = ({
 }) => (
   <th key={track.name} colSpan={colSpan} className={level === 0 ? " " : ""}>
     <div className="flex items-center justify-center">
-      <Hexagon emoji={trackIcons[track.name] ?? "?"} hexagonColor="blue-800" />
+      <Hexagon
+        emoji={trackIcons[track.name] ?? "?"}
+        hexagonColor="indigo-100"
+      />
     </div>
   </th>
 );
@@ -263,14 +264,12 @@ const Headers = ({
 }) => {
   const children: ReactNode[] = [];
 
-  // TODO: Make a TH component for spacer
-
   if (level === 0) {
     keyGroups.forEach((keyGroup, idx) => {
       const isLast = idx === keyGroups.length - 1;
       children.push(<Header keyGroup={keyGroup} level={level} />);
       if (!isLast) {
-        children.push(<th key={`spacer-${idx}`}></th>);
+        children.push(<Spacer key={`spacer-${idx}`} type="th" />);
       }
     });
   } else if (level === 1) {
@@ -280,7 +279,7 @@ const Headers = ({
         children.push(<Header keyGroup={keyGroup} level={level} />);
       });
       if (!isLast) {
-        children.push(<th key={`spacer-${idx}`}></th>);
+        children.push(<Spacer key={`spacer-${idx}`} type="th" />);
       }
     });
   }
@@ -367,11 +366,11 @@ export function TrackList() {
   sortKeys.sort(compareKeyLists);
   const keyGroups = groupEmUp(sortKeys);
 
-  const numRows = differenceInDays(stats.end, stats.start);
+  const numRows = differenceInDays(stats.end, stats.start) - 1;
   const rowsMap = Array.from(new Array(numRows));
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-bl from-[#FED5B6] to-[#7371B5] font-light text-gray-600">
       <div>
         <ToggleButton
           value={groupByUser}
@@ -393,65 +392,67 @@ export function TrackList() {
           label="Use metric?"
         />
       </div>
-      <table>
-        <thead className="sticky top-0 bg-white	bg-opacity-30 backdrop-blur-md">
-          <tr>
-            <th></th>
-            <Headers level={0} keyGroups={keyGroups} />
-          </tr>
-          <tr>
-            <th>Date</th>
-            <Headers level={1} keyGroups={keyGroups} />
-          </tr>
-        </thead>
-        <tbody>
-          {rowsMap.map((_, dateOffset) => {
-            const date = subDays(stats.end, dateOffset);
-            const isWeekend = isSaturday(date) || isSunday(date);
-            const children: ReactNode[] = [];
+      <div className="mb-12 mt-8 rounded-lg bg-gray-50 py-4 shadow-xl drop-shadow-xl">
+        <table>
+          <thead className="bg-gray-50 bg-opacity-30 backdrop-blur-md">
+            <tr>
+              <th></th>
+              <Headers level={0} keyGroups={keyGroups} />
+            </tr>
+            <tr>
+              <th>Nov 23</th>
+              <Headers level={1} keyGroups={keyGroups} />
+            </tr>
+          </thead>
+          <tbody>
+            {rowsMap.map((_, dateOffset) => {
+              const date = subDays(stats.end, dateOffset);
+              const isWeekend = isSaturday(date) || isSunday(date);
+              const children: ReactNode[] = [];
 
-            keyGroups.forEach((outerKeyGroup, i) => {
-              const last = i === keyGroups.length - 1;
-              outerKeyGroup.childKeys.forEach((keyGroup) => {
-                const sk = keyGroup.sortKey;
-                const value = accessor(
-                  stats,
-                  sk.user.id,
-                  sk.track.name,
-                  dateOffset,
-                );
-                // TODO: Make a TD component
-                children.push(
-                  <td
-                    key={`${sk.user.id}-${sk.track.name}`}
-                    className={`h-[45px] min-w-[70px] text-center`}
-                  >
-                    <CellValue trackName={sk.track.name} value={value} />
-                  </td>,
-                );
+              keyGroups.forEach((outerKeyGroup, i) => {
+                const last = i === keyGroups.length - 1;
+                outerKeyGroup.childKeys.forEach((keyGroup) => {
+                  const sk = keyGroup.sortKey;
+                  const value = accessor(
+                    stats,
+                    sk.user.id,
+                    sk.track.name,
+                    dateOffset,
+                  );
+                  // TODO: Make a TD component
+                  children.push(
+                    <td
+                      key={`${sk.user.id}-${sk.track.name}`}
+                      className={`h-[45px] min-w-[70px] text-center`}
+                    >
+                      <CellValue trackName={sk.track.name} value={value} />
+                    </td>,
+                  );
+                });
+                if (!last) {
+                  children.push(<Spacer key={`spacer-${i}`} type="td" />);
+                }
               });
-              if (!last) {
-                children.push(
-                  <td
-                    key={`spacer-${i}`}
-                    className={`h-[45px] min-w-[70px] text-center`}
-                  ></td>,
-                );
-              }
-            });
 
-            return (
-              <tr
-                key={`${dateOffset}`}
-                className={isWeekend ? "bg-blue-800" : ""}
-              >
-                <td>{formatDate(date)}</td>
-                {children}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+              return (
+                <tr
+                  key={`${dateOffset}`}
+                  className={isWeekend ? "bg-gray-100" : ""}
+                >
+                  <td className="px-2 text-right">{formatDate(date)}</td>
+                  {children}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </main>
   );
 }
+
+const Spacer = ({ type }: { type: "th" | "td" }) => {
+  const className = `h-[45px] min-w-[70px] text-center`;
+  return type === "th" ? <th {...{ className }} /> : <td {...{ className }} />;
+};

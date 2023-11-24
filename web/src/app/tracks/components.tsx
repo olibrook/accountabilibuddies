@@ -8,7 +8,7 @@ interface HexagonProps {
 export const Hexagon: React.FC<HexagonProps> = ({ hexagonColor, emoji }) => (
   <div className="relative h-12 w-12 overflow-hidden">
     <svg
-      className={`absolute inset-0 h-full w-full fill-${hexagonColor}`}
+      className={`absolute inset-0 h-full w-full fill-indigo-100`}
       xmlns="http://www.w3.org/2000/svg"
       version="1.1"
       width="20"
