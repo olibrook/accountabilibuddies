@@ -16,15 +16,6 @@ type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
 type User = FollowingList[0];
 type Track = FollowingList[0]["tracks"][0];
-type AccessorReturn = [trackName: string, value: number | undefined];
-type RowAccessor = (sl: StatList, offset: number) => AccessorReturn;
-type Grouper = [
-  userSortKey: string,
-  trackSortKey: string,
-  User,
-  Track,
-  RowAccessor,
-];
 type GroupBy = "user" | "track";
 type Measurement = "metric" | "imperial";
 
@@ -72,16 +63,6 @@ const trackIcons: Record<string, string> = {
 };
 
 const formatDate = (date: Date) => format(date, "P");
-
-const cmp = (a: string, b: string): number => {
-  if (a === b) {
-    return 0;
-  } else if (a < b) {
-    return -1;
-  } else {
-    return 1;
-  }
-};
 
 const convertWeight = (val: number, from: Measurement, to: Measurement) => {
   let multiplier = 1;
@@ -150,18 +131,41 @@ const ToggleButton = ({
   );
 };
 
-const sortByUser = (a: Grouper, b: Grouper): number => {
-  const [userKeyA, trackKeyA, ...restA] = a;
-  const [userKeyB, trackKeyB, ...restB] = b;
-  const outerCmp = cmp(userKeyA, userKeyB);
-  return outerCmp === 0 ? cmp(trackKeyA, trackKeyB) : outerCmp;
+type SortKey = {
+  kind: "user" | "track";
+  key: string;
+  track: Track;
+  user: User;
 };
 
-const sortByTrack = (a: Grouper, b: Grouper): number => {
-  const [userKeyA, trackKeyA, ...restA] = a;
-  const [userKeyB, trackKeyB, ...restB] = b;
-  const outerCmp = cmp(trackKeyA, trackKeyB);
-  return outerCmp === 0 ? cmp(userKeyA, userKeyB) : outerCmp;
+type SortKeyList = [outerKey: SortKey, innerKey: SortKey];
+type KeyGroup = { sortKey: SortKey; childKeys: KeyGroup[] };
+
+const compareKeyLists = (a: SortKeyList, b: SortKeyList): number => {
+  const [aOuter, aInner] = a;
+  const [bOuter, bInner] = b;
+  return (
+    aOuter.key.localeCompare(bOuter.key) || aInner.key.localeCompare(bInner.key)
+  );
+};
+
+const groupEmUp = (sortKeyLists: SortKeyList[]): KeyGroup[] => {
+  const ret: KeyGroup[] = [];
+  for (const sortKeyList of sortKeyLists) {
+    const [outerSortKey, innerSortKey] = sortKeyList;
+    const prev = ret.pop();
+    if (prev && prev.sortKey.key === outerSortKey.key) {
+      prev.childKeys.push({ sortKey: innerSortKey, childKeys: [] });
+      ret.push(prev);
+    } else {
+      prev && ret.push(prev);
+      ret.push({
+        sortKey: outerSortKey,
+        childKeys: [{ sortKey: innerSortKey, childKeys: [] }],
+      });
+    }
+  }
+  return ret;
 };
 
 interface AvatarProps {
@@ -195,59 +199,71 @@ const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName }) => {
   );
 };
 
-const UserHeaders = ({ groupers }: { groupers: Grouper[] }) => {
-  type User = Grouper[2];
-  type ColSpan = [User, number];
+const UserHeader = ({ user, colSpan }: { user: User; colSpan: number }) => (
+  <th key={user.id} colSpan={colSpan}>
+    <div className="flex items-center justify-center">
+      <Avatar imageUrl={user.image} userName={user.name ?? "Anon"} />
+    </div>
+  </th>
+);
 
-  const colSpans: ColSpan[] = [];
+const TrackHeader = ({ track, colSpan }: { track: Track; colSpan: number }) => (
+  <th key={track.name} colSpan={colSpan}>
+    <div className="flex items-center justify-center">
+      <Hexagon emoji={trackIcons[track.name] ?? "?"} hexagonColor="blue-800" />
+    </div>
+  </th>
+);
 
-  groupers.forEach((gr: Grouper) => {
-    const curr = gr[2];
-    const prev = colSpans.pop();
-    if (prev?.[0]?.id === curr.id) {
-      colSpans.push([prev[0], prev[1] + 1]);
-    } else {
-      prev && colSpans.push(prev);
-      colSpans.push([curr, 1]);
-    }
-  });
-
-  return colSpans.map(([user, colSpan]) => (
-    <th key={user.id} colSpan={colSpan}>
-      <div className="flex items-center justify-center">
-        <Avatar imageUrl={user.image} userName={user.name ?? "Anon"} />
-      </div>
-    </th>
-  ));
+const Header = ({
+  keyGroup,
+  statList,
+}: {
+  keyGroup: KeyGroup;
+  statList: StatList;
+}) => {
+  switch (keyGroup.sortKey.kind) {
+    case "track":
+      return (
+        <TrackHeader
+          track={keyGroup.sortKey.track}
+          colSpan={keyGroup.childKeys.length}
+        />
+      );
+    case "user":
+      return (
+        <UserHeader
+          user={keyGroup.sortKey.user}
+          colSpan={keyGroup.childKeys.length}
+        />
+      );
+  }
 };
 
-const TrackHeaders = ({ groupers }: { groupers: Grouper[] }) => {
-  type Track = Grouper[3];
-  type ColSpan = [Track, number];
+const Headers = ({
+  level,
+  statList,
+  keyGroups,
+}: {
+  level: 0 | 1;
+  statList: StatList;
+  keyGroups: KeyGroup[];
+}) => {
+  const children: ReactNode[] = [];
 
-  const colSpans: ColSpan[] = [];
+  if (level === 0) {
+    keyGroups.forEach((keyGroup) => {
+      children.push(<Header keyGroup={keyGroup} statList={statList} />);
+    });
+  } else if (level === 1) {
+    keyGroups.forEach((outerKeyGroup) => {
+      outerKeyGroup.childKeys.forEach((keyGroup) => {
+        children.push(<Header keyGroup={keyGroup} statList={statList} />);
+      });
+    });
+  }
 
-  groupers.forEach((gr: Grouper) => {
-    const curr = gr[3];
-    const prev = colSpans.pop();
-    if (prev?.[0]?.name === curr.name) {
-      colSpans.push([prev[0], prev[1] + 1]);
-    } else {
-      prev && colSpans.push(prev);
-      colSpans.push([curr, 1]);
-    }
-  });
-
-  return colSpans.map(([track, colSpan]) => (
-    <th key={track.name} colSpan={colSpan}>
-      <div className="flex items-center justify-center">
-        <Hexagon
-          emoji={trackIcons[track.name] ?? "?"}
-          hexagonColor="blue-800"
-        />
-      </div>
-    </th>
-  ));
+  return <>{children}</>;
 };
 
 export default function Home() {
@@ -257,6 +273,15 @@ export default function Home() {
     </UserSettingProvider>
   );
 }
+
+const accessor = (
+  sl: StatList,
+  userId: string,
+  trackName: string,
+  offset: number,
+): number | undefined => {
+  return sl?.stats?.[userId]?.[trackName]?.data[offset] ?? undefined;
+};
 
 export function TrackList() {
   const { settings, setUserSettings } = useContext(UserSettingsContext);
@@ -295,15 +320,6 @@ export function TrackList() {
   // TODO: This limits the number of buddies displayed, remove!
   const sliced = following.slice(0, 3);
 
-  type SortKey = {
-    kind: "user" | "track";
-    key: string;
-    id: string;
-    name: string;
-  };
-
-  type SortKeyList = [userSortKey: SortKey, trackSortKey: SortKey];
-
   const sortKeys: SortKeyList[] = [];
 
   for (const user of sliced) {
@@ -311,14 +327,14 @@ export function TrackList() {
       const userKey: SortKey = {
         kind: "user",
         key: `${user.name ?? "Anon"}-${user.id}`,
-        id: user.id,
-        name: user.name ?? "Anon",
+        user: user,
+        track: track,
       };
       const trackKey: SortKey = {
         kind: "track",
         key: track.name,
-        id: track.id,
-        name: track.name,
+        user: user,
+        track: track,
       };
       sortKeys.push(
         groupBy === "user" ? [userKey, trackKey] : [trackKey, userKey],
@@ -326,72 +342,12 @@ export function TrackList() {
     }
   }
 
-  type KeyGroup = { sortKey: SortKey; childKeys: SortKey[] };
-
-  const groupEmUp = (sortKeyLists: SortKeyList[]): KeyGroup[] => {
-    const ret: KeyGroup[] = [];
-    for (const sortKeyList of sortKeyLists) {
-      const [outerSortKey, innerSortKey] = sortKeyList;
-      const prev = ret.pop();
-      if (prev && prev.sortKey.key === outerSortKey.key) {
-        prev.childKeys.push(innerSortKey);
-        ret.push(prev);
-      } else {
-        prev && ret.push(prev);
-        ret.push({ sortKey: outerSortKey, childKeys: [innerSortKey] });
-      }
-    }
-    return ret;
-  };
-
-  sortKeys.sort();
-
-  const groups = groupEmUp(sortKeys);
-
-  sliced.forEach((user) => {
-    user.tracks.forEach((track) => {
-      const accessor = (sl: StatList, offset: number): AccessorReturn => {
-        const value =
-          sl?.stats?.[user.id]?.[track.name]?.data[offset] ?? undefined;
-        return [track.name, value];
-      };
-      groupers.push([
-        `${user.name ?? ""}-${user.id}`,
-        track.name,
-        user,
-        track,
-        accessor,
-      ]);
-    });
-  });
-
-  const groupers: Grouper[] = [];
-
-  sliced.forEach((user) => {
-    user.tracks.forEach((track) => {
-      const accessor = (sl: StatList, offset: number): AccessorReturn => {
-        const value =
-          sl?.stats?.[user.id]?.[track.name]?.data[offset] ?? undefined;
-        return [track.name, value];
-      };
-      groupers.push([
-        `${user.name ?? ""}-${user.id}`,
-        track.name,
-        user,
-        track,
-        accessor,
-      ]);
-    });
-  });
-
-  const sortFunc = groupBy === "user" ? sortByUser : sortByTrack;
-  groupers.sort(sortFunc);
+  sortKeys.sort(compareKeyLists);
+  const keyGroups = groupEmUp(sortKeys);
 
   const numRows = differenceInDays(stats.end, stats.start);
   const rowsMap = Array.from(new Array(numRows));
 
-  const userHeaders = <UserHeaders groupers={groupers} />;
-  const trackHeaders = <TrackHeaders groupers={groupers} />;
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
       <div>
@@ -419,11 +375,11 @@ export function TrackList() {
         <thead className="sticky top-0 bg-white	bg-opacity-30 backdrop-blur-md">
           <tr>
             <th></th>
-            {groupBy === "user" ? userHeaders : trackHeaders}
+            <Headers level={0} statList={stats} keyGroups={keyGroups} />
           </tr>
           <tr>
             <th>Date</th>
-            {groupBy === "user" ? trackHeaders : userHeaders}
+            <Headers level={1} statList={stats} keyGroups={keyGroups} />
           </tr>
         </thead>
         <tbody>
@@ -436,18 +392,27 @@ export function TrackList() {
                 className={isWeekend ? "bg-blue-800" : ""}
               >
                 <td>{formatDate(date)}</td>
-                {groupers.map((grouper, columnOffset) => {
-                  const accessor = grouper[4];
-                  const [trackName, value] = accessor(stats, dateOffset);
-                  return (
-                    <td
-                      key={`${dateOffset}-${columnOffset}`}
-                      className="h-[45px] min-w-[70px] text-center"
-                    >
-                      <CellValue trackName={trackName} value={value} />
-                    </td>
-                  );
-                })}
+                {keyGroups.map((outerKeyGroup) => (
+                  <>
+                    {outerKeyGroup.childKeys.map((keyGroup, idx) => {
+                      const sk = keyGroup.sortKey;
+                      const value = accessor(
+                        stats,
+                        sk.user.id,
+                        sk.track.name,
+                        dateOffset,
+                      );
+                      return (
+                        <td
+                          key={`${dateOffset}-${idx}`}
+                          className="h-[45px] min-w-[70px] text-center"
+                        >
+                          <CellValue trackName={sk.track.name} value={value} />
+                        </td>
+                      );
+                    })}
+                  </>
+                ))}
               </tr>
             );
           })}
