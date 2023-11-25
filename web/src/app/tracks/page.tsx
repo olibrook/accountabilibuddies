@@ -10,6 +10,8 @@ import {
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import HamburgerMenu from '@buds/app/components/HamburgerMenu';
+import VerticalNavbar from "@buds/app/components/VerticalNavBar";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -336,13 +338,10 @@ export function TrackList() {
     { enabled: !!following },
   );
 
-  if (!(following && stats)) {
-    return <div>Loading</div>;
-  }
 
   const keyGroups = useMemo(() => {
     // TODO: This limits the number of buddies displayed, remove!
-    const sliced = following.slice(0, 3);
+    const sliced = (following ?? []).slice(0, 3);
 
     const sortKeys: SortKeyList[] = [];
 
@@ -370,6 +369,11 @@ export function TrackList() {
     return groupEmUp(sortKeys);
 
   }, [following, groupBy])
+
+
+  if (!(following && stats)) {
+    return <div>Loading</div>;
+  }
 
   const numRows = differenceInDays(stats.end, stats.start) - 1;
   const rowsMap = Array.from(new Array(numRows));
@@ -456,6 +460,10 @@ export function TrackList() {
             })}
           </tbody>
         </table>
+      </div>
+      <HamburgerMenu />
+      <div className="fixed top-0 left-0 right-0">
+        <VerticalNavbar />
       </div>
     </main>
   );
