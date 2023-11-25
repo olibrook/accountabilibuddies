@@ -9,7 +9,7 @@ import {
   subDays,
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -304,6 +304,9 @@ const accessor = (
 };
 
 export function TrackList() {
+
+  const hiPerf = true
+
   const { settings, setUserSettings } = useContext(UserSettingsContext);
 
   const displayMetric = settings.measurements === "metric";
@@ -337,38 +340,40 @@ export function TrackList() {
     return <div>Loading</div>;
   }
 
-  // TODO: This limits the number of buddies displayed, remove!
-  const sliced = following.slice(0, 3);
+  const keyGroups = useMemo(() => {
+    // TODO: This limits the number of buddies displayed, remove!
+    const sliced = following.slice(0, 3);
 
-  const sortKeys: SortKeyList[] = [];
+    const sortKeys: SortKeyList[] = [];
 
-  for (const user of sliced) {
-    for (const track of user.tracks) {
-      const userKey: SortKey = {
-        kind: "user",
-        key: `${user.name ?? "Anon"}-${user.id}`,
-        user: user,
-        track: track,
-      };
-      const trackKey: SortKey = {
-        kind: "track",
-        key: track.name,
-        user: user,
-        track: track,
-      };
-      sortKeys.push(
-        groupBy === "user" ? [userKey, trackKey] : [trackKey, userKey],
-      );
+    for (const user of sliced) {
+      for (const track of user.tracks) {
+        const userKey: SortKey = {
+          kind: "user",
+          key: `${user.name ?? "Anon"}-${user.id}`,
+          user: user,
+          track: track,
+        };
+        const trackKey: SortKey = {
+          kind: "track",
+          key: track.name,
+          user: user,
+          track: track,
+        };
+        sortKeys.push(
+          groupBy === "user" ? [userKey, trackKey] : [trackKey, userKey],
+        );
+      }
     }
-  }
 
-  sortKeys.sort(compareKeyLists);
-  const keyGroups = groupEmUp(sortKeys);
+    sortKeys.sort(compareKeyLists);
+    return groupEmUp(sortKeys);
+
+  }, [following, groupBy])
 
   const numRows = differenceInDays(stats.end, stats.start) - 1;
   const rowsMap = Array.from(new Array(numRows));
 
-  const hiPerf = true
   const bg = hiPerf ? "bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]" : "bg-[#FED5B6]"
 
   return (
