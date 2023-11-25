@@ -10,8 +10,6 @@ import {
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { createContext, ReactNode, useContext, useMemo, useState } from "react";
-import HamburgerMenu from '@buds/app/components/HamburgerMenu';
-import VerticalNavbar from "@buds/app/components/VerticalNavBar";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -460,10 +458,6 @@ export function TrackList() {
             })}
           </tbody>
         </table>
-      </div>
-      <HamburgerMenu />
-      <div className="fixed top-0 left-0 right-0">
-        <VerticalNavbar />
       </div>
     </main>
   );
