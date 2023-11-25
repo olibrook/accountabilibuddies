@@ -10,47 +10,16 @@ import {
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { createContext, ReactNode, useContext, useMemo, useState } from "react";
-import AppShell from "@buds/app/components/AppShell";
+import AppShell, { Measurement, UserSettingsContext } from "@buds/app/components/AppShell";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
 type User = FollowingList[0];
 type Track = FollowingList[0]["tracks"][0];
 type GroupBy = "user" | "track";
-type Measurement = "metric" | "imperial";
 
-type UserSettings = {
-  measurements: Measurement;
-  checkIcon: string;
-};
-const defaultUserSettings: UserSettings = {
-  measurements: "metric",
-  checkIcon: "⭐",
-};
 
-type UserSettingsContextType = {
-  settings: UserSettings;
-  setUserSettings: (settings: UserSettings) => void;
-};
-const defaultUserSettingsContext = {
-  settings: defaultUserSettings,
-  setUserSettings: () => {
-    return;
-  },
-};
-const UserSettingsContext = createContext<UserSettingsContextType>(
-  defaultUserSettingsContext,
-);
 
-const UserSettingProvider = ({ children }: { children: ReactNode }) => {
-  const [settings, setUserSettings] =
-    useState<UserSettings>(defaultUserSettings);
-  return (
-    <UserSettingsContext.Provider value={{ settings, setUserSettings }}>
-      {children}
-    </UserSettingsContext.Provider>
-  );
-};
 
 const trackIcons: Record<string, string> = {
   alcohol: "🍺",
@@ -108,28 +77,7 @@ const CellValue = ({
   }
 };
 
-const ToggleButton = ({
-  value,
-  onChange,
-  label,
-}: {
-  value: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-}) => {
-  return (
-    <label className="relative inline-flex cursor-pointer items-center">
-      <input
-        type="checkbox"
-        checked={value}
-        className="peer sr-only"
-        onChange={() => onChange(!value)}
-      />
-      <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-gray-50 after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"></div>
-      <span className="ms-3 text-sm font-medium">{label}</span>
-    </label>
-  );
-};
+
 
 type SortKey = {
   kind: "user" | "track";
@@ -291,9 +239,7 @@ const Headers = ({
 
 export default function Home() {
   return (
-    <UserSettingProvider>
-      <TrackList />
-    </UserSettingProvider>
+    <TrackList />
   );
 }
 
@@ -310,21 +256,6 @@ export function TrackList() {
 
   const hiPerf = true
 
-  const { settings, setUserSettings } = useContext(UserSettingsContext);
-
-  const displayMetric = settings.measurements === "metric";
-
-  const setDisplayMetric = (useMetric: boolean) =>
-    setUserSettings({
-      ...settings,
-      measurements: useMetric ? "metric" : "imperial",
-    });
-
-  const toggleStarHeart = (useStar: boolean) =>
-    setUserSettings({
-      ...settings,
-      checkIcon: useStar ? "⭐" : "💖",
-    });
 
   const [groupByUser, setGroupByUser] = useState<boolean>(true);
 
@@ -385,27 +316,7 @@ export function TrackList() {
     <AppShell>
       <main className={`flex min-h-screen flex-col items-center justify-center font-light text-gray-
 600 ${bg} pb-16`}>
-        <div>
-          <ToggleButton
-            value={groupByUser}
-            onChange={setGroupByUser}
-            label="Track/User"
-          />
-        </div>
-        <div>
-          <ToggleButton
-            value={settings.checkIcon === "⭐"}
-            onChange={toggleStarHeart}
-            label="💖/⭐"
-          />
-        </div>
-        <div>
-          <ToggleButton
-            value={displayMetric}
-            onChange={setDisplayMetric}
-            label="Use metric?"
-          />
-        </div>
+
         <div className="mb-12 mt-8 bg-gray-50 shadow-xl drop-shadow-xl rounded-xl py-4">
           <table className="">
             <thead className="sticky top-0 bg-gray-50">
