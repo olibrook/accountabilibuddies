@@ -10,6 +10,7 @@ import {
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import AppShell from "@buds/app/components/AppShell";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -339,7 +340,7 @@ export function TrackList() {
 
   const keyGroups = useMemo(() => {
     // TODO: This limits the number of buddies displayed, remove!
-    const sliced = (following ?? []).slice(0, 3);
+    const sliced = (following ?? []).slice(0, 2);
 
     const sortKeys: SortKeyList[] = [];
 
@@ -379,87 +380,89 @@ export function TrackList() {
   const bg = hiPerf ? "bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]" : "bg-[#FED5B6]"
 
   return (
-    <main className={`flex min-h-screen flex-col items-center justify-center font-light text-gray-
-600 ${bg}`}>
-      <div>
-        <ToggleButton
-          value={groupByUser}
-          onChange={setGroupByUser}
-          label="Track/User"
-        />
-      </div>
-      <div>
-        <ToggleButton
-          value={settings.checkIcon === "⭐"}
-          onChange={toggleStarHeart}
-          label="💖/⭐"
-        />
-      </div>
-      <div>
-        <ToggleButton
-          value={displayMetric}
-          onChange={setDisplayMetric}
-          label="Use metric?"
-        />
-      </div>
-      <div className="mb-12 mt-8 bg-green-500 shadow-xl drop-shadow-xl rounded-xl py-4">
-        <table className="">
-          <thead className="sticky top-0 bg-gray-50">
+    <AppShell>
+      <main className={`flex min-h-screen flex-col items-center justify-center font-light text-gray-
+600 ${bg} pb-16`}>
+        <div>
+          <ToggleButton
+            value={groupByUser}
+            onChange={setGroupByUser}
+            label="Track/User"
+          />
+        </div>
+        <div>
+          <ToggleButton
+            value={settings.checkIcon === "⭐"}
+            onChange={toggleStarHeart}
+            label="💖/⭐"
+          />
+        </div>
+        <div>
+          <ToggleButton
+            value={displayMetric}
+            onChange={setDisplayMetric}
+            label="Use metric?"
+          />
+        </div>
+        <div className="mb-12 mt-8 bg-gray-50 shadow-xl drop-shadow-xl rounded-xl py-4">
+          <table className="">
+            <thead className="sticky top-0 bg-gray-50">
 
-            <tr className="bg-[#7371b5] text-white">
-              <th></th>
-              <Headers level={0} keyGroups={keyGroups} />
-            </tr>
-            <tr>
-              <th>Nov 23</th>
-              <Headers level={1} keyGroups={keyGroups} />
-            </tr>
-          </thead>
-          <tbody>
-            {rowsMap.map((_, dateOffset) => {
-              const date = subDays(stats.end, dateOffset);
-              const isWeekend = isSaturday(date) || isSunday(date);
-              const children: ReactNode[] = [];
+              <tr className="bg-[#7371b5] text-white">
+                <th></th>
+                <Headers level={0} keyGroups={keyGroups} />
+              </tr>
+              <tr>
+                <th>Nov 23</th>
+                <Headers level={1} keyGroups={keyGroups} />
+              </tr>
+            </thead>
+            <tbody>
+              {rowsMap.map((_, dateOffset) => {
+                const date = subDays(stats.end, dateOffset);
+                const isWeekend = isSaturday(date) || isSunday(date);
+                const children: ReactNode[] = [];
 
-              keyGroups.forEach((outerKeyGroup, i) => {
-                const last = i === keyGroups.length - 1;
-                outerKeyGroup.childKeys.forEach((keyGroup) => {
-                  const sk = keyGroup.sortKey;
-                  const value = accessor(
-                    stats,
-                    sk.user.id,
-                    sk.track.name,
-                    dateOffset,
-                  );
-                  // TODO: Make a TD component
-                  children.push(
-                    <td
-                      key={`${sk.user.id}-${sk.track.name}`}
-                      className={`h-[45px] min-w-[70px] text-center`}
-                    >
-                      <CellValue trackName={sk.track.name} value={value} />
-                    </td>,
-                  );
+                keyGroups.forEach((outerKeyGroup, i) => {
+                  const last = i === keyGroups.length - 1;
+                  outerKeyGroup.childKeys.forEach((keyGroup) => {
+                    const sk = keyGroup.sortKey;
+                    const value = accessor(
+                      stats,
+                      sk.user.id,
+                      sk.track.name,
+                      dateOffset,
+                    );
+                    // TODO: Make a TD component
+                    children.push(
+                      <td
+                        key={`${sk.user.id}-${sk.track.name}`}
+                        className={`h-[45px] min-w-[70px] text-center`}
+                      >
+                        <CellValue trackName={sk.track.name} value={value} />
+                      </td>,
+                    );
+                  });
+                  if (!last) {
+                    children.push(<Spacer key={`spacer-${i}`} type="td" />);
+                  }
                 });
-                if (!last) {
-                  children.push(<Spacer key={`spacer-${i}`} type="td" />);
-                }
-              });
 
-              return (
-                <tr
-                  key={`${dateOffset}`}
-                  className={isWeekend ? "bg-gray-100" : ""}
-                >
-                  <td className="px-2 text-right">{formatDate(date)}</td>
-                  {children}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </main>
+                return (
+                  <tr
+                    key={`${dateOffset}`}
+                    className={isWeekend ? "bg-gray-100" : ""}
+                  >
+                    <td className="px-2 text-right">{formatDate(date)}</td>
+                    {children}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </AppShell>
   );
 }
 
