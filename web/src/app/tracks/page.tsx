@@ -10,7 +10,6 @@ import {
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { createContext, ReactNode, useContext, useState } from "react";
-import { Hexagon } from "@buds/app/tracks/components";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -168,12 +167,40 @@ const groupEmUp = (sortKeyLists: SortKeyList[]): KeyGroup[] => {
   return ret;
 };
 
-interface AvatarProps {
+type Sized = {
+  size: "lg" | "md";
+};
+
+type IconProps = {
+  imageUrl?: string | null;
+  fallback: string;
+} & Sized;
+
+const Icon: React.FC<IconProps> = ({ imageUrl, fallback, size }) => {
+  const sizeStyles = size === "md" ? "h-8 w-8" : "h-10 w-10";
+  return (
+    <div className={`${sizeStyles} overflow-hidden rounded-full`}>
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={fallback}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-white text-lg font-bold text-gray-600">
+          {fallback}
+        </div>
+      )}
+    </div>
+  );
+};
+
+type AvatarProps = {
   imageUrl?: string | null;
   userName: string;
-}
+} & Sized;
 
-const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName }) => {
+const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName, size }) => {
   const getInitials = (name: string): string => {
     const nameArray = name.split(" ");
     return nameArray
@@ -181,77 +208,49 @@ const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName }) => {
       .join("")
       .toUpperCase();
   };
-
   return (
-    <div className="h-12 w-12 overflow-hidden rounded-full">
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={userName}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gray-300 text-lg font-bold text-gray-600">
-          {getInitials(userName)}
-        </div>
-      )}
-    </div>
+    <Icon imageUrl={imageUrl} fallback={getInitials(userName)} size={size} />
   );
 };
 
-const UserHeader = ({
-  user,
-  colSpan,
-  level,
-}: {
-  user: User;
-  colSpan: number;
-  level: 0 | 1;
-}) => (
-  <th key={user.id} colSpan={colSpan} className={level === 0 ? " " : ""}>
-    <div className="flex items-center justify-center">
-      <Avatar imageUrl={user.image} userName={user.name ?? "Anon"} />
-    </div>
-  </th>
-);
-
-const TrackHeader = ({
-  track,
-  colSpan,
-  level,
-}: {
-  track: Track;
-  colSpan: number;
-  level: 0 | 1;
-}) => (
-  <th key={track.name} colSpan={colSpan} className={level === 0 ? " " : ""}>
-    <div className="flex items-center justify-center">
-      <Hexagon
-        emoji={trackIcons[track.name] ?? "?"}
-        hexagonColor="indigo-100"
-      />
-    </div>
-  </th>
-);
-
 const Header = ({ keyGroup, level }: { keyGroup: KeyGroup; level: 0 | 1 }) => {
+  let icon: ReactNode = <></>;
+  let name = "";
+  let key = "";
+  const size = level == 0 ? "lg" : "md";
+  const colSpan = keyGroup.childKeys.length;
   switch (keyGroup.sortKey.kind) {
     case "track":
-      return (
-        <TrackHeader
-          track={keyGroup.sortKey.track}
-          colSpan={keyGroup.childKeys.length}
-          level={level}
-        />
-      );
+      const track = keyGroup.sortKey.track;
+      name = track.name;
+      key = track.name;
+      icon = <Icon fallback={trackIcons[track.name] ?? "?"} size={size} />;
+      break;
     case "user":
-      return (
-        <UserHeader
-          user={keyGroup.sortKey.user}
-          colSpan={keyGroup.childKeys.length}
-          level={level}
-        />
-      );
+      const user = keyGroup.sortKey.user;
+      name = user.name ?? "Anon";
+      key = user.id;
+      icon = <Avatar imageUrl={user.image} userName={name} size={size} />;
+      break;
+  }
+
+  if (level === 0) {
+    // Big boy
+    return (
+      <th key={key} colSpan={colSpan}>
+        <div className="flex flex-row items-center justify-end py-2 pr-1">
+          <span className="mr-2">{name}</span>
+          {icon}
+        </div>
+      </th>
+    );
+  } else {
+    // Little guy
+    return (
+      <th key={key} colSpan={colSpan}>
+        <div className="flex items-center justify-center">{icon}</div>
+      </th>
+    );
   }
 };
 
@@ -369,8 +368,12 @@ export function TrackList() {
   const numRows = differenceInDays(stats.end, stats.start) - 1;
   const rowsMap = Array.from(new Array(numRows));
 
+  const hiPerf = true
+  const bg = hiPerf ? "bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]" : "bg-[#FED5B6]"
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-bl from-[#FED5B6] to-[#7371B5] font-light text-gray-600">
+    <main className={`flex min-h-screen flex-col items-center justify-center font-light text-gray-
+600 ${bg}`}>
       <div>
         <ToggleButton
           value={groupByUser}
@@ -392,10 +395,11 @@ export function TrackList() {
           label="Use metric?"
         />
       </div>
-      <div className="mb-12 mt-8 rounded-lg bg-gray-50 py-4 shadow-xl drop-shadow-xl">
-        <table>
-          <thead className="bg-gray-50 bg-opacity-30 backdrop-blur-md">
-            <tr>
+      <div className="mb-12 mt-8 bg-green-500 shadow-xl drop-shadow-xl rounded-xl py-4">
+        <table className="">
+          <thead className="sticky top-0 bg-gray-50">
+
+            <tr className="bg-[#7371b5] text-white">
               <th></th>
               <Headers level={0} keyGroups={keyGroups} />
             </tr>
