@@ -19,7 +19,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     };
 
     return (
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-screen font-normal">
             {/* Hamburger Menu */}
             <div
                 className="fixed top-0 left-0 p-4 cursor-pointer z-10"
@@ -29,7 +29,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
             </div>
 
             {/* Content */}
-            <div className="flex-1">
+            <div className="flex-1 font-light">
                 {children}
             </div>
 

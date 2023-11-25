@@ -188,7 +188,7 @@ const Icon: React.FC<IconProps> = ({ imageUrl, fallback, size }) => {
           className="h-full w-full object-cover"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-white text-lg font-bold text-gray-600">
+        <div className="flex h-full w-full items-center justify-center bg-white text-lg font-normal text-gray-600">
           {fallback}
         </div>
       )}
@@ -235,10 +235,12 @@ const Header = ({ keyGroup, level }: { keyGroup: KeyGroup; level: 0 | 1 }) => {
       break;
   }
 
+  const classes = "font-medium"
+
   if (level === 0) {
     // Big boy
     return (
-      <th key={key} colSpan={colSpan}>
+      <th key={key} colSpan={colSpan} className={classes}>
         <div className="flex flex-row items-center justify-end py-2 pr-1">
           <span className="mr-2">{name}</span>
           {icon}
@@ -248,7 +250,7 @@ const Header = ({ keyGroup, level }: { keyGroup: KeyGroup; level: 0 | 1 }) => {
   } else {
     // Little guy
     return (
-      <th key={key} colSpan={colSpan}>
+      <th key={key} colSpan={colSpan} className={classes}>
         <div className="flex items-center justify-center">{icon}</div>
       </th>
     );
@@ -413,7 +415,7 @@ export function TrackList() {
                 <Headers level={0} keyGroups={keyGroups} />
               </tr>
               <tr>
-                <th>Nov 23</th>
+                <th className="font-normal">Nov 23</th>
                 <Headers level={1} keyGroups={keyGroups} />
               </tr>
             </thead>
