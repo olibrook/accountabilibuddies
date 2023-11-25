@@ -2,7 +2,12 @@
 import React, { useState } from 'react';
 import { Home, Users, Activity, X, Menu } from 'react-feather';
 
-const AppShell: React.FC = () => {
+
+type AppShellProps = {
+    children: React.ReactNode;
+};
+
+const AppShell: React.FC<AppShellProps> = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const toggleMenu = () => {
@@ -24,9 +29,9 @@ const AppShell: React.FC = () => {
             </div>
 
             {/* Content */}
-            {/* <div className="flex-1 overflow-y-auto p-4">
-                <h1>Your App Content</h1>
-            </div> */}
+            <div className="flex-1">
+                {children}
+            </div>
 
             {/* Bottom Navbar */}
             <nav className="fixed bottom-0 left-0 w-full flex justify-around bg-gray-800 p-4 z-10">
