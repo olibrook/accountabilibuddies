@@ -126,14 +126,14 @@ export const LeftSlider: React.FC<LeftSliderProps> = ({ closeMenu }) => {
                     label="Track/User"
                 />
             </div> */}
-            <div>
+            <div className="block mb-2 flex items-center py-2 hover:bg-gray-700 px-4">
                 <ToggleButton
                     value={settings.checkIcon === "⭐"}
                     onChange={toggleStarHeart}
                     label="💖/⭐"
                 />
             </div>
-            <div>
+            <div className="block mb-2 flex items-center py-2 hover:bg-gray-700 px-4">
                 <ToggleButton
                     value={displayMetric}
                     onChange={setDisplayMetric}
@@ -163,7 +163,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
     return (
         <UserSettingProvider>
-            <div className="flex flex-col h-screen font-normal">
+            <div className="flex flex-col font-normal">
                 <div>
                     {/* Hamburger Menu */}
                     <div
@@ -179,17 +179,17 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     </div>
 
                     {/* Bottom Navbar */}
-                    <nav className="fixed bottom-0 left-0 w-full flex justify-around bg-gray-800 p-4 z-10">
+                    <nav className="fixed bottom-0 left-0 w-full flex justify-around bg-gray-800 p-2 z-10 text-xs">
                         <a href="#" className="text-white flex flex-col items-center">
-                            <Home size={20} />
+                            <Home size={16} />
                             Profile
                         </a>
                         <a href="#" className="text-white flex flex-col items-center">
-                            <Users size={20} />
+                            <Users size={16} />
                             Friends
                         </a>
                         <a href="#" className="text-white flex flex-col items-center">
-                            <Activity size={20} />
+                            <Activity size={16} />
                             Activity
                         </a>
                     </nav>
