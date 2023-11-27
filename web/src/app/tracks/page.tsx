@@ -9,7 +9,7 @@ import {
   subDays,
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import { ReactNode, useContext, useMemo } from "react";
 import AppShell, { Measurement, UserSettingsContext } from "@buds/app/components/AppShell";
 
 type StatList = RouterOutputs["stat"]["listStats"];
@@ -17,8 +17,6 @@ type FollowingList = RouterOutputs["user"]["listFollowing"];
 type User = FollowingList[0];
 type Track = FollowingList[0]["tracks"][0];
 type GroupBy = "user" | "track";
-
-
 
 
 const trackIcons: Record<string, string> = {
@@ -51,6 +49,7 @@ const CellValue = ({
   value: number | undefined;
 }) => {
   const { settings } = useContext(UserSettingsContext);
+
   if (!value) {
     return undefined;
   }
@@ -189,9 +188,9 @@ const Header = ({ keyGroup, level }: { keyGroup: KeyGroup; level: 0 | 1 }) => {
     // Big boy
     return (
       <th key={key} colSpan={colSpan} className={classes}>
-        <div className="flex flex-row items-center justify-end py-2 pr-1">
-          <span className="mr-2">{name}</span>
+        <div className="flex flex-row items-center justify-start py-2 pl-1">
           {icon}
+          <span className="ml-2">{name}</span>
         </div>
       </th>
     );
@@ -239,7 +238,9 @@ const Headers = ({
 
 export default function Home() {
   return (
-    <TrackList />
+    <AppShell>
+      <TrackList />
+    </AppShell>
   );
 }
 
@@ -253,14 +254,6 @@ const accessor = (
 };
 
 export function TrackList() {
-
-  const hiPerf = true
-
-
-  const [groupByUser, setGroupByUser] = useState<boolean>(true);
-
-  const groupBy: GroupBy = groupByUser ? "user" : "track";
-
   const { data: following } = api.user.listFollowing.useQuery();
 
   const { data: stats } = api.stat.listStats.useQuery(
@@ -269,6 +262,14 @@ export function TrackList() {
     },
     { enabled: !!following },
   );
+
+
+  const { settings } = useContext(UserSettingsContext);
+
+  const groupBy: GroupBy = settings.groupByUser ? "user" : "track";
+
+  // Wait, why is this not changing???
+  console.log({ groupBy, groupByUser: settings.groupByUser })
 
 
   const keyGroups = useMemo(() => {
@@ -312,73 +313,73 @@ export function TrackList() {
 
 
   return (
-    <AppShell>
-      <main className={`font-light text-gray-
+    <main className={`font-light text-gray-
 600 pb-16`}>
 
-        <div className="mb-12 mt-12 mx-4 bg-gray-50 shadow-xl drop-shadow-xl rounded-xl py-4 w-auto">
-          <div className="h-screen w-full overflow-scroll">
-            <table className="">
-              <thead className="sticky top-0 bg-gray-50">
+      <div className="mb-12 mt-12 mx-4 bg-gray-50 shadow-xl drop-shadow-xl rounded-xl py-4 w-auto">
+        <div className="h-screen w-full overflow-scroll">
+          <table className="">
+            <thead className="sticky top-0 bg-gray-50">
 
-                <tr className="bg-[#7371b5] text-white">
-                  <th></th>
-                  <Headers level={0} keyGroups={keyGroups} />
-                </tr>
-                <tr>
-                  <th className="font-normal text-right">Nov 23</th>
-                  <Headers level={1} keyGroups={keyGroups} />
-                </tr>
-              </thead>
-              <tbody>
-                {rowsMap.map((_, dateOffset) => {
-                  const date = subDays(stats.end, dateOffset);
-                  const isWeekend = isSaturday(date) || isSunday(date);
-                  const children: ReactNode[] = [];
+              <tr className="bg-[#7371b5] text-white">
+                <th></th>
+                <Headers level={0} keyGroups={keyGroups} />
+              </tr>
+              <tr>
+                <th className="font-normal text-right">Nov 23</th>
+                <Headers level={1} keyGroups={keyGroups} />
+              </tr>
+            </thead>
+            <tbody>
+              {rowsMap.map((_, dateOffset) => {
+                const date = subDays(stats.end, dateOffset);
+                const isWeekend = isSaturday(date) || isSunday(date);
+                const children: ReactNode[] = [];
 
-                  keyGroups.forEach((outerKeyGroup, i) => {
-                    const last = i === keyGroups.length - 1;
-                    outerKeyGroup.childKeys.forEach((keyGroup) => {
-                      const sk = keyGroup.sortKey;
-                      const value = accessor(
-                        stats,
-                        sk.user.id,
-                        sk.track.name,
-                        dateOffset,
-                      );
-                      // TODO: Make a TD component
-                      children.push(
-                        <td
-                          key={`${sk.user.id}-${sk.track.name}`}
-                          className={`h-[45px] min-w-[70px] text-center`}
-                        >
-                          <CellValue trackName={sk.track.name} value={value} />
-                        </td>,
-                      );
-                    });
-                    if (!last) {
-                      children.push(<Spacer key={`spacer-${i}`} type="td" />);
-                    }
+                keyGroups.forEach((outerKeyGroup, i) => {
+                  const last = i === keyGroups.length - 1;
+                  outerKeyGroup.childKeys.forEach((keyGroup) => {
+                    const sk = keyGroup.sortKey;
+                    const value = accessor(
+                      stats,
+                      sk.user.id,
+                      sk.track.name,
+                      dateOffset,
+                    );
+                    // TODO: Make a TD component
+                    children.push(
+                      <td
+                        key={`${sk.user.id}-${sk.track.name}`}
+                        className={`h-[45px] min-w-[70px] text-center`}
+                      >
+                        <CellValue trackName={sk.track.name} value={value} />
+                      </td>,
+                    );
                   });
+                  if (!last) {
+                    children.push(<Spacer key={`spacer-${i}`} type="td" />);
+                  }
+                });
 
-                  return (
-                    <tr
-                      key={`${dateOffset}`}
-                      className={isWeekend ? "bg-gray-100" : ""}
-                    >
-                      <td className="px-2 text-right min-w-[70px] text-sm">{formatDate(date)}</td>
-                      {children}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                return (
+                  <tr
+                    key={`${dateOffset}`}
+                    className={isWeekend ? "bg-gray-100" : ""}
+                  >
+                    <td className="px-2 text-right min-w-[70px] text-sm">{formatDate(date)}</td>
+                    {children}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      </main>
-    </AppShell >
+      </div>
+    </main>
   );
 }
+
+
 
 const Spacer = ({ type }: { type: "th" | "td" }) => {
   const className = `h-[45px] min-w-[70px] text-center`;

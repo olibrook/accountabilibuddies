@@ -31,10 +31,12 @@ export type Measurement = "metric" | "imperial";
 export type UserSettings = {
     measurements: Measurement;
     checkIcon: string;
+    groupByUser: boolean;
 };
 export const defaultUserSettings: UserSettings = {
     measurements: "metric",
     checkIcon: "⭐",
+    groupByUser: true,
 };
 
 export type UserSettingsContextType = {
@@ -70,6 +72,12 @@ export const LeftSlider: React.FC<LeftSliderProps> = ({ closeMenu }) => {
     const { settings, setUserSettings } = useContext(UserSettingsContext);
 
     const displayMetric = settings.measurements === "metric";
+
+    const setGroupByUser = (val: boolean) =>
+        setUserSettings({
+            ...settings,
+            groupByUser: val,
+        });
 
     const setDisplayMetric = (useMetric: boolean) =>
         setUserSettings({
@@ -118,14 +126,6 @@ export const LeftSlider: React.FC<LeftSliderProps> = ({ closeMenu }) => {
 
             <h2 className='my-4 px-4'>Settings</h2>
 
-
-            {/* <div>
-                <ToggleButton
-                    value={groupByUser}
-                    onChange={setGroupByUser}
-                    label="Track/User"
-                />
-            </div> */}
             <div className="block mb-2 flex items-center py-2 hover:bg-gray-700 px-4">
                 <ToggleButton
                     value={settings.checkIcon === "⭐"}
@@ -138,6 +138,13 @@ export const LeftSlider: React.FC<LeftSliderProps> = ({ closeMenu }) => {
                     value={displayMetric}
                     onChange={setDisplayMetric}
                     label="Use metric?"
+                />
+            </div>
+            <div className="block mb-2 flex items-center py-2 hover:bg-gray-700 px-4">
+                <ToggleButton
+                    value={settings.groupByUser}
+                    onChange={() => setGroupByUser(!settings.groupByUser)}
+                    label="Track/User"
                 />
             </div>
         </div>
