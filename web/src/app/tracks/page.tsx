@@ -311,7 +311,7 @@ export function TrackList() {
           </span>
         </div>
         <div className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50">
-          <table className="">
+          <table className="min-w-full">
             <thead className="sticky top-0 bg-gray-50">
               <tr className="font-normal">
                 <th className="py-2 text-right">Nov 23</th>
