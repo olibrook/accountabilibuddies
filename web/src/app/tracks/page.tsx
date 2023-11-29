@@ -14,6 +14,8 @@ import AppShell, {
   Measurement,
   UserSettingsContext,
 } from "@buds/app/components/AppShell";
+import Link from "next/link";
+import { SessionProvider } from "next-auth/react";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -182,14 +184,23 @@ const KeyGroupIcon = ({
   keyGroup: KeyGroup;
   size: "md" | "lg";
 }) => {
+  const href = hrefForKeyGroup(keyGroup);
   switch (keyGroup.sortKey.kind) {
     case "track":
       const track = keyGroup.sortKey.track;
-      return <Icon fallback={trackIcons[track.name] ?? "?"} size={size} />;
+      return (
+        <Link href={href}>
+          <Icon fallback={trackIcons[track.name] ?? "?"} size={size} />
+        </Link>
+      );
 
     case "user":
       const user = keyGroup.sortKey.user;
-      return <UserAvatar user={user} size={size} />;
+      return (
+        <Link href={href}>
+          <UserAvatar user={user} size={size} />
+        </Link>
+      );
   }
 };
 
@@ -204,9 +215,11 @@ const KeyGroupName = ({ keyGroup }: { keyGroup: KeyGroup }) => {
 
 export default function Home() {
   return (
-    <AppShell>
-      <TrackList />
-    </AppShell>
+    <SessionProvider>
+      <AppShell>
+        <TrackList />
+      </AppShell>
+    </SessionProvider>
   );
 }
 
@@ -217,6 +230,15 @@ const accessor = (
   offset: number,
 ): number | undefined => {
   return sl?.stats?.[userId]?.[trackName]?.data[offset] ?? undefined;
+};
+
+const hrefForKeyGroup = (kg: KeyGroup) => {
+  switch (kg.sortKey.kind) {
+    case "track":
+      return `/track/${kg.sortKey.track.name}`;
+    case "user":
+      return `/user/${kg.sortKey.user.id}`;
+  }
 };
 
 export function TrackList() {
@@ -344,14 +366,16 @@ export function TrackList() {
 
       <nav className="fixed bottom-0 left-0 z-10 w-full bg-gray-600 bg-opacity-30 p-2 text-xs">
         <div className="flex w-full overflow-scroll">
-          {keyGroups.map((kg) => (
-            <div
-              key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
-              className="mx-1"
-            >
-              <KeyGroupIcon keyGroup={kg} size="lg" />
-            </div>
-          ))}
+          {keyGroups.map((kg) => {
+            return (
+              <div
+                key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
+                className="mx-1"
+              >
+                <KeyGroupIcon keyGroup={kg} size="lg" />
+              </div>
+            );
+          })}
         </div>
       </nav>
     </main>

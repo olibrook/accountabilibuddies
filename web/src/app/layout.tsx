@@ -17,7 +17,9 @@ export const metadata = {
 };
 
 const hiPerf = true;
-const bg = hiPerf ? "bg-cover	bg-no-repeat bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]" : "bg-[#FED5B6]"
+const bg = hiPerf
+  ? "bg-cover	bg-no-repeat bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]"
+  : "bg-[#FED5B6]";
 
 export default function RootLayout({
   children,
