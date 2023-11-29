@@ -31,6 +31,16 @@ const trackIcons: Record<string, string> = {
   meditation: "☯",
 };
 
+const trackNames: Record<string, string> = {
+  alcohol: "Alcohol",
+  weight: "Weight",
+  mood: "Mood",
+  food: "Food",
+  gym: "Gym",
+  pushups: "Pushups",
+  meditation: "Meditation",
+};
+
 const formatDate = (date: Date) => format(date, "E d");
 
 const convertWeight = (val: number, from: Measurement, to: Measurement) => {
@@ -186,7 +196,7 @@ const KeyGroupIcon = ({
 const KeyGroupName = ({ keyGroup }: { keyGroup: KeyGroup }) => {
   switch (keyGroup.sortKey.kind) {
     case "track":
-      return keyGroup.sortKey.track.name;
+      return trackNames[keyGroup.sortKey.track.name] ?? "Unknown";
     case "user":
       return keyGroup.sortKey.user.name ?? "Anon";
   }
