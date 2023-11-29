@@ -10,14 +10,16 @@ import {
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { ReactNode, useContext, useMemo } from "react";
-import AppShell, { Measurement, UserSettingsContext } from "@buds/app/components/AppShell";
+import AppShell, {
+  Measurement,
+  UserSettingsContext,
+} from "@buds/app/components/AppShell";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
 type User = FollowingList[0];
 type Track = FollowingList[0]["tracks"][0];
 type GroupBy = "user" | "track";
-
 
 const trackIcons: Record<string, string> = {
   alcohol: "🍺",
@@ -75,8 +77,6 @@ const CellValue = ({
       return value;
   }
 };
-
-
 
 type SortKey = {
   kind: "user" | "track";
@@ -182,7 +182,7 @@ const Header = ({ keyGroup, level }: { keyGroup: KeyGroup; level: 0 | 1 }) => {
       break;
   }
 
-  const classes = "font-medium"
+  const classes = "font-medium";
 
   if (level === 0) {
     // Big boy
@@ -263,14 +263,12 @@ export function TrackList() {
     { enabled: !!following },
   );
 
-
   const { settings } = useContext(UserSettingsContext);
 
   const groupBy: GroupBy = settings.groupByUser ? "user" : "track";
 
   // Wait, why is this not changing???
-  console.log({ groupBy, groupByUser: settings.groupByUser })
-
+  console.log({ groupBy, groupByUser: settings.groupByUser });
 
   const keyGroups = useMemo(() => {
     // TODO: This limits the number of buddies displayed, remove!
@@ -300,9 +298,7 @@ export function TrackList() {
 
     sortKeys.sort(compareKeyLists);
     return groupEmUp(sortKeys);
-
-  }, [following, groupBy])
-
+  }, [following, groupBy]);
 
   if (!(following && stats)) {
     return <div>Loading</div>;
@@ -311,22 +307,18 @@ export function TrackList() {
   const numRows = differenceInDays(stats.end, stats.start) - 1;
   const rowsMap = Array.from(new Array(numRows));
 
-
   return (
-    <main className={`font-light text-gray-
-600 pb-16`}>
-
-      <div className="mb-12 mt-12 mx-4 bg-gray-50 shadow-xl drop-shadow-xl rounded-xl py-4 w-auto">
-        <div className="h-screen w-full overflow-scroll">
+    <main className={`h-screen px-4 pb-16 pt-12 font-light text-gray-600`}>
+      <div className="h-full w-full rounded-xl bg-[#7371b5] py-4 shadow-xl drop-shadow-xl">
+        <div className="h-full w-full overflow-scroll bg-gray-50">
           <table className="">
             <thead className="sticky top-0 bg-gray-50">
-
               <tr className="bg-[#7371b5] text-white">
                 <th></th>
                 <Headers level={0} keyGroups={keyGroups} />
               </tr>
               <tr>
-                <th className="font-normal text-right">Nov 23</th>
+                <th className="text-right font-normal">Nov 23</th>
                 <Headers level={1} keyGroups={keyGroups} />
               </tr>
             </thead>
@@ -350,7 +342,7 @@ export function TrackList() {
                     children.push(
                       <td
                         key={`${sk.user.id}-${sk.track.name}`}
-                        className={`h-[45px] min-w-[70px] text-center`}
+                        className={`h-[45px] min-w-[50px] text-center`}
                       >
                         <CellValue trackName={sk.track.name} value={value} />
                       </td>,
@@ -366,7 +358,9 @@ export function TrackList() {
                     key={`${dateOffset}`}
                     className={isWeekend ? "bg-gray-100" : ""}
                   >
-                    <td className="px-2 text-right min-w-[70px] text-sm">{formatDate(date)}</td>
+                    <td className="min-w-[70px] px-2 text-right text-sm">
+                      {formatDate(date)}
+                    </td>
                     {children}
                   </tr>
                 );
@@ -378,8 +372,6 @@ export function TrackList() {
     </main>
   );
 }
-
-
 
 const Spacer = ({ type }: { type: "th" | "td" }) => {
   const className = `h-[45px] min-w-[70px] text-center`;
