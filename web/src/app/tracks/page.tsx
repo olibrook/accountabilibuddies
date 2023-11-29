@@ -9,7 +9,7 @@ import {
   subDays,
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import { useContext, useMemo } from "react";
+import React, { useContext, useMemo } from "react";
 import AppShell, {
   Measurement,
   UserSettingsContext,
@@ -161,6 +161,10 @@ const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName, size }) => {
   );
 };
 
+const UserAvatar = ({ user, size }: { user: User; size: "md" | "lg" }) => (
+  <Avatar imageUrl={user.image} userName={user.name ?? "Anon"} size={size} />
+);
+
 const KeyGroupIcon = ({
   keyGroup,
   size,
@@ -175,13 +179,7 @@ const KeyGroupIcon = ({
 
     case "user":
       const user = keyGroup.sortKey.user;
-      return (
-        <Avatar
-          imageUrl={user.image}
-          userName={user.name ?? "Anon"}
-          size={size}
-        />
-      );
+      return <UserAvatar user={user} size={size} />;
   }
 };
 
@@ -272,15 +270,15 @@ export function TrackList() {
   }
 
   return (
-    <main className={`h-screen px-4 pb-16 pt-12 font-light text-gray-600`}>
-      <div className="h-full w-full rounded-xl bg-[#7371b5] pb-4 shadow-xl drop-shadow-xl">
-        <div className="flex items-center justify-end p-4 text-white">
+    <main className={`h-screen px-4 pb-16 pt-14 font-light text-gray-600`}>
+      <div className="flex h-full w-full flex-col rounded-xl bg-[#7371b5] shadow-xl drop-shadow-xl">
+        <div className="flex flex-1 items-center justify-end p-4 font-normal text-white">
           <KeyGroupName keyGroup={selectedKeyGroup} />
           <span className="ml-4">
             <KeyGroupIcon keyGroup={selectedKeyGroup} size="lg" />
           </span>
         </div>
-        <div className="h-full w-full overflow-scroll bg-gray-50">
+        <div className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50">
           <table className="">
             <thead className="sticky top-0 bg-gray-50">
               <tr className="font-normal">
@@ -333,11 +331,19 @@ export function TrackList() {
           </table>
         </div>
       </div>
+
+      <nav className="fixed bottom-0 left-0 z-10 w-full bg-gray-600 bg-opacity-30 p-2 text-xs">
+        <div className="flex w-full overflow-scroll">
+          {keyGroups.map((kg) => (
+            <div
+              key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
+              className="mx-1"
+            >
+              <KeyGroupIcon keyGroup={kg} size="lg" />
+            </div>
+          ))}
+        </div>
+      </nav>
     </main>
   );
 }
-
-const Spacer = ({ type }: { type: "th" | "td" }) => {
-  const className = `h-[45px] min-w-[70px] text-center`;
-  return type === "th" ? <th {...{ className }} /> : <td {...{ className }} />;
-};

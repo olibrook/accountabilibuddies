@@ -176,22 +176,6 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
         {/* Content */}
         <div className="flex-1 font-light">{children}</div>
 
-        {/* Bottom Navbar */}
-        <nav className="fixed bottom-0 left-0 z-10 flex w-full justify-around bg-gray-800 p-2 text-xs">
-          <a href="#" className="flex flex-col items-center text-white">
-            <Home size={16} />
-            Profile
-          </a>
-          <a href="#" className="flex flex-col items-center text-white">
-            <Users size={16} />
-            Friends
-          </a>
-          <a href="#" className="flex flex-col items-center text-white">
-            <Activity size={16} />
-            Activity
-          </a>
-        </nav>
-
         {/* Hamburger Menu Slider */}
         <div
           className={`fixed left-0 top-0 h-full w-64 ${
