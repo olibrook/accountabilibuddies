@@ -101,7 +101,7 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   stats.forEach((stat) => {
     const userId = stat.userId;
     const trackName = stat.track.name;
-    const offset = differenceInDays(stat.date, start);
+    const offset = Math.abs(differenceInDays(stat.date, end));
 
     ret.stats[userId] = ret.stats[userId] ?? {};
     ret.stats[userId][trackName] = ret.stats[userId][trackName] ?? {

@@ -314,7 +314,9 @@ export function TrackList() {
           <table className="min-w-full">
             <thead className="sticky top-0 bg-gray-50">
               <tr className="font-normal">
-                <th className="py-2 text-right">Nov 23</th>
+                <th className="py-2 text-right">
+                  <div className="w-[70px]">Nov 23</div>
+                </th>
                 {selectedKeyGroup.childKeys.map((kg) => (
                   <th
                     className="py-2"
@@ -336,8 +338,8 @@ export function TrackList() {
                     key={`${dateOffset}`}
                     className={isWeekend ? "bg-gray-100" : ""}
                   >
-                    <td className="min-w-[70px] px-2 text-right text-sm">
-                      {formatDate(date)}
+                    <td className="w-[70px] text-right text-sm">
+                      <div>{formatDate(date)}</div>
                     </td>
                     {selectedKeyGroup.childKeys.map((keyGroup) => {
                       const sk = keyGroup.sortKey;
