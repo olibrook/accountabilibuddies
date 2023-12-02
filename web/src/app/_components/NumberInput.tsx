@@ -1,0 +1,71 @@
+import React from "react";
+
+export const NumberInput: React.FC = () => {
+  return (
+    <div className="h-[225px] max-w-[225px] text-9xl">
+      <label htmlFor="bedrooms-input" className="sr-only">
+        Choose bedrooms number:
+      </label>
+      <div className="relative flex h-full items-center">
+        <button
+          type="button"
+          id="decrement-button"
+          data-input-counter-decrement="bedrooms-input"
+          className="h-full rounded-s-lg border border-gray-300 bg-gray-100 p-3 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700"
+        >
+          <svg
+            className="h-3 w-3 text-gray-900 dark:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 18 2"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M1 1h16"
+            />
+          </svg>
+        </button>
+        <input
+          type="text"
+          id="bedrooms-input"
+          data-input-counter
+          data-input-counter-min="1"
+          data-input-counter-max="5"
+          className="block h-full w-full border-x-0 border-gray-300 bg-gray-50 pb-6 text-center font-medium text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+          placeholder=""
+          value="2"
+          required
+        />
+        <div className="absolute bottom-1 start-1/2 flex -translate-x-1/2 items-center space-x-1 text-xs text-gray-400 rtl:translate-x-1/2 rtl:space-x-reverse">
+          <span>Kg</span>
+        </div>
+        <button
+          type="button"
+          id="increment-button"
+          data-input-counter-increment="bedrooms-input"
+          className="h-full rounded-e-lg border border-gray-300 bg-gray-100 p-3 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700"
+        >
+          <svg
+            className="h-3 w-3 text-gray-900 dark:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 18 18"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 1v16M1 9h16"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
