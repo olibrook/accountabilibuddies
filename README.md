@@ -7,6 +7,30 @@
 - Whatever.
 
 
+
+## MVP
+
+- Missing CRUD for stats.
+- Missing ability to add/remove followers in-app.
+- Replace Github with Google Login.
+- Deploy
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## TODO:
  - Make a Venn diagram of you and your buddies and the
    tracks you have in common!!
