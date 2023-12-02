@@ -13,6 +13,7 @@
 - Missing CRUD for stats.
 - Missing ability to add/remove followers in-app.
 - Replace Github with Google Login.
+- Persist user prefs (imperial, etc.)
 - Deploy
 
 

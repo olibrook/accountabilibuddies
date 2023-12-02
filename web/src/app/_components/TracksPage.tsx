@@ -9,7 +9,7 @@ import {
   subDays,
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import React, { useContext, useMemo } from "react";
+import React, { ReactNode, useContext, useMemo } from "react";
 import AppShell, {
   Measurement,
   UserSettingsContext,
@@ -58,17 +58,39 @@ const convertWeight = (val: number, from: Measurement, to: Measurement) => {
   return val * multiplier;
 };
 
+const InteractiveCell = ({
+  session,
+  date,
+  keyGroup,
+  children,
+}: {
+  session: CustomSession;
+  date: Date;
+  keyGroup: KeyGroup;
+  children: ReactNode;
+}) => {
+  const onClick = (e) => {
+    e.preventDefault();
+  };
+  const isMe = keyGroup.sortKey.user.id === session.user.id;
+  const props = {
+    onClick: onClick,
+  };
+  const { onClick: _, ...disabledProps } = props;
+  const finalProps = isMe ? props : disabledProps;
+  return <span {...finalProps}>{children}</span>;
+};
+
 const CellValue = ({
   trackName,
   value,
 }: {
   trackName: string;
-  value: number | undefined;
+  value?: number;
 }) => {
   const { settings } = useContext(UserSettingsContext);
-
   if (!value) {
-    return undefined;
+    return <span className="text-gray-300">⚬</span>;
   }
   switch (trackName) {
     case "weight":
@@ -403,7 +425,16 @@ function TrackList({
                           key={`${sk.user.id}-${sk.track.name}`}
                           className={`h-[45px] min-w-[50px] text-center`}
                         >
-                          <CellValue trackName={sk.track.name} value={value} />
+                          <InteractiveCell
+                            date={date}
+                            keyGroup={keyGroup}
+                            session={session}
+                          >
+                            <CellValue
+                              trackName={sk.track.name}
+                              value={value}
+                            />
+                          </InteractiveCell>
                         </td>
                       );
                     })}
