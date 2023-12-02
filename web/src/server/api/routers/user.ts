@@ -126,11 +126,18 @@ export const userRouter = createTRPCRouter({
     }
     return await db.user.findMany({
       where: {
-        followedBy: {
-          some: {
-            followerId: userId,
+        OR: [
+          {
+            id: userId,
           },
-        },
+          {
+            followedBy: {
+              some: {
+                followerId: userId,
+              },
+            },
+          },
+        ],
       },
       select,
     });
