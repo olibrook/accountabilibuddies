@@ -43,7 +43,7 @@ export const NumberInput: React.FC<Props> = ({
           </svg>
         </button>
         <input
-          type="text"
+          type="number"
           className="block h-full w-full border-x-0 border-gray-300 bg-gray-50 pb-6 text-center font-medium text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
           value={value ?? ""}
           onChange={(e) =>

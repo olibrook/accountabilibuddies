@@ -535,7 +535,7 @@ const EntryPopup = ({
 }) => {
   const userSettingsContext = useContext(UserSettingsContext);
   const [value, setValue] = useState<number | undefined>(
-    editing.value || editing.previousValue,
+    editing.value ?? editing.previousValue,
   );
   const { date, keyGroup } = editing;
   const trackName = trackNames[keyGroup.sortKey.track.name];
