@@ -35,26 +35,20 @@ export const NumberInput: React.FC<Props> = ({
           >
             <path
               stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
               d="M1 1h16"
             />
           </svg>
         </button>
         <input
           type="text"
-          id="bedrooms-input"
-          data-input-counter
-          data-input-counter-min="1"
-          data-input-counter-max="5"
           className="block h-full w-full border-x-0 border-gray-300 bg-gray-50 pb-6 text-center font-medium text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-          placeholder=""
           value={value ?? ""}
           onChange={(e) =>
             onChange(!!e.target.value ? Number(e.target.value) : undefined)
           }
-          required
         />
         <div className="absolute bottom-1 start-1/2 flex -translate-x-1/2 items-center space-x-1 text-xs text-gray-400 rtl:translate-x-1/2 rtl:space-x-reverse">
           <span>{unit}</span>
@@ -75,9 +69,9 @@ export const NumberInput: React.FC<Props> = ({
           >
             <path
               stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
               d="M9 1v16M1 9h16"
             />
           </svg>

@@ -534,7 +534,9 @@ const EntryPopup = ({
   setEditing: (e: Editing | undefined) => void;
 }) => {
   const userSettingsContext = useContext(UserSettingsContext);
-  const [value, setValue] = useState<number | undefined>(undefined);
+  const [value, setValue] = useState<number | undefined>(
+    editing.value || editing.previousValue,
+  );
   const { date, keyGroup } = editing;
   const trackName = trackNames[keyGroup.sortKey.track.name];
   const trackEmoji = trackIcons[keyGroup.sortKey.track.name ?? ""] ?? "?";
