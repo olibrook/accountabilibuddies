@@ -99,7 +99,7 @@ const InteractiveCell = ({
       setEditing({ date, keyGroup, value, previousValue });
     } else {
       console.log(`Update a binary value here`);
-      console.log({ date, value: !value, trackName });
+      console.log({ date, value: !value ? 1 : 0, trackName });
     }
   };
   const isMe = keyGroup.sortKey.user.id === session.user.id;
