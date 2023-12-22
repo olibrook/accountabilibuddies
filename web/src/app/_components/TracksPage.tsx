@@ -80,20 +80,26 @@ const InteractiveCell = ({
   date,
   keyGroup,
   children,
-  editing,
   setEditing,
+  value,
+  previousValue,
 }: {
   session: CustomSession;
   date: Date;
   keyGroup: KeyGroup;
   children: ReactNode;
-  editing?: Editing;
   setEditing: (e: Editing | undefined) => void;
+  value: number | undefined;
+  previousValue: number | undefined;
 }) => {
-  const onClick = (e) => {
+  const onClick = (e: MouseEvent) => {
     e.preventDefault();
-    if (nonBinaryTracks.indexOf(keyGroup.sortKey.track.name) >= 0) {
-      setEditing({ date, keyGroup });
+    const trackName = keyGroup.sortKey.track.name;
+    if (nonBinaryTracks.indexOf(trackName) >= 0) {
+      setEditing({ date, keyGroup, value, previousValue });
+    } else {
+      console.log(`Update a binary value here`);
+      console.log({ date, value: !value, trackName });
     }
   };
   const isMe = keyGroup.sortKey.user.id === session.user.id;
@@ -323,6 +329,8 @@ function TrackListWrapper({ params }: { params: Params }) {
 type Editing = {
   keyGroup: KeyGroup;
   date: Date;
+  value: number | undefined;
+  previousValue: number | undefined;
 };
 
 function TrackList({
@@ -457,6 +465,12 @@ function TrackList({
                         sk.track.name,
                         dateOffset,
                       );
+                      const previousValue = accessor(
+                        stats,
+                        sk.user.id,
+                        sk.track.name,
+                        dateOffset,
+                      );
                       return (
                         <td
                           key={`${sk.user.id}-${sk.track.name}`}
@@ -466,8 +480,9 @@ function TrackList({
                             date={date}
                             keyGroup={keyGroup}
                             session={session}
-                            editing={editing}
                             setEditing={setEditing}
+                            previousValue={previousValue}
+                            value={value}
                           >
                             <CellValue
                               trackName={sk.track.name}
@@ -550,6 +565,8 @@ const EntryPopup = ({
           type="button"
           className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           onClick={() => {
+            console.log("Update this:");
+            console.log({ date, value, trackName });
             setEditing(undefined);
           }}
         >
