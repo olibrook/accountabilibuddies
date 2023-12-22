@@ -5,26 +5,20 @@ import {
   protectedProcedure,
 } from "@buds/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { differenceInDays, endOfToday, startOfToday, subDays } from "date-fns";
+import { differenceInDays } from "date-fns";
 import { StatType } from "@prisma/client";
 import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
 
-export const windowInDays = 30;
-
 const ListStatsInput = z.object({
   followingIds: z.array(z.string().uuid()),
-  start: z
-    .date()
-    .optional()
-    .default((): Date => subDays(startOfToday(), windowInDays)),
-  end: z
-    .date()
-    .optional()
-    .default(() => endOfToday()),
+  start: z.date(),
+  end: z.date(),
 });
 
 const ListGoalsInput = z.object({
   followingIds: z.array(z.string().uuid()),
+  start: z.date(),
+  end: z.date(),
 });
 
 const CreateInput = z.object({
@@ -96,13 +90,15 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
 
   const ret: StatList = { start, end, stats: {} };
 
-  const dataLength = differenceInDays(end, start);
+  const dataLength = differenceInDays(end, start) + 1;
 
   stats.forEach((stat) => {
     const userId = stat.userId;
     const trackName = stat.track.name;
-    const offset = Math.abs(differenceInDays(stat.date, end));
-
+    const offset = Math.abs(differenceInDays(stat.date, end)) - 1;
+    if (offset < 0 || offset > dataLength - 1) {
+      throw Error(`Bounds check ${offset}`);
+    }
     ret.stats[userId] = ret.stats[userId] ?? {};
     ret.stats[userId][trackName] = ret.stats[userId][trackName] ?? {
       trackId: stat.track.id,

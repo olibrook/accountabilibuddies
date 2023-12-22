@@ -3,15 +3,18 @@
 import { api } from "@buds/trpc/react";
 import {
   differenceInDays,
+  endOfDay,
   format,
   isSaturday,
   isSunday,
+  startOfDay,
   subDays,
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import React, { ReactNode, useContext, useMemo } from "react";
+import React, { ReactNode, useContext, useMemo, useState } from "react";
 import AppShell, {
   Measurement,
+  UserSettings,
   UserSettingsContext,
 } from "@buds/app/_components/AppShell";
 import Link from "next/link";
@@ -19,6 +22,7 @@ import { SessionProvider, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DefaultSession } from "next-auth";
 import { SessionContextValue } from "next-auth/src/react";
+import { NumberInput } from "@buds/app/_components/NumberInput";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -46,7 +50,20 @@ const trackNames: Record<string, string> = {
   meditation: "Meditation",
 };
 
+const trackUnits: Record<string, string> = {
+  alcohol: "sobrieties",
+  weight: "", // user-defined
+  mood: "nuggets",
+  food: "clean days",
+  gym: "lift days",
+  pushups: "grunts",
+  meditation: "oms",
+};
+
+const nonBinaryTracks = ["weight", "mood"];
+
 const formatDate = (date: Date) => format(date, "E d");
+const formatFullDate = (date: Date) => format(date, "PPP");
 
 const convertWeight = (val: number, from: Measurement, to: Measurement) => {
   let multiplier = 1;
@@ -63,14 +80,21 @@ const InteractiveCell = ({
   date,
   keyGroup,
   children,
+  editing,
+  setEditing,
 }: {
   session: CustomSession;
   date: Date;
   keyGroup: KeyGroup;
   children: ReactNode;
+  editing?: Editing;
+  setEditing: (e: Editing | undefined) => void;
 }) => {
   const onClick = (e) => {
     e.preventDefault();
+    if (nonBinaryTracks.indexOf(keyGroup.sortKey.track.name) >= 0) {
+      setEditing({ date, keyGroup });
+    }
   };
   const isMe = keyGroup.sortKey.user.id === session.user.id;
   const props = {
@@ -153,7 +177,7 @@ const groupEmUp = (sortKeyLists: SortKeyList[]): KeyGroup[] => {
 };
 
 type Sized = {
-  size: "lg" | "md";
+  size: "xl" | "lg" | "md";
 };
 
 type IconProps = {
@@ -163,7 +187,8 @@ type IconProps = {
 } & Sized;
 
 const Icon: React.FC<IconProps> = ({ imageUrl, alt, fallback, size }) => {
-  const sizeStyles = size === "md" ? "h-8 w-8" : "h-10 w-10";
+  const sizeStyles =
+    size === "md" ? "h-8 w-8" : "lg" ? "h-10 w-10" : "h-14 w-14";
   return (
     <div className={`${sizeStyles} overflow-hidden rounded-full`}>
       {imageUrl ? (
@@ -295,6 +320,11 @@ function TrackListWrapper({ params }: { params: Params }) {
   }
 }
 
+type Editing = {
+  keyGroup: KeyGroup;
+  date: Date;
+};
+
 function TrackList({
   params: { trackName, userId: userIdFromParams },
   session,
@@ -304,11 +334,15 @@ function TrackList({
 }) {
   const router = useRouter();
 
+  const [editing, setEditing] = useState<Editing | undefined>();
+
   const { data: following } = api.user.listFollowing.useQuery();
 
   const { data: stats } = api.stat.listStats.useQuery(
     {
       followingIds: (following ?? []).map((f) => f.id),
+      start: startOfDay(subDays(new Date(), 30)),
+      end: endOfDay(new Date()),
     },
     { enabled: !!following },
   );
@@ -374,7 +408,10 @@ function TrackList({
 
   return (
     <main className={`h-screen px-4 pb-16 pt-14 font-light text-gray-600`}>
-      <div className="flex h-full w-full flex-col rounded-xl bg-[#7371b5] shadow-xl drop-shadow-xl">
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#7371b5] shadow-xl drop-shadow-xl">
+        {editing ? (
+          <EntryPopup editing={editing} setEditing={setEditing} />
+        ) : null}
         <div className="flex flex-1 items-center justify-end p-4 font-normal text-white">
           <KeyGroupName keyGroup={selectedKeyGroup} />
           <span className="ml-4">
@@ -429,6 +466,8 @@ function TrackList({
                             date={date}
                             keyGroup={keyGroup}
                             session={session}
+                            editing={editing}
+                            setEditing={setEditing}
                           >
                             <CellValue
                               trackName={sk.track.name}
@@ -463,3 +502,60 @@ function TrackList({
     </main>
   );
 }
+
+const getUnit = (userSettings: UserSettings, trackName: string) => {
+  if (trackName === "weight") {
+    return userSettings.measurements === "metric" ? "Kg" : "lb";
+  } else {
+    return trackUnits[trackName] ?? "units";
+  }
+};
+
+const EntryPopup = ({
+  editing,
+  setEditing,
+}: {
+  editing: Editing;
+  setEditing: (e: Editing | undefined) => void;
+}) => {
+  const userSettingsContext = useContext(UserSettingsContext);
+  const [value, setValue] = useState<number | undefined>(undefined);
+  const { date, keyGroup } = editing;
+  const trackName = trackNames[keyGroup.sortKey.track.name];
+  const trackEmoji = trackIcons[keyGroup.sortKey.track.name ?? ""] ?? "?";
+  const icon = trackEmoji ? (
+    <Icon fallback={trackEmoji} alt={trackEmoji} size={"xl"} />
+  ) : (
+    false
+  );
+  const unit = getUnit(
+    userSettingsContext.settings,
+    keyGroup.sortKey.track.name,
+  );
+
+  return (
+    <div className="absolute bottom-0 left-0 right-0 top-0 z-50  bg-gray-100">
+      <div className="flex h-full flex-col items-center justify-center px-4">
+        <div className="mb-4 flex w-full flex-row items-end justify-end">
+          <div className="mr-4 text-right">
+            <h2 className="text-lg font-medium">{trackName}</h2>
+            <h3 className="text-sm font-light">{formatFullDate(date)}</h3>
+          </div>
+          {icon}
+        </div>
+        <div className="mb-2">
+          <NumberInput value={value} onChange={setValue} incr={1} unit={unit} />
+        </div>
+        <button
+          type="button"
+          className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          onClick={() => {
+            setEditing(undefined);
+          }}
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  );
+};
