@@ -2,6 +2,8 @@ import React from "react";
 
 type Props = {
   value?: number;
+  min?: number;
+  max?: number;
   onChange: (val?: number) => void;
   incr: number;
   unit: string;
@@ -9,6 +11,8 @@ type Props = {
 
 export const NumberInput: React.FC<Props> = ({
   value,
+  min,
+  max,
   onChange,
   incr,
   unit,
@@ -49,6 +53,8 @@ export const NumberInput: React.FC<Props> = ({
           onChange={(e) =>
             onChange(!!e.target.value ? Number(e.target.value) : undefined)
           }
+          min={min}
+          max={max}
         />
         <div className="absolute bottom-1 start-1/2 flex -translate-x-1/2 items-center space-x-1 text-xs text-gray-400 rtl:translate-x-1/2 rtl:space-x-reverse">
           <span>{unit}</span>
