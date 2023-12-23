@@ -136,6 +136,7 @@ const InteractiveCell = ({
   setEditing,
   value,
   previousValue,
+  upsertStat,
 }: {
   session: CustomSession;
   date: Date;
@@ -144,8 +145,9 @@ const InteractiveCell = ({
   setEditing: (e: Editing | undefined) => void;
   value: number | undefined;
   previousValue: number | undefined;
+  upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
 }) => {
-  const onClick = (e: MouseEvent) => {
+  const onClick = async (e: MouseEvent) => {
     e.preventDefault();
     const trackName = keyGroup.sortKey.track.name as TrackName;
     const trackId = keyGroup.sortKey.track.id;
@@ -153,8 +155,7 @@ const InteractiveCell = ({
     if (trackConfig.type === "number") {
       setEditing({ date, keyGroup, value, previousValue });
     } else {
-      console.log(`Update a binary value here`);
-      console.log({ date, value: !value ? 1 : 0, trackName, trackId });
+      await upsertStat.mutateAsync({ date, value: !value ? 1 : 0, trackId });
     }
   };
   const isMe = keyGroup.sortKey.user.id === session.user.id;
@@ -410,6 +411,7 @@ function TrackList({
   session: CustomSession;
 }) {
   const router = useRouter();
+  const utils = api.useUtils();
 
   const [editing, setEditing] = useState<Editing | undefined>();
 
@@ -423,6 +425,12 @@ function TrackList({
     },
     { enabled: !!following },
   );
+
+  const upsertStat = api.stat.upsertStat.useMutation({
+    onSuccess: async () => {
+      await utils.stat.listStats.invalidate();
+    },
+  });
 
   const userId = userIdFromParams === "me" ? session.user.id : userIdFromParams;
 
@@ -487,7 +495,11 @@ function TrackList({
     <main className={`h-screen px-4 pb-16 pt-14 font-light text-gray-600`}>
       <div className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#7371b5] shadow-xl drop-shadow-xl">
         {editing ? (
-          <EntryPopup editing={editing} setEditing={setEditing} />
+          <EntryPopup
+            editing={editing}
+            setEditing={setEditing}
+            upsertStat={upsertStat}
+          />
         ) : null}
         <div className="flex flex-1 items-center justify-end p-4 font-normal text-white">
           <KeyGroupName keyGroup={selectedKeyGroup} />
@@ -552,6 +564,7 @@ function TrackList({
                             setEditing={setEditing}
                             previousValue={previousValue}
                             value={value}
+                            upsertStat={upsertStat}
                           >
                             <CellValue
                               trackName={sk.track.name}
@@ -599,9 +612,11 @@ const getUnit = (userSettings: UserSettings, trackName: string) => {
 const EntryPopup = ({
   editing,
   setEditing,
+  upsertStat,
 }: {
   editing: Editing;
   setEditing: (e: Editing | undefined) => void;
+  upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
 }) => {
   const userSettingsContext = useContext(UserSettingsContext);
   const [value, setValue] = useState<number | undefined>(
@@ -645,9 +660,10 @@ const EntryPopup = ({
         <button
           type="button"
           className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          onClick={() => {
-            console.log("Update this:");
-            console.log({ date, value, trackName, trackId });
+          onClick={async () => {
+            if (value) {
+              await upsertStat.mutateAsync({ date, trackId, value });
+            }
             setEditing(undefined);
           }}
         >

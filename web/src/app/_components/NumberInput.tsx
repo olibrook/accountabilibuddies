@@ -21,14 +21,9 @@ export const NumberInput: React.FC<Props> = ({
 }) => {
   return (
     <div className="h-full w-full text-8xl">
-      <label htmlFor="bedrooms-input" className="sr-only">
-        Choose bedrooms number:
-      </label>
       <div className="relative flex h-full items-center">
         <button
           type="button"
-          id="decrement-button"
-          data-input-counter-decrement="bedrooms-input"
           className="h-full rounded-s-lg border border-gray-300 bg-gray-100 p-3 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700"
           disabled={min !== undefined ? (value ?? 0) <= min : false}
           onClick={() => onChange(round((value ?? 0) - incr))}
@@ -64,8 +59,6 @@ export const NumberInput: React.FC<Props> = ({
         </div>
         <button
           type="button"
-          id="increment-button"
-          data-input-counter-increment="bedrooms-input"
           className="h-full rounded-e-lg border border-gray-300 bg-gray-100 p-3 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700"
           disabled={max !== undefined ? (value ?? 0) >= max : false}
           onClick={() => onChange(round((value ?? 0) + incr))}

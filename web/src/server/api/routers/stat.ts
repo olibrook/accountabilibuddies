@@ -95,7 +95,7 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   stats.forEach((stat) => {
     const userId = stat.userId;
     const trackName = stat.track.name;
-    const offset = Math.abs(differenceInDays(stat.date, end)) - 1;
+    const offset = Math.abs(differenceInDays(stat.date, end));
     if (offset < 0 || offset > dataLength - 1) {
       throw Error(`Bounds check ${offset}`);
     }
@@ -152,7 +152,7 @@ export const statRouter = createTRPCRouter({
 
   upsertStat: protectedProcedure
     .input(UpsertInput)
-    .query(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       return upsert({ input: { ...input, type: StatType.STAT }, ctx });
     }),
 
@@ -164,7 +164,7 @@ export const statRouter = createTRPCRouter({
 
   upsertGoal: protectedProcedure
     .input(UpsertInput)
-    .query(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       return upsert({ input: { ...input, type: StatType.STAT }, ctx });
     }),
 });
