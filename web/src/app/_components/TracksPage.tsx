@@ -529,7 +529,7 @@ function TrackList({
                         stats,
                         sk.user.id,
                         sk.track.name,
-                        dateOffset,
+                        dateOffset + 1,
                       );
                       return (
                         <td
