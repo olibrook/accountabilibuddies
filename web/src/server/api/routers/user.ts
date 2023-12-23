@@ -90,15 +90,17 @@ export const userRouter = createTRPCRouter({
               throw new Error();
           }
           const now = new Date();
+          const start = subDays(now, 2);
+
           stats.push({
             id: uuid4(),
             type: "STAT",
             userId: user.id,
             trackId: track.id,
             value,
-            date: subDays(now, i),
-            createdAt: now,
-            updatedAt: now,
+            date: subDays(start, i),
+            createdAt: start,
+            updatedAt: start,
           });
         }
       }
