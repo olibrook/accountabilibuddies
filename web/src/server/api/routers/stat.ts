@@ -21,7 +21,7 @@ const ListGoalsInput = z.object({
   end: z.date(),
 });
 
-const CreateInput = z.object({
+const UpsertInput = z.object({
   date: z.date(),
   trackId: z.string().uuid(),
   value: z.number(),
@@ -110,19 +110,36 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   return ret;
 };
 
-type createInput = z.infer<typeof CreateInput> & { type: StatType };
+type UpsertInputType = z.infer<typeof UpsertInput> & {
+  type: StatType;
+};
 
-const create = async ({ input, ctx }: { input: createInput; ctx: Context }) => {
+const upsert = async ({
+  input,
+  ctx,
+}: {
+  input: UpsertInputType;
+  ctx: Context;
+}) => {
   const userId = ctx?.session?.user.id;
   if (!userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  return ctx.db.stat.create({
-    data: {
-      ...input,
-      type: StatType.STAT,
-      userId,
+  const data = {
+    ...input,
+    userId,
+  };
+  return ctx.db.stat.upsert({
+    where: {
+      type_userId_trackId_date: {
+        date: input.date,
+        trackId: input.trackId,
+        userId,
+        type: input.type,
+      },
     },
+    create: data,
+    update: data,
   });
 };
 
@@ -133,10 +150,10 @@ export const statRouter = createTRPCRouter({
       return list({ input: { ...input, type: StatType.STAT }, ctx });
     }),
 
-  createStat: protectedProcedure
-    .input(CreateInput)
+  upsertStat: protectedProcedure
+    .input(UpsertInput)
     .query(async ({ input, ctx }) => {
-      return create({ input: { ...input, type: StatType.STAT }, ctx });
+      return upsert({ input: { ...input, type: StatType.STAT }, ctx });
     }),
 
   listGoals: protectedProcedure
@@ -145,9 +162,9 @@ export const statRouter = createTRPCRouter({
       return list({ input: { ...input, type: StatType.GOAL }, ctx });
     }),
 
-  createGoal: protectedProcedure
-    .input(CreateInput)
+  upsertGoal: protectedProcedure
+    .input(UpsertInput)
     .query(async ({ input, ctx }) => {
-      return create({ input: { ...input, type: StatType.STAT }, ctx });
+      return upsert({ input: { ...input, type: StatType.STAT }, ctx });
     }),
 });

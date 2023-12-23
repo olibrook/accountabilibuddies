@@ -148,12 +148,13 @@ const InteractiveCell = ({
   const onClick = (e: MouseEvent) => {
     e.preventDefault();
     const trackName = keyGroup.sortKey.track.name as TrackName;
+    const trackId = keyGroup.sortKey.track.id;
     const trackConfig = trackConfigs[trackName];
     if (trackConfig.type === "number") {
       setEditing({ date, keyGroup, value, previousValue });
     } else {
       console.log(`Update a binary value here`);
-      console.log({ date, value: !value ? 1 : 0, trackName });
+      console.log({ date, value: !value ? 1 : 0, trackName, trackId });
     }
   };
   const isMe = keyGroup.sortKey.user.id === session.user.id;
@@ -207,7 +208,10 @@ type SortKey = {
 };
 
 type SortKeyList = [outerKey: SortKey, innerKey: SortKey];
-type KeyGroup = { sortKey: SortKey; childKeys: KeyGroup[] };
+type KeyGroup = {
+  sortKey: SortKey;
+  childKeys: KeyGroup[];
+};
 
 const compareKeyLists = (a: SortKeyList, b: SortKeyList): number => {
   const [aOuter, aInner] = a;
@@ -332,7 +336,10 @@ const KeyGroupName = ({ keyGroup }: { keyGroup: KeyGroup }) => {
   }
 };
 
-type Params = { trackName?: string; userId?: string };
+type Params = {
+  trackName?: string;
+  userId?: string;
+};
 
 export const TracksPage = ({ params }: { params: Params }) => {
   return (
@@ -364,7 +371,9 @@ const hrefForKeyGroup = (kg: KeyGroup) => {
 
 type AuthdSession = Extract<
   SessionContextValue<true>,
-  { status: "authenticated" }
+  {
+    status: "authenticated";
+  }
 >;
 
 interface CustomSession extends DefaultSession {
@@ -600,6 +609,7 @@ const EntryPopup = ({
   );
   const { date, keyGroup } = editing;
   const trackConfig = trackConfigs[keyGroup.sortKey.track.name as TrackName];
+  const trackId = keyGroup.sortKey.track.id;
   const trackName = trackConfig.name ?? "?";
   const trackEmoji = trackConfig.icon ?? "?";
   const icon = trackEmoji ? (
@@ -637,7 +647,7 @@ const EntryPopup = ({
           className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           onClick={() => {
             console.log("Update this:");
-            console.log({ date, value, trackName });
+            console.log({ date, value, trackName, trackId });
             setEditing(undefined);
           }}
         >
