@@ -30,37 +30,90 @@ type User = FollowingList[0];
 type Track = FollowingList[0]["tracks"][0];
 type GroupBy = "user" | "track";
 
-const trackIcons: Record<string, string> = {
-  alcohol: "🍺",
-  weight: "⚖️",
-  mood: "🙂",
-  food: "🍔",
-  gym: "🏋️",
-  pushups: "🤗",
-  meditation: "☯",
+type TrackConfig = {
+  icon: string;
+  name: string;
+  units: string;
+  type: "binary" | "number";
+  incr: number;
+  min: number | undefined;
+  max: number | undefined;
 };
 
-const trackNames: Record<string, string> = {
-  alcohol: "Alcohol",
-  weight: "Weight",
-  mood: "Mood",
-  food: "Food",
-  gym: "Gym",
-  pushups: "Pushups",
-  meditation: "Meditation",
-};
+type TrackName =
+  | "alcohol"
+  | "weight"
+  | "mood"
+  | "food"
+  | "gym"
+  | "pushups"
+  | "meditation";
 
-const trackUnits: Record<string, string> = {
-  alcohol: "sobrieties",
-  weight: "", // user-defined
-  mood: "nuggets",
-  food: "clean days",
-  gym: "lift days",
-  pushups: "grunts",
-  meditation: "oms",
+const trackConfigs: Record<TrackName, TrackConfig> = {
+  alcohol: {
+    icon: "🍺",
+    name: "Alcohol",
+    units: "sober days",
+    type: "binary",
+    incr: 0,
+    min: 0,
+    max: 1,
+  },
+  weight: {
+    icon: "⚖️",
+    name: "Weight",
+    units: "", // user-defined
+    type: "number",
+    incr: 0.1,
+    min: 0,
+    max: undefined,
+  },
+  mood: {
+    icon: "🙂",
+    name: "Mood",
+    units: "nuggets",
+    type: "number",
+    incr: 1,
+    min: 0,
+    max: 10,
+  },
+  food: {
+    icon: "🍔",
+    name: "Food",
+    units: "clean days",
+    type: "binary",
+    incr: 0,
+    min: 0,
+    max: 1,
+  },
+  gym: {
+    icon: "🏋️",
+    name: "Gym",
+    units: "lift days",
+    type: "binary",
+    incr: 0,
+    min: 0,
+    max: 1,
+  },
+  pushups: {
+    icon: "🤗",
+    name: "Pushups",
+    units: "grunts",
+    type: "binary",
+    incr: 0,
+    min: 0,
+    max: 1,
+  },
+  meditation: {
+    icon: "☯",
+    name: "Meditation",
+    units: "oms",
+    type: "binary",
+    incr: 0,
+    min: 0,
+    max: 1,
+  },
 };
-
-const nonBinaryTracks = ["weight", "mood"];
 
 const formatDate = (date: Date) => format(date, "E d");
 const formatFullDate = (date: Date) => format(date, "PPP");
@@ -94,8 +147,9 @@ const InteractiveCell = ({
 }) => {
   const onClick = (e: MouseEvent) => {
     e.preventDefault();
-    const trackName = keyGroup.sortKey.track.name;
-    if (nonBinaryTracks.indexOf(trackName) >= 0) {
+    const trackName = keyGroup.sortKey.track.name as TrackName;
+    const trackConfig = trackConfigs[trackName];
+    if (trackConfig.type === "number") {
       setEditing({ date, keyGroup, value, previousValue });
     } else {
       console.log(`Update a binary value here`);
@@ -246,10 +300,14 @@ const KeyGroupIcon = ({
   switch (keyGroup.sortKey.kind) {
     case "track":
       const track = keyGroup.sortKey.track;
-      const trackName = trackIcons[track.name] ?? "?";
+      const trackConfig = trackConfigs[track.name as TrackName];
       return (
         <Link href={href}>
-          <Icon fallback={trackName} alt={trackName} size={size} />
+          <Icon
+            fallback={trackConfig.icon ?? "?"}
+            alt={trackConfig.name ?? "?"}
+            size={size}
+          />
         </Link>
       );
 
@@ -266,7 +324,9 @@ const KeyGroupIcon = ({
 const KeyGroupName = ({ keyGroup }: { keyGroup: KeyGroup }) => {
   switch (keyGroup.sortKey.kind) {
     case "track":
-      return trackNames[keyGroup.sortKey.track.name] ?? "Unknown";
+      const trackConfig =
+        trackConfigs[keyGroup.sortKey.track.name as TrackName];
+      return trackConfig.name;
     case "user":
       return keyGroup.sortKey.user.name ?? "Anon";
   }
@@ -522,7 +582,8 @@ const getUnit = (userSettings: UserSettings, trackName: string) => {
   if (trackName === "weight") {
     return userSettings.measurements === "metric" ? "Kg" : "lb";
   } else {
-    return trackUnits[trackName] ?? "units";
+    const trackConfig = trackConfigs[trackName as TrackName];
+    return trackConfig.units;
   }
 };
 
@@ -538,8 +599,9 @@ const EntryPopup = ({
     editing.value ?? editing.previousValue,
   );
   const { date, keyGroup } = editing;
-  const trackName = trackNames[keyGroup.sortKey.track.name];
-  const trackEmoji = trackIcons[keyGroup.sortKey.track.name ?? ""] ?? "?";
+  const trackConfig = trackConfigs[keyGroup.sortKey.track.name as TrackName];
+  const trackName = trackConfig.name ?? "?";
+  const trackEmoji = trackConfig.icon ?? "?";
   const icon = trackEmoji ? (
     <Icon fallback={trackEmoji} alt={trackEmoji} size={"xl"} />
   ) : (
@@ -561,7 +623,14 @@ const EntryPopup = ({
           {icon}
         </div>
         <div className="mb-2">
-          <NumberInput value={value} onChange={setValue} incr={1} unit={unit} />
+          <NumberInput
+            value={value}
+            onChange={setValue}
+            min={trackConfig.min}
+            max={trackConfig.max}
+            incr={trackConfig.incr}
+            unit={unit}
+          />
         </div>
         <button
           type="button"
