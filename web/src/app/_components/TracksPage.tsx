@@ -358,7 +358,7 @@ const accessor = (
   trackName: string,
   offset: number,
 ): number | undefined => {
-  return sl?.stats?.[userId]?.[trackName]?.data[offset] ?? undefined;
+  return sl?.results[offset]?.data?.[userId]?.[trackName] ?? undefined;
 };
 
 const hrefForKeyGroup = (kg: KeyGroup) => {

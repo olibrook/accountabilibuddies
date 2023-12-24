@@ -5,7 +5,7 @@ import {
   protectedProcedure,
 } from "@buds/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, subDays } from "date-fns";
 import { StatType } from "@prisma/client";
 import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
 
@@ -37,16 +37,14 @@ type listInput = {
 type StatList = {
   start: Date;
   end: Date;
-  stats: Record<
-    string,
-    Record<
-      string,
-      {
-        trackId: string;
-        data: (number | undefined)[];
-      }
-    >
-  >;
+  results: Array<{
+    date: Date;
+    data: {
+      [userId: string]: {
+        [trackName: string]: number;
+      };
+    };
+  }>;
 };
 
 const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
@@ -88,23 +86,32 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     ],
   });
 
-  const ret: StatList = { start, end, stats: {} };
-
   const dataLength = differenceInDays(end, start) + 1;
+
+  const ret: StatList = {
+    start,
+    end,
+    results: Array.from(new Array(dataLength)).map((_, idx) => {
+      return {
+        date: subDays(end, idx),
+        data: {},
+      };
+    }),
+  };
 
   stats.forEach((stat) => {
     const userId = stat.userId;
     const trackName = stat.track.name;
     const offset = Math.abs(differenceInDays(stat.date, end));
-    if (offset < 0 || offset > dataLength - 1) {
-      throw Error(`Bounds check ${offset}`);
+    if (offset < 0 || offset >= ret.results.length) {
+      throw new Error(`Bounds check ${offset}`);
     }
-    ret.stats[userId] = ret.stats[userId] ?? {};
-    ret.stats[userId][trackName] = ret.stats[userId][trackName] ?? {
-      trackId: stat.track.id,
-      data: Array.from(new Array(dataLength)).map(() => undefined),
-    };
-    ret.stats[stat.userId][stat.track.name].data[offset] = stat.value;
+    if (ret.results[offset] === undefined) {
+      console.log(JSON.stringify(ret, null, 4));
+      throw new Error("Outtahere");
+    }
+    ret.results[offset].data[userId] = ret.results[offset].data[userId] ?? {};
+    ret.results[offset].data[userId][trackName] = stat.value;
   });
 
   return ret;
