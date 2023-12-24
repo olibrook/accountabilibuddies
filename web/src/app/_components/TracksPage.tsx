@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { DefaultSession } from "next-auth";
 import { SessionContextValue } from "next-auth/src/react";
 import { NumberInput } from "@buds/app/_components/NumberInput";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -411,7 +412,11 @@ function TrackList({
 
   const { data: following } = api.user.listFollowing.useQuery();
 
-  const { data: stats } = api.stat.listStats.useInfiniteQuery(
+  const {
+    data: stats,
+    fetchNextPage,
+    hasNextPage,
+  } = api.stat.listStats.useInfiniteQuery(
     {
       followingIds: (following ?? []).map((f) => f.id),
       limit: 30,
@@ -506,78 +511,89 @@ function TrackList({
             <KeyGroupIcon keyGroup={selectedKeyGroup} size="lg" />
           </span>
         </div>
-        <div className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50">
-          <table className="min-w-full">
-            <thead className="sticky top-0 bg-gray-50">
-              <tr className="font-normal">
-                <th className="py-2 text-right">
-                  <div className="w-[70px]">Nov 23</div>
-                </th>
-                {selectedKeyGroup.childKeys.map((kg) => (
-                  <th
-                    className="py-2"
-                    key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
-                  >
-                    <div className="flex items-center justify-center">
-                      <KeyGroupIcon keyGroup={kg} size="md" />
-                    </div>
+        <div
+          id="scrollableDiv"
+          className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50"
+        >
+          <InfiniteScroll
+            next={fetchNextPage}
+            hasMore={!!hasNextPage}
+            dataLength={flatStats.length}
+            scrollableTarget="scrollableDiv"
+            style={{ overflow: "none" }}
+          >
+            <table className="min-w-full">
+              <thead className="sticky top-0 bg-gray-50">
+                <tr className="font-normal">
+                  <th className="py-2 text-right">
+                    <div className="w-[70px]">Nov 23</div>
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {flatStats.map((stat, dateOffset) => {
-                const date = stat.date;
-                const isWeekend = isSaturday(date) || isSunday(date);
-                return (
-                  <tr
-                    key={`${dateOffset}`}
-                    className={isWeekend ? "bg-gray-100" : ""}
-                  >
-                    <td className="w-[70px] text-right text-sm">
-                      <div>{formatDate(date)}</div>
-                    </td>
-                    {selectedKeyGroup.childKeys.map((keyGroup) => {
-                      const sk = keyGroup.sortKey;
-                      const value = accessor(
-                        flatStats,
-                        sk.user.id,
-                        sk.track.name,
-                        dateOffset,
-                      );
-                      const previousValue = accessor(
-                        flatStats,
-                        sk.user.id,
-                        sk.track.name,
-                        dateOffset + 1,
-                      );
-                      return (
-                        <td
-                          key={`${sk.user.id}-${sk.track.name}`}
-                          className={`h-[45px] min-w-[50px] text-center`}
-                        >
-                          <InteractiveCell
-                            date={date}
-                            keyGroup={keyGroup}
-                            session={session}
-                            setEditing={setEditing}
-                            previousValue={previousValue}
-                            value={value}
-                            upsertStat={upsertStat}
+                  {selectedKeyGroup.childKeys.map((kg) => (
+                    <th
+                      className="py-2"
+                      key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
+                    >
+                      <div className="flex items-center justify-center">
+                        <KeyGroupIcon keyGroup={kg} size="md" />
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {flatStats.map((stat, dateOffset) => {
+                  const date = stat.date;
+                  const isWeekend = isSaturday(date) || isSunday(date);
+                  return (
+                    <tr
+                      key={`${dateOffset}`}
+                      className={isWeekend ? "bg-gray-100" : ""}
+                    >
+                      <td className="w-[70px] text-right text-sm">
+                        <div>{formatDate(date)}</div>
+                      </td>
+                      {selectedKeyGroup.childKeys.map((keyGroup) => {
+                        const sk = keyGroup.sortKey;
+                        const value = accessor(
+                          flatStats,
+                          sk.user.id,
+                          sk.track.name,
+                          dateOffset,
+                        );
+                        const previousValue = accessor(
+                          flatStats,
+                          sk.user.id,
+                          sk.track.name,
+                          dateOffset + 1,
+                        );
+                        return (
+                          <td
+                            key={`${sk.user.id}-${sk.track.name}`}
+                            className={`h-[45px] min-w-[50px] text-center`}
                           >
-                            <CellValue
-                              trackName={sk.track.name}
+                            <InteractiveCell
+                              date={date}
+                              keyGroup={keyGroup}
+                              session={session}
+                              setEditing={setEditing}
+                              previousValue={previousValue}
                               value={value}
-                            />
-                          </InteractiveCell>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                              upsertStat={upsertStat}
+                            >
+                              <CellValue
+                                trackName={sk.track.name}
+                                value={value}
+                              />
+                            </InteractiveCell>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </InfiniteScroll>
         </div>
       </div>
 
