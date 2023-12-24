@@ -35,6 +35,8 @@ type listInput = {
 };
 
 type StatList = {
+  start: Date;
+  end: Date;
   nextCursor: Date;
   results: Array<{
     date: Date;
@@ -58,7 +60,7 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     followingIds,
   });
 
-  const end = cursor;
+  const end = startOfDay(cursor);
   const start = startOfDay(subDays(end, limit));
 
   const stats = await ctx.db.stat.findMany({
@@ -88,10 +90,14 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     ],
   });
 
-  const dataLength = differenceInDays(end, start) + 1;
+  const dataLength = differenceInDays(end, start);
+
+  console.log({ dataLength });
 
   const ret: StatList = {
-    nextCursor: endOfDay(subDays(end, 1)),
+    start,
+    end,
+    nextCursor: endOfDay(subDays(end, limit)),
     results: Array.from(new Array(dataLength)).map((_, idx) => {
       return {
         date: subDays(end, idx),
@@ -103,12 +109,9 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   stats.forEach((stat) => {
     const userId = stat.userId;
     const trackName = stat.track.name;
-    const offset = Math.abs(differenceInDays(stat.date, end));
+    const offset = Math.abs(differenceInDays(endOfDay(stat.date), end));
     if (offset < 0 || offset >= ret.results.length) {
       throw new Error(`Bounds check ${offset}`);
-    }
-    if (ret.results[offset] === undefined) {
-      throw new Error("Out of bounds");
     }
     ret.results[offset].data[userId] = ret.results[offset].data[userId] ?? {};
     ret.results[offset].data[userId][trackName] = stat.value;

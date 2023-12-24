@@ -24,6 +24,7 @@ import { SessionContextValue } from "next-auth/src/react";
 import { NumberInput } from "@buds/app/_components/NumberInput";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useInView } from "react-intersection-observer";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -349,6 +350,7 @@ export const TracksPage = ({ params }: { params: Params }) => {
       <AppShell>
         <TrackListWrapper params={params} />
       </AppShell>
+      <ReactQueryDevtools initialIsOpen={false} />
     </SessionProvider>
   );
 };
@@ -425,6 +427,7 @@ function TrackList({
     data: stats,
     fetchNextPage,
     hasNextPage,
+    refetch,
   } = api.stat.listStats.useInfiniteQuery(
     {
       followingIds: (following ?? []).map((f) => f.id),
@@ -443,8 +446,17 @@ function TrackList({
   });
 
   const upsertStat = api.stat.upsertStat.useMutation({
-    onSuccess: async () => {
-      await utils.stat.listStats.invalidate();
+    onSuccess: async (data) => {
+      await refetch({
+        refetchPage: (page: StatList) => {
+          const shouldRefetch =
+            page.start <= data.date && data.date <= page.end;
+          if (shouldRefetch) {
+            console.log("Will refetch page", data.date, page);
+          }
+          return shouldRefetch;
+        },
+      });
     },
   });
 
