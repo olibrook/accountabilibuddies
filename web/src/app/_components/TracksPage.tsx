@@ -3,7 +3,14 @@
 import { api } from "@buds/trpc/react";
 import { endOfDay, format, isSaturday, isSunday } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import React, { ReactNode, useContext, useMemo, useState } from "react";
+import React, {
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import AppShell, {
   Measurement,
   UserSettings,
@@ -16,6 +23,7 @@ import { DefaultSession } from "next-auth";
 import { SessionContextValue } from "next-auth/src/react";
 import { NumberInput } from "@buds/app/_components/NumberInput";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { useInView } from "react-intersection-observer";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -370,7 +378,8 @@ type AuthdSession = Extract<
   }
 >;
 
-type FlatStats = StatList["results"][0][];
+type FlatStat = StatList["results"][0];
+type FlatStats = FlatStat[];
 
 interface CustomSession extends DefaultSession {
   user: {
@@ -470,6 +479,8 @@ function TrackList({
     return groupEmUp(sortKeys);
   }, [following, groupBy]);
 
+  const scrollableRef = useRef(null);
+
   if (!trackName && !userId) {
     router.replace("/users/me");
   }
@@ -513,6 +524,7 @@ function TrackList({
         </div>
         <div
           id="scrollableDiv"
+          ref={scrollableRef}
           className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50"
         >
           <InfiniteScroll
@@ -521,6 +533,7 @@ function TrackList({
             dataLength={flatStats.length}
             scrollableTarget="scrollableDiv"
             style={{ overflow: "none" }}
+            loader={<div />}
           >
             <table className="min-w-full">
               <thead className="sticky top-0 bg-gray-50">
@@ -541,56 +554,22 @@ function TrackList({
                 </tr>
               </thead>
               <tbody>
-                {flatStats.map((stat, dateOffset) => {
-                  const date = stat.date;
-                  const isWeekend = isSaturday(date) || isSunday(date);
-                  return (
-                    <tr
-                      key={`${dateOffset}`}
-                      className={isWeekend ? "bg-gray-100" : ""}
-                    >
-                      <td className="w-[70px] text-right text-sm">
-                        <div>{formatDate(date)}</div>
-                      </td>
-                      {selectedKeyGroup.childKeys.map((keyGroup) => {
-                        const sk = keyGroup.sortKey;
-                        const value = accessor(
-                          flatStats,
-                          sk.user.id,
-                          sk.track.name,
-                          dateOffset,
-                        );
-                        const previousValue = accessor(
-                          flatStats,
-                          sk.user.id,
-                          sk.track.name,
-                          dateOffset + 1,
-                        );
-                        return (
-                          <td
-                            key={`${sk.user.id}-${sk.track.name}`}
-                            className={`h-[45px] min-w-[50px] text-center`}
-                          >
-                            <InteractiveCell
-                              date={date}
-                              keyGroup={keyGroup}
-                              session={session}
-                              setEditing={setEditing}
-                              previousValue={previousValue}
-                              value={value}
-                              upsertStat={upsertStat}
-                            >
-                              <CellValue
-                                trackName={sk.track.name}
-                                value={value}
-                              />
-                            </InteractiveCell>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
+                {flatStats.map(
+                  (stat, dateOffset) =>
+                    scrollableRef.current && (
+                      <TableRow
+                        key={dateOffset}
+                        stat={stat}
+                        flatStats={flatStats}
+                        dateOffset={dateOffset}
+                        selectedKeyGroup={selectedKeyGroup}
+                        setEditing={setEditing}
+                        upsertStat={upsertStat}
+                        session={session}
+                        scrollableEl={scrollableRef.current}
+                      />
+                    ),
+                )}
               </tbody>
             </table>
           </InfiniteScroll>
@@ -614,6 +593,83 @@ function TrackList({
     </main>
   );
 }
+
+const TableRow = ({
+  stat,
+  flatStats,
+  dateOffset,
+  selectedKeyGroup,
+  setEditing,
+  upsertStat,
+  session,
+  scrollableEl,
+}: {
+  stat: FlatStat;
+  flatStats: FlatStat[];
+  dateOffset: number;
+  selectedKeyGroup: KeyGroup | undefined;
+  setEditing: (e: Editing | undefined) => void;
+  upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
+  session: CustomSession;
+  scrollableEl: HTMLElement;
+}) => {
+  const date = stat.date;
+  const isWeekend = isSaturday(date) || isSunday(date);
+  const { ref, inView } = useInView({
+    // -48px needs to match height of header row of the table. Yuk!
+    rootMargin: "-48px 0px 0px 0px",
+    root: scrollableEl,
+  });
+
+  useEffect(() => {
+    console.log(`${formatDate(date)} ${inView}`);
+  }, [inView]);
+
+  return (
+    <tr
+      ref={ref}
+      key={`${dateOffset}`}
+      className={isWeekend ? "bg-gray-100" : ""}
+    >
+      <td className="w-[70px] text-right text-sm">
+        <div>{formatDate(date)}</div>
+      </td>
+      {selectedKeyGroup?.childKeys.map((keyGroup) => {
+        const sk = keyGroup.sortKey;
+        const value = accessor(
+          flatStats,
+          sk.user.id,
+          sk.track.name,
+          dateOffset,
+        );
+        const previousValue = accessor(
+          flatStats,
+          sk.user.id,
+          sk.track.name,
+          dateOffset + 1,
+        );
+        return (
+          <td
+            key={`${sk.user.id}-${sk.track.name}`}
+            className={`h-[45px] min-w-[50px] text-center`}
+          >
+            <InteractiveCell
+              date={date}
+              keyGroup={keyGroup}
+              session={session}
+              setEditing={setEditing}
+              previousValue={previousValue}
+              value={value}
+              upsertStat={upsertStat}
+            >
+              <CellValue trackName={sk.track.name} value={value} />
+            </InteractiveCell>
+          </td>
+        );
+      })}
+    </tr>
+  );
+};
 
 const getUnit = (userSettings: UserSettings, trackName: string) => {
   if (trackName === "weight") {
