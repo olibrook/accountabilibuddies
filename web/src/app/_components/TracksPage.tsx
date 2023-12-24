@@ -345,12 +345,12 @@ export const TracksPage = ({ params }: { params: Params }) => {
 };
 
 const accessor = (
-  sl: StatList,
+  flatStats: FlatStats,
   userId: string,
   trackName: string,
   offset: number,
 ): number | undefined => {
-  return sl?.results[offset]?.data?.[userId]?.[trackName] ?? undefined;
+  return flatStats[offset]?.data?.[userId]?.[trackName] ?? undefined;
 };
 
 const hrefForKeyGroup = (kg: KeyGroup) => {
@@ -368,6 +368,8 @@ type AuthdSession = Extract<
     status: "authenticated";
   }
 >;
+
+type FlatStats = StatList["results"][0][];
 
 interface CustomSession extends DefaultSession {
   user: {
@@ -409,14 +411,22 @@ function TrackList({
 
   const { data: following } = api.user.listFollowing.useQuery();
 
-  const { data: stats } = api.stat.listStats.useQuery(
+  const { data: stats } = api.stat.listStats.useInfiniteQuery(
     {
       followingIds: (following ?? []).map((f) => f.id),
-      cursor: endOfDay(new Date()),
       limit: 30,
     },
-    { enabled: !!following },
+    {
+      enabled: !!following,
+      initialCursor: endOfDay(new Date()),
+      getNextPageParam: (prevPage) => prevPage.nextCursor,
+    },
   );
+
+  const flatStats: FlatStats = [];
+  (stats?.pages ?? []).forEach((page: StatList) => {
+    page.results.forEach((r) => flatStats.push(r));
+  });
 
   const upsertStat = api.stat.upsertStat.useMutation({
     onSuccess: async () => {
@@ -516,7 +526,7 @@ function TrackList({
               </tr>
             </thead>
             <tbody>
-              {stats.results.map((stat, dateOffset) => {
+              {flatStats.map((stat, dateOffset) => {
                 const date = stat.date;
                 const isWeekend = isSaturday(date) || isSunday(date);
                 return (
@@ -530,13 +540,13 @@ function TrackList({
                     {selectedKeyGroup.childKeys.map((keyGroup) => {
                       const sk = keyGroup.sortKey;
                       const value = accessor(
-                        stats,
+                        flatStats,
                         sk.user.id,
                         sk.track.name,
                         dateOffset,
                       );
                       const previousValue = accessor(
-                        stats,
+                        flatStats,
                         sk.user.id,
                         sk.track.name,
                         dateOffset + 1,
