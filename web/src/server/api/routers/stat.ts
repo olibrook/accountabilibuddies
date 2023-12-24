@@ -5,14 +5,14 @@ import {
   protectedProcedure,
 } from "@buds/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { differenceInDays, subDays } from "date-fns";
+import { differenceInDays, startOfDay, subDays } from "date-fns";
 import { StatType } from "@prisma/client";
 import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
 
 const ListStatsInput = z.object({
   followingIds: z.array(z.string().uuid()),
-  start: z.date(),
-  end: z.date(),
+  cursor: z.date(),
+  limit: z.number().int().positive(),
 });
 
 const ListGoalsInput = z.object({
@@ -29,8 +29,8 @@ const UpsertInput = z.object({
 
 type listInput = {
   followingIds: string[];
-  start: Date;
-  end: Date;
+  cursor: Date;
+  limit: number;
   type: StatType;
 };
 
@@ -48,7 +48,7 @@ type StatList = {
 };
 
 const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
-  const { start, end, followingIds, type } = input;
+  const { cursor, limit, followingIds, type } = input;
   const followerId = ctx?.session?.user.id;
   if (!followerId) {
     throw unauthorized();
@@ -58,6 +58,9 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     followerId,
     followingIds,
   });
+
+  const end = cursor;
+  const start = startOfDay(subDays(end, limit));
 
   const stats = await ctx.db.stat.findMany({
     where: {

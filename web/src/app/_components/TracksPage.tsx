@@ -7,7 +7,6 @@ import {
   format,
   isSaturday,
   isSunday,
-  startOfDay,
   subDays,
 } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
@@ -420,8 +419,8 @@ function TrackList({
   const { data: stats } = api.stat.listStats.useQuery(
     {
       followingIds: (following ?? []).map((f) => f.id),
-      start: startOfDay(subDays(new Date(), 30)),
-      end: endOfDay(new Date()),
+      cursor: endOfDay(new Date()),
+      limit: 30,
     },
     { enabled: !!following },
   );
