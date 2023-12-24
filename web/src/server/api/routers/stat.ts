@@ -5,7 +5,7 @@ import {
   protectedProcedure,
 } from "@buds/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { differenceInDays, startOfDay, subDays } from "date-fns";
+import { differenceInDays, endOfDay, startOfDay, subDays } from "date-fns";
 import { StatType } from "@prisma/client";
 import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
 
@@ -17,8 +17,8 @@ const ListStatsInput = z.object({
 
 const ListGoalsInput = z.object({
   followingIds: z.array(z.string().uuid()),
-  start: z.date(),
-  end: z.date(),
+  cursor: z.date(),
+  limit: z.number().int().positive(),
 });
 
 const UpsertInput = z.object({
@@ -35,8 +35,7 @@ type listInput = {
 };
 
 type StatList = {
-  start: Date;
-  end: Date;
+  nextCursor: Date;
   results: Array<{
     date: Date;
     data: {
@@ -92,8 +91,7 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   const dataLength = differenceInDays(end, start) + 1;
 
   const ret: StatList = {
-    start,
-    end,
+    nextCursor: endOfDay(subDays(end, 1)),
     results: Array.from(new Array(dataLength)).map((_, idx) => {
       return {
         date: subDays(end, idx),
@@ -110,8 +108,7 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
       throw new Error(`Bounds check ${offset}`);
     }
     if (ret.results[offset] === undefined) {
-      console.log(JSON.stringify(ret, null, 4));
-      throw new Error("Outtahere");
+      throw new Error("Out of bounds");
     }
     ret.results[offset].data[userId] = ret.results[offset].data[userId] ?? {};
     ret.results[offset].data[userId][trackName] = stat.value;

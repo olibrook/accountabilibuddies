@@ -1,14 +1,7 @@
 "use client";
 
 import { api } from "@buds/trpc/react";
-import {
-  differenceInDays,
-  endOfDay,
-  format,
-  isSaturday,
-  isSunday,
-  subDays,
-} from "date-fns";
+import { endOfDay, format, isSaturday, isSunday } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import React, { ReactNode, useContext, useMemo, useState } from "react";
 import AppShell, {
@@ -470,9 +463,6 @@ function TrackList({
     return <div>Loading</div>;
   }
 
-  const numRows = differenceInDays(stats.end, stats.start) - 1;
-  const rowsMap = Array.from(new Array(numRows));
-
   let selectedKeyGroup: KeyGroup | undefined;
 
   switch (groupBy) {
@@ -526,8 +516,8 @@ function TrackList({
               </tr>
             </thead>
             <tbody>
-              {rowsMap.map((_, dateOffset) => {
-                const date = subDays(stats.end, dateOffset);
+              {stats.results.map((stat, dateOffset) => {
+                const date = stat.date;
                 const isWeekend = isSaturday(date) || isSunday(date);
                 return (
                   <tr
