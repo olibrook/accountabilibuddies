@@ -5,7 +5,7 @@ import {
   protectedProcedure,
 } from "@buds/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { differenceInDays, endOfDay, startOfDay, subDays } from "date-fns";
+import { differenceInDays, startOfDay, subDays } from "date-fns";
 import { StatType } from "@prisma/client";
 import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
 
@@ -61,16 +61,20 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   });
 
   const end = startOfDay(cursor);
-  const start = startOfDay(subDays(end, limit));
+  const start = startOfDay(subDays(end, Math.max(0, limit - 1)));
 
   const stats = await ctx.db.stat.findMany({
     where: {
-      userId: { in: followingIds },
-      type,
-      date: {
-        gte: start,
-        lte: end,
-      },
+      AND: [
+        { userId: { in: followingIds } },
+        { type },
+        {
+          date: {
+            gt: start.toISOString(),
+            lte: end.toISOString(),
+          },
+        },
+      ],
     },
     select: {
       userId: true,
@@ -90,15 +94,11 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     ],
   });
 
-  const dataLength = differenceInDays(end, start);
-
-  console.log({ dataLength });
-
   const ret: StatList = {
     start,
     end,
-    nextCursor: endOfDay(subDays(end, limit)),
-    results: Array.from(new Array(dataLength)).map((_, idx) => {
+    nextCursor: startOfDay(subDays(end, limit)),
+    results: Array.from(new Array(limit)).map((_, idx) => {
       return {
         date: subDays(end, idx),
         data: {},
@@ -109,9 +109,22 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   stats.forEach((stat) => {
     const userId = stat.userId;
     const trackName = stat.track.name;
-    const offset = Math.abs(differenceInDays(endOfDay(stat.date), end));
+    const offset = Math.abs(differenceInDays(startOfDay(stat.date), end));
     if (offset < 0 || offset >= ret.results.length) {
-      throw new Error(`Bounds check ${offset}`);
+      console.error(JSON.stringify(stat, null, 2));
+      console.error(
+        JSON.stringify(
+          {
+            offset,
+            start: start.toISOString(),
+            end: end.toISOString(),
+            date: stat.date.toISOString(),
+          },
+          null,
+          2,
+        ),
+      );
+      throw new Error(`Bounds check`);
     }
     ret.results[offset].data[userId] = ret.results[offset].data[userId] ?? {};
     ret.results[offset].data[userId][trackName] = stat.value;

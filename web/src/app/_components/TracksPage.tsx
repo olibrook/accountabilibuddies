@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@buds/trpc/react";
-import { endOfDay, format, isSaturday, isSunday } from "date-fns";
+import { format, isSaturday, isSunday, startOfDay } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import React, {
   ReactNode,
@@ -24,7 +24,6 @@ import { SessionContextValue } from "next-auth/src/react";
 import { NumberInput } from "@buds/app/_components/NumberInput";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useInView } from "react-intersection-observer";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -120,6 +119,17 @@ const trackConfigs: Record<TrackName, TrackConfig> = {
 const formatDate = (date: Date) => format(date, "E d");
 const formatFullDate = (date: Date) => format(date, "PPP");
 
+const naiveDate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, "0");
+  const d = date.getDate().toString().padStart(2, "0");
+  const ds = `${y}-${m}-${d}T00:00:00Z`;
+  const date2 = new Date(ds);
+  console.log(ds);
+  console.log(date2);
+  return date2;
+};
+
 const convertWeight = (val: number, from: Measurement, to: Measurement) => {
   let multiplier = 1;
   if (from == "metric" && to === "imperial") {
@@ -157,7 +167,11 @@ const InteractiveCell = ({
     if (trackConfig.type === "number") {
       setEditing({ date, keyGroup, value, previousValue });
     } else {
-      await upsertStat.mutateAsync({ date, value: !value ? 1 : 0, trackId });
+      await upsertStat.mutateAsync({
+        date: naiveDate(date),
+        value: !value ? 1 : 0,
+        trackId,
+      });
     }
   };
   const isMe = keyGroup.sortKey.user.id === session.user.id;
@@ -350,7 +364,6 @@ export const TracksPage = ({ params }: { params: Params }) => {
       <AppShell>
         <TrackListWrapper params={params} />
       </AppShell>
-      <ReactQueryDevtools initialIsOpen={false} />
     </SessionProvider>
   );
 };
@@ -417,7 +430,6 @@ function TrackList({
   session: CustomSession;
 }) {
   const router = useRouter();
-  const utils = api.useUtils();
 
   const [editing, setEditing] = useState<Editing | undefined>();
 
@@ -435,7 +447,7 @@ function TrackList({
     },
     {
       enabled: !!following,
-      initialCursor: endOfDay(new Date()),
+      initialCursor: startOfDay(new Date()),
       getNextPageParam: (prevPage) => prevPage.nextCursor,
     },
   );
@@ -566,22 +578,19 @@ function TrackList({
                 </tr>
               </thead>
               <tbody>
-                {flatStats.map(
-                  (stat, dateOffset) =>
-                    scrollableRef.current && (
-                      <TableRow
-                        key={dateOffset}
-                        stat={stat}
-                        flatStats={flatStats}
-                        dateOffset={dateOffset}
-                        selectedKeyGroup={selectedKeyGroup}
-                        setEditing={setEditing}
-                        upsertStat={upsertStat}
-                        session={session}
-                        scrollableEl={scrollableRef.current}
-                      />
-                    ),
-                )}
+                {flatStats.map((stat, dateOffset) => (
+                  <TableRow
+                    key={dateOffset}
+                    stat={stat}
+                    flatStats={flatStats}
+                    dateOffset={dateOffset}
+                    selectedKeyGroup={selectedKeyGroup}
+                    setEditing={setEditing}
+                    upsertStat={upsertStat}
+                    session={session}
+                    scrollableEl={scrollableRef.current}
+                  />
+                ))}
               </tbody>
             </table>
           </InfiniteScroll>
@@ -623,7 +632,7 @@ const TableRow = ({
   setEditing: (e: Editing | undefined) => void;
   upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
   session: CustomSession;
-  scrollableEl: HTMLElement;
+  scrollableEl: HTMLElement | null;
 }) => {
   const date = stat.date;
   const isWeekend = isSaturday(date) || isSunday(date);
@@ -745,7 +754,11 @@ const EntryPopup = ({
           className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           onClick={async () => {
             if (value) {
-              await upsertStat.mutateAsync({ date, trackId, value });
+              await upsertStat.mutateAsync({
+                date: naiveDate(date),
+                trackId,
+                value,
+              });
             }
             setEditing(undefined);
           }}

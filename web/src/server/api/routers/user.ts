@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
 import { unauthorized } from "@buds/server/api/common";
-import { subDays } from "date-fns";
+import { startOfDay, subDays } from "date-fns";
 import { Stat } from "@prisma/client";
 import { v4 as uuid4 } from "uuid";
 
@@ -89,8 +89,8 @@ export const userRouter = createTRPCRouter({
             default:
               throw new Error();
           }
-          const now = new Date();
-          const start = subDays(now, 2);
+          const now = startOfDay(new Date());
+          const start = startOfDay(now);
 
           stats.push({
             id: uuid4(),
@@ -98,7 +98,7 @@ export const userRouter = createTRPCRouter({
             userId: user.id,
             trackId: track.id,
             value,
-            date: subDays(start, i),
+            date: startOfDay(subDays(start, i)),
             createdAt: start,
             updatedAt: start,
           });
