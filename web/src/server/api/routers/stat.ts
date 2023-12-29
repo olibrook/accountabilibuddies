@@ -126,8 +126,8 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
       );
       throw new Error(`Bounds check`);
     }
-    ret.results[offset].data[userId] = ret.results[offset].data[userId] ?? {};
-    ret.results[offset].data[userId][trackName] = stat.value;
+    ret.results[offset]!.data[userId] = ret.results[offset]!.data[userId] ?? {};
+    ret.results[offset]!.data[userId]![trackName] = stat.value;
   });
 
   return ret;
