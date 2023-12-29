@@ -20,7 +20,6 @@ import Link from "next/link";
 import { SessionProvider, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DefaultSession } from "next-auth";
-import { SessionContextValue } from "next-auth/src/react";
 import { NumberInput } from "@buds/app/_components/NumberInput";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useInView } from "react-intersection-observer";
@@ -385,13 +384,6 @@ const hrefForKeyGroup = (kg: KeyGroup) => {
       return `/users/${kg.sortKey.user.id}`;
   }
 };
-
-type AuthdSession = Extract<
-  SessionContextValue<true>,
-  {
-    status: "authenticated";
-  }
->;
 
 type FlatStat = StatList["results"][0];
 type FlatStats = FlatStat[];
