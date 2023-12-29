@@ -15,6 +15,5 @@ services:
     ports:
       - 3000:3000
     environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=postgres
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/buds
+      - TEST_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test

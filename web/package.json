@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "npm run db:generate && next build",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:ensure-test-db": "source .env && bash -c \": '${TEST_DATABASE_URL:?not set}'\" && DATABASE_URL=$TEST_DATABASE_URL prisma migrate reset --force",
+    "db:generate": "prisma generate",
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
