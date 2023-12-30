@@ -10,11 +10,20 @@
 
 ## MVP
 
+### TODO
+
+- Setup Postgres, get used to doing migrations.
+  - Part done: Created an instance
 - Missing CRUD for stats.
 - Missing ability to add/remove followers in-app.
 - Replace Github with Google Login.
 - Persist user prefs (imperial, etc.)
-- Deploy
+
+### DONE
+
+- Finish Porkbun and Google Domain setup (https://console.cloud.google.com/run/domains?hl=en&project=accountabilibuddies-409618)
+  - Part done: Waiting for Google to detect the DNS settings on Porkbun.
+
 
 
 

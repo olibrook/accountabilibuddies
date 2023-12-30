@@ -1,13 +1,9 @@
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import {
-  getServerSession,
-  type DefaultSession,
-  type NextAuthOptions,
-} from "next-auth";
-import GithubProider from "next-auth/providers/github";
+import {PrismaAdapter} from "@next-auth/prisma-adapter";
+import {type DefaultSession, getServerSession, type NextAuthOptions,} from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 
-import { env } from "@buds/env.mjs";
-import { db } from "@buds/server/db";
+import {env} from "@buds/env.mjs";
+import {db} from "@buds/server/db";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -47,9 +43,9 @@ export const authOptions: NextAuthOptions = {
   },
   adapter: PrismaAdapter(db),
   providers: [
-    GithubProider({
-      clientId: env.GITHUB_CLIENT_ID,
-      clientSecret: env.GITHUB_CLIENT_SECRET,
+    GoogleProvider({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
     /**
      * ...add more providers here.
