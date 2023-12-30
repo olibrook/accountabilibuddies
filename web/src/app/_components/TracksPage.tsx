@@ -23,6 +23,8 @@ import { DefaultSession } from "next-auth";
 import { NumberInput } from "@buds/app/_components/NumberInput";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useInView } from "react-intersection-observer";
+import { User } from "react-feather";
+import MobileFooter from "@buds/app/_components/MobileFooter";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -523,81 +525,76 @@ function TrackList({
   }
 
   return (
-    <main className={`h-screen px-4 pb-16 pt-14 font-light text-gray-600`}>
-      <div className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#7371b5] shadow-xl drop-shadow-xl">
-        {editing ? (
-          <EntryPopup
-            editing={editing}
-            setEditing={setEditing}
-            upsertStat={upsertStat}
-          />
-        ) : null}
-        <div className="flex flex-1 items-center justify-end p-4 font-normal text-white">
-          {keyGroups.map((kg) => (
-            <span key={kg.sortKey.key} className="ml-4">
-              <KeyGroupIcon keyGroup={kg} size="lg" />
-            </span>
-          ))}
-        </div>
-        <div
-          id="scrollableDiv"
-          ref={scrollableRef}
-          className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50"
-        >
-          <InfiniteScroll
-            next={fetchNextPage}
-            hasMore={!!hasNextPage}
-            dataLength={flatStats.length}
-            scrollableTarget="scrollableDiv"
-            style={{ overflow: "none" }}
-            loader={<div />}
+    <>
+      <main className={`h-screen px-4 pb-16 pt-14 font-light text-gray-600`}>
+        <div className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#7371b5] shadow-xl drop-shadow-xl">
+          {editing ? (
+            <EntryPopup
+              editing={editing}
+              setEditing={setEditing}
+              upsertStat={upsertStat}
+            />
+          ) : null}
+          <div className="flex flex-1 items-center justify-end p-4 font-normal text-white">
+            {keyGroups.map((kg) => (
+              <span key={kg.sortKey.key} className="ml-4">
+                <KeyGroupIcon keyGroup={kg} size="lg" />
+              </span>
+            ))}
+          </div>
+          <div
+            id="scrollableDiv"
+            ref={scrollableRef}
+            className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50"
           >
-            <table className="min-w-full">
-              <thead className="sticky top-0 bg-gray-50">
-                <tr className="font-normal">
-                  <th className="py-2 text-right">
-                    <div className="w-[70px]">Nov 23</div>
-                  </th>
-                  {selectedKeyGroup.childKeys.map((kg) => (
-                    <th
-                      className="py-2"
-                      key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
-                    >
-                      <div className="flex items-center justify-center">
-                        <KeyGroupIcon keyGroup={kg} size="md" />
-                      </div>
+            <InfiniteScroll
+              next={fetchNextPage}
+              hasMore={!!hasNextPage}
+              dataLength={flatStats.length}
+              scrollableTarget="scrollableDiv"
+              style={{ overflow: "none" }}
+              loader={<div />}
+            >
+              <table className="min-w-full">
+                <thead className="sticky top-0 bg-gray-50">
+                  <tr className="font-normal">
+                    <th className="py-2 text-right">
+                      <div className="w-[70px]">Nov 23</div>
                     </th>
+                    {selectedKeyGroup.childKeys.map((kg) => (
+                      <th
+                        className="py-2"
+                        key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
+                      >
+                        <div className="flex items-center justify-center">
+                          <KeyGroupIcon keyGroup={kg} size="md" />
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {flatStats.map((stat, dateOffset) => (
+                    <TableRow
+                      key={dateOffset}
+                      stat={stat}
+                      flatStats={flatStats}
+                      dateOffset={dateOffset}
+                      selectedKeyGroup={selectedKeyGroup}
+                      setEditing={setEditing}
+                      upsertStat={upsertStat}
+                      session={session}
+                      scrollableEl={scrollableRef.current}
+                    />
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {flatStats.map((stat, dateOffset) => (
-                  <TableRow
-                    key={dateOffset}
-                    stat={stat}
-                    flatStats={flatStats}
-                    dateOffset={dateOffset}
-                    selectedKeyGroup={selectedKeyGroup}
-                    setEditing={setEditing}
-                    upsertStat={upsertStat}
-                    session={session}
-                    scrollableEl={scrollableRef.current}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </InfiniteScroll>
+                </tbody>
+              </table>
+            </InfiniteScroll>
+          </div>
         </div>
-      </div>
-
-      <nav className="fixed bottom-0 left-0 z-10 w-full bg-gray-600 bg-opacity-30 p-2 text-xs">
-        <div className="flex h-10 w-full overflow-scroll">
-          {/*
-            TODO: Footer navigation needs to go here.
-          */}
-        </div>
-      </nav>
-    </main>
+      </main>
+      <MobileFooter />
+    </>
   );
 }
 
