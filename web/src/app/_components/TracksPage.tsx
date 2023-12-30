@@ -533,10 +533,11 @@ function TrackList({
           />
         ) : null}
         <div className="flex flex-1 items-center justify-end p-4 font-normal text-white">
-          <KeyGroupName keyGroup={selectedKeyGroup} />
-          <span className="ml-4">
-            <KeyGroupIcon keyGroup={selectedKeyGroup} size="lg" />
-          </span>
+          {keyGroups.map((kg) => (
+            <span key={kg.sortKey.key} className="ml-4">
+              <KeyGroupIcon keyGroup={kg} size="lg" />
+            </span>
+          ))}
         </div>
         <div
           id="scrollableDiv"
@@ -590,17 +591,10 @@ function TrackList({
       </div>
 
       <nav className="fixed bottom-0 left-0 z-10 w-full bg-gray-600 bg-opacity-30 p-2 text-xs">
-        <div className="flex w-full overflow-scroll">
-          {keyGroups.map((kg) => {
-            return (
-              <div
-                key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
-                className="mx-1"
-              >
-                <KeyGroupIcon keyGroup={kg} size="lg" />
-              </div>
-            );
-          })}
+        <div className="flex h-10 w-full overflow-scroll">
+          {/*
+            TODO: Footer navigation needs to go here.
+          */}
         </div>
       </nav>
     </main>
