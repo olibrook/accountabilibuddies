@@ -363,8 +363,8 @@ export const KeyGroupName = ({ keyGroup }: { keyGroup: KeyGroup }) => {
 };
 
 type Params = {
-  trackName?: string;
-  userId?: string;
+  resource?: string;
+  id?: string;
 };
 
 export const TracksPage = ({ params }: { params: Params }) => {
@@ -406,12 +406,13 @@ interface CustomSession extends DefaultSession {
 
 function TrackListWrapper({ params }: { params: Params }) {
   const session = useSession();
+  const { resource, id } = params;
 
-  if (session.data) {
+  if (session.data && (resource === "tracks" || resource === "users")) {
     // TODO: This is horrendous – how do we get the type properly on
     //  the client through next-auth?
     const custom = session.data as unknown as CustomSession;
-    return <TrackList session={custom} params={params} />;
+    return <TrackList session={custom} resource={resource} id={id} />;
   } else {
     return null;
   }
@@ -425,10 +426,12 @@ type Editing = {
 };
 
 function TrackList({
-  params: { trackName, userId: userIdFromParams },
+  resource,
+  id,
   session,
 }: {
-  params: Params;
+  resource: "users" | "tracks";
+  id?: string;
   session: CustomSession;
 }) {
   const router = useRouter();
@@ -475,9 +478,7 @@ function TrackList({
     },
   });
 
-  const userId = userIdFromParams === "me" ? session.user.id : userIdFromParams;
-
-  const groupBy: GroupBy = !!userId ? "user" : "track";
+  const groupBy: GroupBy = resource === "users" ? "user" : "track";
 
   const keyGroups = useMemo(() => {
     const sortKeys: SortKeyList[] = [];
@@ -508,8 +509,12 @@ function TrackList({
 
   const scrollableRef = useRef<HTMLDivElement | null>(null);
 
-  if (!trackName && !userId) {
-    router.replace("/users/me");
+  if (!id) {
+    if (resource === "tracks") {
+      router.replace("/tracks");
+    } else {
+      router.replace("/users/me");
+    }
   }
 
   if (!(following && stats)) {
@@ -520,9 +525,11 @@ function TrackList({
 
   switch (groupBy) {
     case "user":
+      const userId = id === "me" ? session.user.id : id;
       selectedKeyGroup = keyGroups.find((kg) => kg.sortKey.user.id === userId);
       break;
     case "track":
+      const trackName = id ?? keyGroups[0]?.sortKey.track.name;
       selectedKeyGroup = keyGroups.find(
         (kg) => kg.sortKey.track.name === trackName,
       );

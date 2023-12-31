@@ -11,7 +11,7 @@ const MobileFooter = () => {
         </Link>
       </div>
       <div className="text-gray-500 hover:text-black">
-        <Link href="/tracks/first">
+        <Link href="/tracks">
           <Users size={20} />
         </Link>
       </div>
