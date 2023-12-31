@@ -138,10 +138,16 @@ type AppShellProps = {
 };
 
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
+  const hiPerf = true;
+  const bg = hiPerf
+    ? "bg-cover	bg-no-repeat bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]"
+    : "bg-[#FED5B6]";
   return (
     <UserSettingProvider>
-      <div className="flex flex-col font-normal">
-        <div className="flex-1 font-light">{children}</div>
+      <div className={`${bg} h-screen`}>
+        <div className="flex flex-col font-normal">
+          <div className="flex-1 font-light">{children}</div>
+        </div>
       </div>
       <MobileFooter />
     </UserSettingProvider>
