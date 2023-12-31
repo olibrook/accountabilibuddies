@@ -16,10 +16,14 @@ const MobileFooter = () => {
         </Link>
       </div>
       <div className="text-gray-500 hover:text-black">
-        <Search size={20} />
+        <Link href="/search">
+          <Search size={20} />
+        </Link>
       </div>
       <div className="text-gray-500 hover:text-black">
-        <Settings size={20} />
+        <Link href="/settings">
+          <Settings size={20} />
+        </Link>
       </div>
     </div>
   );

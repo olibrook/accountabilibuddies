@@ -560,7 +560,7 @@ function TrackList({
 
   return (
     <>
-      <main className={`h-screen px-4 pb-16 pt-14 font-light text-gray-600`}>
+      <main className={`h-screen px-4 pb-16 pt-4 font-light text-gray-600`}>
         <div className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#7371b5] shadow-xl drop-shadow-xl">
           {editing ? (
             <EntryPopup
