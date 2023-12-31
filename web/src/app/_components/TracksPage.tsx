@@ -278,7 +278,7 @@ export const Icon: React.FC<IconProps> = ({
   const sizeStyles =
     size === "md" ? "h-8 w-8" : "lg" ? "h-10 w-10" : "h-14 w-14";
   return (
-    <div className={`${sizeStyles} overflow-hidden rounded-full`}>
+    <div className={`${sizeStyles} overflow-hidden rounded-full border`}>
       {imageUrl ? (
         <img src={imageUrl} alt={alt} className="h-full w-full object-cover" />
       ) : (
@@ -392,7 +392,7 @@ const accessor = (
   return flatStats[offset]?.data?.[userId]?.[trackName] ?? undefined;
 };
 
-const hrefForKeyGroup = (kg: KeyGroup) => {
+export const hrefForKeyGroup = (kg: KeyGroup) => {
   switch (kg.sortKey.kind) {
     case "track":
       return `/tracks/${kg.sortKey.track.name}`;
