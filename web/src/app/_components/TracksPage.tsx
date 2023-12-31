@@ -3,14 +3,7 @@
 import { api } from "@buds/trpc/react";
 import { format, isSaturday, isSunday, startOfDay } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import React, {
-  ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { ReactNode, useContext, useMemo, useRef, useState } from "react";
 import AppShell, {
   Measurement,
   UserSettings,
@@ -22,10 +15,10 @@ import { useRouter } from "next/navigation";
 import { DefaultSession } from "next-auth";
 import { NumberInput } from "@buds/app/_components/NumberInput";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useInView } from "react-intersection-observer";
 import { User } from "react-feather";
 import MobileFooter from "@buds/app/_components/MobileFooter";
 import DropdownMenu from "@buds/app/_components/DropdownMenu";
+import { debounce } from "next/dist/server/utils";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -118,6 +111,7 @@ const trackConfigs: Record<TrackName, TrackConfig> = {
   },
 };
 
+const formatMonthYear = (date: Date) => format(date, "MMM ’yy");
 const formatDate = (date: Date) => format(date, "E d");
 const formatFullDate = (date: Date) => format(date, "PPP");
 
@@ -440,6 +434,7 @@ function TrackList({
   const router = useRouter();
 
   const [editing, setEditing] = useState<Editing | undefined>();
+  const [topmostIdx, setTopmostIdx] = useState<number>(0);
 
   const { data: following } = api.user.listFollowing.useQuery();
 
@@ -511,7 +506,7 @@ function TrackList({
     return groupEmUp(sortKeys);
   }, [following, groupBy]);
 
-  const scrollableRef = useRef(null);
+  const scrollableRef = useRef<HTMLDivElement | null>(null);
 
   if (!trackName && !userId) {
     router.replace("/users/me");
@@ -537,6 +532,25 @@ function TrackList({
   if (!selectedKeyGroup) {
     return null;
   }
+
+  const onScroll = debounce(() => {
+    console.log("onScroll");
+    const el = scrollableRef.current;
+    if (el) {
+      const { top, left } = el.getBoundingClientRect();
+      const testTop = top + 50;
+      const testleft = left + 5;
+      const topmost = el.ownerDocument.elementFromPoint(testleft, testTop);
+      const tr = topmost?.closest("tr");
+      const index = Array.prototype.indexOf.call(
+        tr?.parentElement?.children ?? [],
+        tr,
+      );
+      setTopmostIdx(index);
+    }
+  }, 500);
+
+  const topmostDate = flatStats?.[topmostIdx]?.date;
 
   return (
     <>
@@ -567,12 +581,15 @@ function TrackList({
               scrollableTarget="scrollableDiv"
               style={{ overflow: "none" }}
               loader={<div />}
+              onScroll={onScroll}
             >
               <table className="min-w-full">
                 <thead className="sticky top-0 bg-gray-50">
                   <tr className="font-normal">
                     <th className="py-2 text-right">
-                      <div className="w-[70px]">Nov 23</div>
+                      <div className="w-[70px]">
+                        {topmostDate && formatMonthYear(topmostDate)}
+                      </div>
                     </th>
                     {selectedKeyGroup.childKeys.map((kg) => (
                       <th
@@ -597,7 +614,6 @@ function TrackList({
                       setEditing={setEditing}
                       upsertStat={upsertStat}
                       session={session}
-                      scrollableEl={scrollableRef.current}
                     />
                   ))}
                 </tbody>
@@ -619,7 +635,6 @@ const TableRow = ({
   setEditing,
   upsertStat,
   session,
-  scrollableEl,
 }: {
   stat: FlatStat;
   flatStats: FlatStat[];
@@ -628,26 +643,12 @@ const TableRow = ({
   setEditing: (e: Editing | undefined) => void;
   upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
   session: CustomSession;
-  scrollableEl: HTMLElement | null;
 }) => {
   const date = stat.date;
   const isWeekend = isSaturday(date) || isSunday(date);
-  const { ref, inView } = useInView({
-    // -48px needs to match height of header row of the table. Yuk!
-    rootMargin: "-48px 0px 0px 0px",
-    root: scrollableEl,
-  });
-
-  useEffect(() => {
-    console.log(`${formatDate(date)} ${inView}`);
-  }, [inView]);
 
   return (
-    <tr
-      ref={ref}
-      key={`${dateOffset}`}
-      className={isWeekend ? "bg-gray-100" : ""}
-    >
+    <tr key={`${dateOffset}`} className={isWeekend ? "bg-gray-100" : ""}>
       <td className="w-[70px] text-right text-sm">
         <div>{formatDate(date)}</div>
       </td>
