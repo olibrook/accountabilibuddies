@@ -16,7 +16,6 @@ import { DefaultSession } from "next-auth";
 import { NumberInput } from "@buds/app/_components/NumberInput";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { User } from "react-feather";
-import MobileFooter from "@buds/app/_components/MobileFooter";
 import DropdownMenu from "@buds/app/_components/DropdownMenu";
 import { debounce } from "next/dist/server/utils";
 
@@ -629,7 +628,6 @@ function TrackList({
           </div>
         </div>
       </main>
-      <MobileFooter />
     </>
   );
 }

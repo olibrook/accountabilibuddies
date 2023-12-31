@@ -1,6 +1,7 @@
 // src/components/AppShell.tsx
 import React, { createContext, ReactNode, useContext, useState } from "react";
-import { Activity, Home, Menu, Users, X } from "react-feather";
+import { Activity, Home, Users, X } from "react-feather";
+import MobileFooter from "@buds/app/_components/MobileFooter";
 
 export const ToggleButton = ({
   value,
@@ -137,39 +138,12 @@ type AppShellProps = {
 };
 
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
-
   return (
     <UserSettingProvider>
       <div className="flex flex-col font-normal">
-        {/* Hamburger Menu */}
-        <div
-          className="fixed left-0 top-0 z-10 cursor-pointer p-4"
-          onClick={toggleMenu}
-        >
-          <Menu size={20} />
-        </div>
-
-        {/* Content */}
         <div className="flex-1 font-light">{children}</div>
-
-        {/* Hamburger Menu Slider */}
-        <div
-          className={`fixed left-0 top-0 h-full w-64 ${
-            isMenuOpen ? "translate-x-0" : "-translate-x-64"
-          } z-20 bg-gray-800 pb-4 pt-12 text-white transition-transform duration-300 ease-in-out`}
-        >
-          <LeftSlider closeMenu={closeMenu} />
-        </div>
       </div>
+      <MobileFooter />
     </UserSettingProvider>
   );
 };
