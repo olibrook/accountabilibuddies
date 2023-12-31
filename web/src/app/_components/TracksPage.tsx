@@ -25,6 +25,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useInView } from "react-intersection-observer";
 import { User } from "react-feather";
 import MobileFooter from "@buds/app/_components/MobileFooter";
+import DropdownMenu from "@buds/app/_components/DropdownMenu";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -226,7 +227,7 @@ type SortKey = {
 };
 
 type SortKeyList = [outerKey: SortKey, innerKey: SortKey];
-type KeyGroup = {
+export type KeyGroup = {
   sortKey: SortKey;
   childKeys: KeyGroup[];
 };
@@ -268,7 +269,12 @@ type IconProps = {
   alt: string;
 } & Sized;
 
-const Icon: React.FC<IconProps> = ({ imageUrl, alt, fallback, size }) => {
+export const Icon: React.FC<IconProps> = ({
+  imageUrl,
+  alt,
+  fallback,
+  size,
+}) => {
   const sizeStyles =
     size === "md" ? "h-8 w-8" : "lg" ? "h-10 w-10" : "h-14 w-14";
   return (
@@ -311,7 +317,7 @@ const UserAvatar = ({ user, size }: { user: User; size: "md" | "lg" }) => (
   <Avatar imageUrl={user.image} userName={user.name ?? "Anon"} size={size} />
 );
 
-const KeyGroupIcon = ({
+export const KeyGroupLink = ({
   keyGroup,
   size,
 }: {
@@ -319,31 +325,39 @@ const KeyGroupIcon = ({
   size: "md" | "lg";
 }) => {
   const href = hrefForKeyGroup(keyGroup);
+  return (
+    <Link href={href}>
+      <KeyGroupIcon keyGroup={keyGroup} size={size} />
+    </Link>
+  );
+};
+
+export const KeyGroupIcon = ({
+  keyGroup,
+  size,
+}: {
+  keyGroup: KeyGroup;
+  size: "md" | "lg";
+}) => {
   switch (keyGroup.sortKey.kind) {
     case "track":
       const track = keyGroup.sortKey.track;
       const trackConfig = trackConfigs[track.name as TrackName];
       return (
-        <Link href={href}>
-          <Icon
-            fallback={trackConfig.icon ?? "?"}
-            alt={trackConfig.name ?? "?"}
-            size={size}
-          />
-        </Link>
+        <Icon
+          fallback={trackConfig.icon ?? "?"}
+          alt={trackConfig.name ?? "?"}
+          size={size}
+        />
       );
 
     case "user":
       const user = keyGroup.sortKey.user;
-      return (
-        <Link href={href}>
-          <UserAvatar user={user} size={size} />
-        </Link>
-      );
+      return <UserAvatar user={user} size={size} />;
   }
 };
 
-const KeyGroupName = ({ keyGroup }: { keyGroup: KeyGroup }) => {
+export const KeyGroupName = ({ keyGroup }: { keyGroup: KeyGroup }) => {
   switch (keyGroup.sortKey.kind) {
     case "track":
       const trackConfig =
@@ -536,11 +550,10 @@ function TrackList({
             />
           ) : null}
           <div className="flex flex-1 items-center justify-end p-4 font-normal text-white">
-            {keyGroups.map((kg) => (
-              <span key={kg.sortKey.key} className="ml-4">
-                <KeyGroupIcon keyGroup={kg} size="lg" />
-              </span>
-            ))}
+            <DropdownMenu
+              selectedKeyGroup={selectedKeyGroup}
+              keyGroups={keyGroups}
+            />
           </div>
           <div
             id="scrollableDiv"
@@ -567,7 +580,7 @@ function TrackList({
                         key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
                       >
                         <div className="flex items-center justify-center">
-                          <KeyGroupIcon keyGroup={kg} size="md" />
+                          <KeyGroupLink keyGroup={kg} size="md" />
                         </div>
                       </th>
                     ))}
