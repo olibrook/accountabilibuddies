@@ -1,7 +1,7 @@
-// src/components/AppShell.tsx
 import React, { createContext, ReactNode, useContext, useState } from "react";
 import { Activity, Home, Users, X } from "react-feather";
 import MobileFooter from "@buds/app/_components/MobileFooter";
+import { SessionProvider } from "next-auth/react";
 
 export const ToggleButton = ({
   value,
@@ -143,14 +143,16 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     ? "bg-cover	bg-no-repeat bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]"
     : "bg-[#FED5B6]";
   return (
-    <UserSettingProvider>
-      <div className={`${bg} h-screen`}>
-        <div className="flex flex-col font-normal">
-          <div className="flex-1 font-light">{children}</div>
+    <SessionProvider>
+      <UserSettingProvider>
+        <div className={`${bg} h-screen`}>
+          <div className="flex flex-col font-normal">
+            <div className="flex-1 font-light">{children}</div>
+          </div>
         </div>
-      </div>
-      <MobileFooter />
-    </UserSettingProvider>
+        <MobileFooter />
+      </UserSettingProvider>
+    </SessionProvider>
   );
 };
 

@@ -10,7 +10,7 @@ import AppShell, {
   UserSettingsContext,
 } from "@buds/app/_components/AppShell";
 import Link from "next/link";
-import { SessionProvider, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DefaultSession } from "next-auth";
 import { NumberInput } from "@buds/app/_components/NumberInput";
@@ -368,11 +368,9 @@ type Params = {
 
 export const TracksPage = ({ params }: { params: Params }) => {
   return (
-    <SessionProvider>
-      <AppShell>
-        <TrackListWrapper params={params} />
-      </AppShell>
-    </SessionProvider>
+    <AppShell>
+      <TrackListWrapper params={params} />
+    </AppShell>
   );
 };
 

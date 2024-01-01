@@ -1,11 +1,19 @@
-import { getServerAuthSession } from "@buds/server/auth";
+"use client";
+import AppShell from "@buds/app/_components/AppShell";
 
-export default async function Home() {
-  const session = await getServerAuthSession();
-
+export default function Search() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      search
-    </main>
+    <AppShell>
+      <main className={`h-screen px-4 pb-16 pt-4 font-light text-gray-600`}>
+        <div className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#7371b5] shadow-xl drop-shadow-xl">
+          <div
+            id="scrollableDiv"
+            className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50"
+          >
+            TODO: Search for users
+          </div>
+        </div>
+      </main>
+    </AppShell>
   );
 }
