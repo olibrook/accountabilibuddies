@@ -18,6 +18,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { User } from "react-feather";
 import DropdownMenu from "@buds/app/_components/DropdownMenu";
 import { debounce } from "next/dist/server/utils";
+import { Pane } from "@buds/app/_components/Pane";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -538,7 +539,6 @@ function TrackList({
   }
 
   const onScroll = debounce(() => {
-    console.log("onScroll");
     const el = scrollableRef.current;
     if (el) {
       const { top, left } = el.getBoundingClientRect();
@@ -552,81 +552,83 @@ function TrackList({
       );
       setTopmostIdx(index);
     }
-  }, 500);
+  }, 200);
 
   const topmostDate = flatStats?.[topmostIdx]?.date;
 
   return (
-    <>
-      <main className={`h-screen px-4 pb-16 pt-4 font-light text-gray-600`}>
-        <div className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#7371b5] shadow-xl drop-shadow-xl">
-          {editing ? (
-            <EntryPopup
-              editing={editing}
-              setEditing={setEditing}
-              upsertStat={upsertStat}
-            />
-          ) : null}
-          <div className="flex flex-1 items-center justify-end p-4 font-normal text-white">
-            <DropdownMenu
-              selectedKeyGroup={selectedKeyGroup}
-              keyGroups={keyGroups}
-            />
-          </div>
-          <div
-            id="scrollableDiv"
-            ref={scrollableRef}
-            className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50"
+    <Pane
+      popupChildren={
+        editing ? (
+          <EntryPopup
+            editing={editing}
+            setEditing={setEditing}
+            upsertStat={upsertStat}
+          />
+        ) : null
+      }
+      headerChildren={
+        <div className="px-4">
+          <DropdownMenu
+            selectedKeyGroup={selectedKeyGroup}
+            keyGroups={keyGroups}
+          />
+        </div>
+      }
+      mainChildren={
+        <div
+          id="scrollableDiv"
+          className="h-full w-full overflow-scroll"
+          ref={scrollableRef}
+        >
+          <InfiniteScroll
+            next={fetchNextPage}
+            hasMore={!!hasNextPage}
+            dataLength={flatStats.length}
+            scrollableTarget="scrollableDiv"
+            style={{ overflow: "none" }}
+            loader={<div />}
+            onScroll={onScroll}
           >
-            <InfiniteScroll
-              next={fetchNextPage}
-              hasMore={!!hasNextPage}
-              dataLength={flatStats.length}
-              scrollableTarget="scrollableDiv"
-              style={{ overflow: "none" }}
-              loader={<div />}
-              onScroll={onScroll}
-            >
-              <table className="min-w-full">
-                <thead className="sticky top-0 bg-gray-50">
-                  <tr className="font-normal">
-                    <th className="py-2 text-right">
-                      <div className="w-[70px]">
-                        {topmostDate && formatMonthYear(topmostDate)}
+            <table className="min-w-full">
+              <thead className="sticky top-0 bg-gray-50">
+                <tr className="font-normal">
+                  <th className="py-2 text-right">
+                    <div className="w-[70px]">
+                      {topmostDate && formatMonthYear(topmostDate)}
+                    </div>
+                  </th>
+                  {selectedKeyGroup.childKeys.map((kg) => (
+                    <th
+                      className="py-2"
+                      key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
+                    >
+                      <div className="flex items-center justify-center">
+                        <KeyGroupLink keyGroup={kg} size="md" />
                       </div>
                     </th>
-                    {selectedKeyGroup.childKeys.map((kg) => (
-                      <th
-                        className="py-2"
-                        key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
-                      >
-                        <div className="flex items-center justify-center">
-                          <KeyGroupLink keyGroup={kg} size="md" />
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {flatStats.map((stat, dateOffset) => (
-                    <TableRow
-                      key={dateOffset}
-                      stat={stat}
-                      flatStats={flatStats}
-                      dateOffset={dateOffset}
-                      selectedKeyGroup={selectedKeyGroup}
-                      setEditing={setEditing}
-                      upsertStat={upsertStat}
-                      session={session}
-                    />
                   ))}
-                </tbody>
-              </table>
-            </InfiniteScroll>
-          </div>
+                </tr>
+              </thead>
+              <tbody>
+                {flatStats.map((stat, dateOffset) => (
+                  <TableRow
+                    key={dateOffset}
+                    stat={stat}
+                    flatStats={flatStats}
+                    dateOffset={dateOffset}
+                    selectedKeyGroup={selectedKeyGroup}
+                    setEditing={setEditing}
+                    upsertStat={upsertStat}
+                    session={session}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </InfiniteScroll>
         </div>
-      </main>
-    </>
+      }
+    />
   );
 }
 

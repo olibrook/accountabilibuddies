@@ -133,11 +133,11 @@ export const LeftSlider: React.FC<LeftSliderProps> = ({ closeMenu }) => {
   );
 };
 
-type AppShellProps = {
+type GradientBgProps = {
   children: React.ReactNode;
 };
 
-const AppShell: React.FC<AppShellProps> = ({ children }) => {
+export const BaseAppShell: React.FC<GradientBgProps> = ({ children }) => {
   const hiPerf = true;
   const bg = hiPerf
     ? "bg-cover	bg-no-repeat bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]"
@@ -145,14 +145,23 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
   return (
     <SessionProvider>
       <UserSettingProvider>
-        <div className={`${bg} h-screen`}>
-          <div className="flex flex-col font-normal">
-            <div className="flex-1 font-light">{children}</div>
-          </div>
-        </div>
-        <MobileFooter />
+        <div className={`${bg} h-screen`}>{children}</div>
       </UserSettingProvider>
     </SessionProvider>
+  );
+};
+
+type AppShellProps = {
+  children: React.ReactNode;
+};
+const AppShell: React.FC<AppShellProps> = ({ children }) => {
+  return (
+    <BaseAppShell>
+      <div className="flex flex-col font-normal">
+        <div className="flex-1 font-light">{children}</div>
+      </div>
+      <MobileFooter />
+    </BaseAppShell>
   );
 };
 
