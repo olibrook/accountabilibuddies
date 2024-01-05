@@ -1,16 +1,30 @@
 import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
-import { unauthorized } from "@buds/server/api/common";
+import { badRequest, unauthorized } from "@buds/server/api/common";
 import { startOfDay, subDays } from "date-fns";
 import { Stat } from "@prisma/client";
 import { v4 as uuid4 } from "uuid";
+import { z } from "zod";
 
-const select = {
+const publicFields = {
   id: true,
   name: true,
-  email: true,
   image: true,
   tracks: true,
+  username: true,
+  useMetric: true,
+  checkMark: true,
 };
+
+const privateFields = {
+  ...publicFields,
+  email: true,
+};
+
+const UpdateMeInput = z.object({
+  username: z.string().optional(),
+  useMetric: z.boolean().optional(),
+  checkMark: z.string().optional(),
+});
 
 export const userRouter = createTRPCRouter({
   seedMe: protectedProcedure.query(async ({ ctx }) => {
@@ -117,9 +131,37 @@ export const userRouter = createTRPCRouter({
       where: {
         id: userId,
       },
-      select,
+      select: privateFields,
     });
   }),
+  updateMe: protectedProcedure
+    .input(UpdateMeInput)
+    .mutation(async ({ input, ctx }) => {
+      const { db } = ctx;
+      const userId = ctx?.session?.user.id;
+      if (!userId) {
+        throw unauthorized();
+      }
+      const existing = await db.user.findUniqueOrThrow({
+        where: {
+          id: userId,
+        },
+      });
+      if (
+        existing.username &&
+        input.username &&
+        existing.username !== input.username
+      ) {
+        throw badRequest();
+      }
+      return await db.user.update({
+        where: {
+          id: userId,
+        },
+        data: input,
+        select: privateFields,
+      });
+    }),
   listFollowing: protectedProcedure.query(async ({ ctx }) => {
     const { db } = ctx;
     const userId = ctx?.session?.user.id;
@@ -141,7 +183,7 @@ export const userRouter = createTRPCRouter({
           },
         ],
       },
-      select,
+      select: publicFields,
     });
   }),
 });

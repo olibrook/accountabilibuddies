@@ -29,6 +29,7 @@ export const isFollowingAll = async (
 };
 
 export const unauthorized = () => new TRPCError({ code: "UNAUTHORIZED" });
+export const badRequest = () => new TRPCError({ code: "BAD_REQUEST" });
 
 export const isFollowingAllOrThrow = async (
   params: followingParams,

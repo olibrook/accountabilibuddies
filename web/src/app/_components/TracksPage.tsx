@@ -254,7 +254,7 @@ const groupEmUp = (sortKeyLists: SortKeyList[]): KeyGroup[] => {
 };
 
 type Sized = {
-  size: "xl" | "lg" | "md";
+  size: "4xl" | "xl" | "lg" | "md";
 };
 
 type IconProps = {
@@ -269,10 +269,14 @@ export const Icon: React.FC<IconProps> = ({
   fallback,
   size,
 }) => {
-  const sizeStyles =
-    size === "md" ? "h-8 w-8" : "lg" ? "h-10 w-10" : "h-14 w-14";
+  const sizeStyles = {
+    "4xl": "h-[185px] w-[185px]",
+    xl: "h-14 w-14",
+    lg: "h-10 w-10",
+    md: "h-8 w-8",
+  };
   return (
-    <div className={`${sizeStyles} overflow-hidden rounded-full border`}>
+    <div className={`${sizeStyles[size]} overflow-hidden rounded-full border`}>
       {imageUrl ? (
         <img src={imageUrl} alt={alt} className="h-full w-full object-cover" />
       ) : (
@@ -289,7 +293,7 @@ type AvatarProps = {
   userName: string;
 } & Sized;
 
-const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName, size }) => {
+export const Avatar: React.FC<AvatarProps> = ({ imageUrl, userName, size }) => {
   const getInitials = (name: string): string => {
     const nameArray = name.split(" ");
     return nameArray
@@ -396,7 +400,7 @@ export const hrefForKeyGroup = (kg: KeyGroup) => {
 type FlatStat = StatList["results"][0];
 type FlatStats = FlatStat[];
 
-interface CustomSession extends DefaultSession {
+export interface CustomSession extends DefaultSession {
   user: {
     id: string;
   } & DefaultSession["user"];

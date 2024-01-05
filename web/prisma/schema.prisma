@@ -52,6 +52,9 @@ model User {
   stats         Stat[]
   tracks        Track[]
   schedules     Schedule[]
+  username      String? @unique
+  useMetric     Boolean @default(true)
+  checkMark     String  @default("⭐")
 
   followedBy Follows[] @relation("following")
   following  Follows[] @relation("follower")
