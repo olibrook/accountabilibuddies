@@ -1,12 +1,14 @@
 "use client";
-import AppShell from "@buds/app/_components/AppShell";
+import AppShell, { ToggleButton } from "@buds/app/_components/AppShell";
 import { Pane } from "@buds/app/_components/Pane";
 import { useSession } from "next-auth/react";
 import React from "react";
 import { Avatar, CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { RouterInputs } from "@buds/trpc/shared";
+
+// TODO: Remove submit button, make this a live update thing.
 
 export default function Settings() {
   return (
@@ -32,17 +34,35 @@ function SettingsPaneWrapper() {
 type UpdateMe = RouterInputs["user"]["updateMe"];
 
 function SettingsPane() {
+  const utils = api.useContext();
   const { data: me } = api.user.me.useQuery();
+  const updateMe = api.user.updateMe.useMutation({
+    onSuccess: async () => {
+      await utils.user.me.invalidate();
+    },
+  });
+
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<UpdateMe>();
+  } = useForm<UpdateMe>({
+    values: me,
+    defaultValues: {
+      username: "",
+      useMetric: true,
+      checkMark: "⭐",
+    },
+  });
 
-  const onSubmit = (data) => {
-    // Handle form submission logic here
-    console.log(data);
+  const onSubmit = async (data: UpdateMe) => {
+    await updateMe.mutateAsync(data);
   };
+
+  if (!me) {
+    return false;
+  }
   return (
     <Pane
       headerChildren={<div className="px-4 text-xl">Me</div>}
@@ -98,24 +118,39 @@ function SettingsPane() {
                   )}
                 </div>
 
-                <div className="mb-4">
-                  <label
-                    htmlFor="useMetric"
-                    className="block font-medium text-gray-600"
-                  >
-                    Use Metric System
-                  </label>
-                  <input
-                    type="checkbox"
-                    id="useMetric"
-                    {...register("useMetric")}
-                    className="mt-2"
-                  />
-                </div>
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <div className="mb-2 block flex items-center py-2">
+                      <ToggleButton
+                        value={value === "⭐"}
+                        onChange={(val) => {
+                          onChange(val ? "⭐" : "💖");
+                        }}
+                        label="Use 💖 / ⭐ as progress emoji"
+                      />
+                    </div>
+                  )}
+                  name="checkMark"
+                />
+
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <div className="mb-2 block flex items-center py-2">
+                      <ToggleButton
+                        onChange={onChange}
+                        value={value}
+                        label="Use imperial / metric units?"
+                      />
+                    </div>
+                  )}
+                  name="useMetric"
+                />
 
                 <button
                   type="submit"
-                  className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:outline-none"
+                  className="rounded-md bg-blue-500 px-4 py-2 text-white focus:outline-none"
                 >
                   Submit
                 </button>
