@@ -26,6 +26,10 @@ const UpdateMeInput = z.object({
   checkMark: z.string().optional(),
 });
 
+const UsernameAvailableInput = z.object({
+  username: z.string(),
+});
+
 export const userRouter = createTRPCRouter({
   seedMe: protectedProcedure.query(async ({ ctx }) => {
     const { db } = ctx;
@@ -186,4 +190,19 @@ export const userRouter = createTRPCRouter({
       select: publicFields,
     });
   }),
+  usernameAvailable: protectedProcedure
+    .input(UsernameAvailableInput)
+    .mutation(async ({ input: { username }, ctx }) => {
+      const { db } = ctx;
+      const userId = ctx?.session?.user.id;
+      if (!userId) {
+        throw unauthorized();
+      }
+      const existing = await db.user.findUnique({
+        where: {
+          username: username,
+        },
+      });
+      return Boolean(existing);
+    }),
 });

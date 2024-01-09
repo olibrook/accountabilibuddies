@@ -40,6 +40,7 @@ function SettingsPane() {
     control,
     formState: { errors },
     handleSubmit,
+    watch,
   } = useForm<UpdateMe>({
     values: me,
     defaultValues: {
@@ -48,6 +49,10 @@ function SettingsPane() {
       checkMark: "⭐",
     },
   });
+
+  // TODO: As the user types their new username, check to see if
+  // it's available and show that in the error field of the input
+  const usernameAvailable = api.user.usernameAvailable.useMutation();
 
   const updateMe = api.user.updateMe.useMutation();
   const onsubmit = async (data) => {
