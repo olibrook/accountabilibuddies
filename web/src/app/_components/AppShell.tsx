@@ -13,16 +13,20 @@ export const ToggleButton = ({
   label: string;
 }) => {
   return (
-    <label className="relative inline-flex cursor-pointer items-center">
-      <input
-        type="checkbox"
-        checked={value}
-        className="peer sr-only"
-        onChange={() => onChange(!value)}
-      />
-      <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-gray-50 after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"></div>
-      <span className="ms-3 text-sm font-medium">{label}</span>
-    </label>
+    <div className="flex w-full flex-row items-center justify-between">
+      <div className="text-sm font-medium">{label}</div>
+      <label className="relative inline-flex cursor-pointer items-center">
+        <div>
+          <input
+            type="checkbox"
+            checked={value}
+            className="peer sr-only"
+            onChange={() => onChange(!value)}
+          />
+          <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-gray-50 after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"></div>
+        </div>
+      </label>
+    </div>
   );
 };
 
