@@ -1,7 +1,7 @@
 "use client";
 import AppShell, { ToggleButton } from "@buds/app/_components/AppShell";
 import { useSession } from "next-auth/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar, CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
 import { Controller, useForm } from "react-hook-form";
@@ -41,6 +41,7 @@ function SettingsPane() {
     formState: { errors },
     handleSubmit,
     watch,
+    setError,
   } = useForm<UpdateMe>({
     values: me,
     defaultValues: {
@@ -60,6 +61,25 @@ function SettingsPane() {
     console.log(data);
     setAlertIsOpen(true);
   };
+
+  useEffect(() => {
+    const inner = async (val: string) => {
+      const available = await usernameAvailable.mutateAsync(val);
+      if (available) {
+        setError("username", { type: "info", message: "Username available!" });
+      } else {
+        setError("username", { type: "error", message: "Username taken." });
+      }
+    };
+    // TODO: Watch just the one field. Then connect up the callbacks, etc.
+    const subscription = watch((value, { name, type }) => {
+      console.log(value, name, type);
+      if (name === "username") {
+        inner(value);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   if (!me) {
     return false;
