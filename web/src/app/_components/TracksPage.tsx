@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@buds/trpc/react";
-import { format, isSaturday, isSunday, startOfDay } from "date-fns";
+import { format, isSaturday, isSunday, parseISO } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import React, { ReactNode, useContext, useMemo, useRef, useState } from "react";
 import AppShell, {
@@ -19,7 +19,7 @@ import { User } from "react-feather";
 import DropdownMenu from "@buds/app/_components/DropdownMenu";
 import { debounce } from "next/dist/server/utils";
 import { Pane } from "@buds/app/_components/Pane";
-import { toDate, toDateString } from "@buds/shared/utils";
+import { DateString, toDate, toDateString } from "@buds/shared/utils";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -112,9 +112,9 @@ const trackConfigs: Record<TrackName, TrackConfig> = {
   },
 };
 
-const formatMonthYear = (date: Date) => format(date, "MMM ’yy");
-const formatDate = (date: Date) => format(date, "E d");
-const formatFullDate = (date: Date) => format(date, "PPP");
+const formatMonthYear = (date: DateString) => format(parseISO(date), "MMM ’yy");
+const formatDate = (date: DateString) => format(parseISO(date), "E d");
+const formatFullDate = (date: DateString) => format(parseISO(date), "PPP");
 
 const convertWeight = (val: number, from: Measurement, to: Measurement) => {
   let multiplier = 1;
@@ -137,7 +137,7 @@ const InteractiveCell = ({
   upsertStat,
 }: {
   session: CustomSession;
-  date: Date;
+  date: DateString;
   keyGroup: KeyGroup;
   children: ReactNode;
   setEditing: (e: Editing | undefined) => void;
@@ -154,7 +154,7 @@ const InteractiveCell = ({
       setEditing({ date, keyGroup, value, previousValue });
     } else {
       const val = {
-        date: toDateString(date),
+        date: date,
         value: !value ? 1 : 0,
         trackId,
       };
@@ -413,7 +413,7 @@ function TrackListWrapper({ params }: { params: Params }) {
 
 type Editing = {
   keyGroup: KeyGroup;
-  date: Date;
+  date: DateString;
   value: number | undefined;
   previousValue: number | undefined;
 };
@@ -446,7 +446,7 @@ function TrackList({
     },
     {
       enabled: !!following,
-      initialCursor: toDateString(startOfDay(new Date())),
+      initialCursor: toDateString(new Date()),
       getNextPageParam: (prevPage) => prevPage.nextCursor,
     },
   );
@@ -591,7 +591,7 @@ function TrackList({
                 <tr className="font-normal">
                   <th className="py-2 text-right">
                     <div className="w-[70px]">
-                      {topmostDate && formatMonthYear(toDate(topmostDate))}
+                      {topmostDate && formatMonthYear(topmostDate)}
                     </div>
                   </th>
                   {selectedKeyGroup.childKeys.map((kg) => (
@@ -651,7 +651,7 @@ const TableRow = ({
   return (
     <tr key={`${dateOffset}`} className={isWeekend ? "bg-gray-100" : ""}>
       <td className="w-[70px] text-right text-sm">
-        <div>{formatDate(toDate(date))}</div>
+        <div>{formatDate(date)}</div>
       </td>
       {selectedKeyGroup?.childKeys.map((keyGroup) => {
         const sk = keyGroup.sortKey;
@@ -673,7 +673,7 @@ const TableRow = ({
             className={`h-[45px] min-w-[50px] text-center`}
           >
             <InteractiveCell
-              date={toDate(date)}
+              date={date}
               keyGroup={keyGroup}
               session={session}
               setEditing={setEditing}
@@ -753,7 +753,7 @@ const EntryPopup = ({
           onClick={async () => {
             if (value) {
               await upsertStat.mutateAsync({
-                date: toDateString(date),
+                date,
                 trackId,
                 value,
               });

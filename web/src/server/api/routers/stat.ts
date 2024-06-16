@@ -69,13 +69,8 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   const end = toDate(cursor);
   const start = subDays(end, Math.max(0, limit - 1));
 
-  console.log(
-    JSON.stringify({
-      cursor,
-      start: start.toISOString(),
-      end: end.toISOString(),
-    }),
-  );
+  console.log("__-----__-____");
+  console.log(JSON.stringify({ start, end }));
 
   const stats = await ctx.db.stat.findMany({
     where: {
