@@ -443,7 +443,7 @@ function TrackList({
   } = api.stat.listStats.useInfiniteQuery(
     {
       followingIds: (following ?? []).map((f) => f.id),
-      limit: 5,
+      limit: 30,
     },
     {
       enabled: !!following,

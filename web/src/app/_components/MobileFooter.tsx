@@ -1,26 +1,32 @@
 import React from "react";
 import { Search, Settings, User, Users } from "react-feather";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const MobileFooter = () => {
+  const pathname = usePathname();
+
+  const linkClasses = (path: string) =>
+    `hover:text-black ${pathname === path ? "text-black" : "text-gray-400"}`;
+
   return (
     <div className="fixed bottom-0 flex w-full items-center justify-around bg-white py-4">
-      <div className="text-gray-500 hover:text-black">
+      <div className={linkClasses("/users/me")}>
         <Link href="/users/me">
           <User size={20} />
         </Link>
       </div>
-      <div className="text-gray-500 hover:text-black">
+      <div className={linkClasses("/tracks")}>
         <Link href="/tracks">
           <Users size={20} />
         </Link>
       </div>
-      <div className="text-gray-500 hover:text-black">
+      <div className={linkClasses("/search")}>
         <Link href="/search">
           <Search size={20} />
         </Link>
       </div>
-      <div className="text-gray-500 hover:text-black">
+      <div className={linkClasses("/settings")}>
         <Link href="/settings">
           <Settings size={20} />
         </Link>

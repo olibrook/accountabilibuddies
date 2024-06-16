@@ -15,7 +15,7 @@ const FieldErrorDisplay = ({ error }: { error?: FieldError }) => {
       {error ? (
         <span style={{ color }}>{error.message}</span>
       ) : (
-        <span>&nbsp;Ooops</span>
+        <span>&nbsp;</span>
       )}
     </p>
   );
@@ -85,7 +85,7 @@ function SettingsPane(props: { session: CustomSession }) {
     const inner = async (val: { username: string }) => {
       const available = await usernameAvailable.mutateAsync(val);
       if (available) {
-        setError("username", { type: "info", message: "Ok!" });
+        setError("username", { type: "info", message: "Username available!" });
       } else {
         setError("username", { type: "error", message: "Username taken" });
       }
@@ -157,23 +157,6 @@ function SettingsPane(props: { session: CustomSession }) {
                       </div>
                     )}
                   />
-
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="block font-medium text-gray-600"
-                    >
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      disabled={true}
-                      value={me.email ?? undefined}
-                      className={`mt-1 w-full rounded-md border px-4 py-2 focus:outline-none`}
-                    />
-                    <FieldErrorDisplay error={undefined} />
-                  </div>
 
                   <Controller
                     control={control}
