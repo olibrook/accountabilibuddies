@@ -15,13 +15,20 @@ import {
   ZDateString,
 } from "@buds/shared/utils";
 
-const ListStatsInput = z.object({
+type ListInput = {
+  followingIds: string[];
+  cursor: DateString;
+  limit: number;
+  type: StatType;
+};
+
+const ListGoalsInput = z.object({
   followingIds: z.array(z.string().uuid()),
   cursor: ZDateString,
   limit: z.number().int().positive(),
 });
 
-const ListGoalsInput = z.object({
+const ZListStatsInput = z.object({
   followingIds: z.array(z.string().uuid()),
   cursor: ZDateString,
   limit: z.number().int().positive(),
@@ -32,13 +39,6 @@ const UpsertInput = z.object({
   trackId: z.string().uuid(),
   value: z.number(),
 });
-
-type listInput = {
-  followingIds: string[];
-  cursor: DateString;
-  limit: number;
-  type: StatType;
-};
 
 type StatList = {
   start: DateString;
@@ -54,7 +54,7 @@ type StatList = {
   }>;
 };
 
-const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
+const list = async ({ input, ctx }: { input: ListInput; ctx: Context }) => {
   const { cursor, limit, followingIds, type } = input;
   const followerId = ctx?.session?.user.id;
   if (!followerId) {
@@ -176,7 +176,7 @@ const upsert = async ({
 
 export const statRouter = createTRPCRouter({
   listStats: protectedProcedure
-    .input(ListStatsInput)
+    .input(ZListStatsInput)
     .query(async ({ input, ctx }) => {
       return list({ input: { ...input, type: StatType.STAT }, ctx });
     }),

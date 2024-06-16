@@ -4,10 +4,22 @@ import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 import { Avatar, CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
-import { Controller, useForm } from "react-hook-form";
-import { RouterInputs } from "@buds/trpc/shared";
+import { Controller, FieldError, useForm } from "react-hook-form";
 import AlertDialog from "@buds/app/_components/AlertDialog";
 import { Pane } from "@buds/app/_components/Pane";
+
+const FieldErrorDisplay = ({ error }: { error?: FieldError }) => {
+  const color = error?.type === "info" ? "green" : "red";
+  return (
+    <p className="py-1 pr-1 text-right text-xs">
+      {error ? (
+        <span style={{ color }}>{error.message}</span>
+      ) : (
+        <span>&nbsp;Ooops</span>
+      )}
+    </p>
+  );
+};
 
 export default function Settings() {
   return (
@@ -30,9 +42,13 @@ function SettingsPaneWrapper() {
   }
 }
 
-type UpdateMe = RouterInputs["user"]["updateMe"];
+type WritableFields = {
+  username?: string;
+  useMetric: boolean;
+  checkMark: string;
+};
 
-function SettingsPane() {
+function SettingsPane(props: { session: CustomSession }) {
   const { data: me } = api.user.me.useQuery();
   const [alertIsOpen, setAlertIsOpen] = useState(false);
 
@@ -42,10 +58,14 @@ function SettingsPane() {
     handleSubmit,
     watch,
     setError,
-  } = useForm<UpdateMe>({
-    values: me,
+  } = useForm<WritableFields>({
+    values: {
+      username: me?.username ?? undefined,
+      useMetric: me?.useMetric ?? true,
+      checkMark: me?.checkMark ?? "⭐",
+    },
     defaultValues: {
-      username: "",
+      username: undefined,
       useMetric: true,
       checkMark: "⭐",
     },
@@ -56,26 +76,25 @@ function SettingsPane() {
   const usernameAvailable = api.user.usernameAvailable.useMutation();
 
   const updateMe = api.user.updateMe.useMutation();
-  const onsubmit = async (data) => {
+  const onsubmit = async (data: WritableFields) => {
     await Promise.resolve();
-    console.log(data);
-    setAlertIsOpen(true);
+    await updateMe.mutateAsync(data);
   };
 
   useEffect(() => {
-    const inner = async (val: string) => {
+    const inner = async (val: { username: string }) => {
       const available = await usernameAvailable.mutateAsync(val);
       if (available) {
-        setError("username", { type: "info", message: "Username available!" });
+        setError("username", { type: "info", message: "Ok!" });
       } else {
-        setError("username", { type: "error", message: "Username taken." });
+        setError("username", { type: "error", message: "Username taken" });
       }
     };
     // TODO: Watch just the one field. Then connect up the callbacks, etc.
     const subscription = watch((value, { name, type }) => {
       console.log(value, name, type);
-      if (name === "username") {
-        inner(value);
+      if (name === "username" && value.username) {
+        void inner({ username: value.username });
       }
     });
     return () => subscription.unsubscribe();
@@ -102,7 +121,11 @@ function SettingsPane() {
           me && (
             <div className="flex w-full flex-grow flex-col items-center overflow-scroll rounded-b-xl bg-gray-50 pt-8">
               <div className="">
-                <Avatar size="4xl" userName={me.name} imageUrl={me.image} />
+                <Avatar
+                  size="4xl"
+                  userName={me.name ?? ""}
+                  imageUrl={me.image}
+                />
               </div>
               <div className="mx-auto w-full rounded-md p-4">
                 <h2 className="mb-4 text-center text-2xl font-semibold">
@@ -113,7 +136,7 @@ function SettingsPane() {
                     control={control}
                     name="username"
                     render={({ field }) => (
-                      <div className="mb-4">
+                      <div>
                         <label
                           htmlFor="username"
                           className="block font-medium text-gray-600"
@@ -124,19 +147,18 @@ function SettingsPane() {
                           type="text"
                           id="username"
                           {...field}
-                          disabled={Boolean(field.value)}
-                          className={`mt-2 w-full rounded-md border px-4 py-2 focus:outline-none ${
-                            errors.username && "border-red-500"
+                          value={field.value}
+                          className={`mt-1 w-full rounded-md border px-4 py-2 focus:outline-none ${
+                            errors.username?.type === "error" &&
+                            "border-red-500"
                           }`}
                         />
-                        {errors.username && (
-                          <p className="mt-1 text-red-500">{errors.username}</p>
-                        )}
+                        <FieldErrorDisplay error={errors.username} />
                       </div>
                     )}
                   />
 
-                  <div className="mb-4">
+                  <div>
                     <label
                       htmlFor="email"
                       className="block font-medium text-gray-600"
@@ -147,14 +169,10 @@ function SettingsPane() {
                       type="email"
                       id="email"
                       disabled={true}
-                      value={me.email}
-                      className={`mt-2 w-full rounded-md border px-4 py-2 focus:outline-none ${
-                        errors.email && "border-red-500"
-                      }`}
+                      value={me.email ?? undefined}
+                      className={`mt-1 w-full rounded-md border px-4 py-2 focus:outline-none`}
                     />
-                    {errors.email && (
-                      <p className="mt-1 text-red-500">Email is required</p>
-                    )}
+                    <FieldErrorDisplay error={undefined} />
                   </div>
 
                   <Controller

@@ -8,7 +8,8 @@ import React, {
 import { Activity, Home, Users, X } from "react-feather";
 import MobileFooter from "@buds/app/_components/MobileFooter";
 import { SessionProvider, signIn, useSession } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
+import { userIsOnboarded } from "@buds/shared/utils";
 
 export const ToggleButton = ({
   value,
@@ -167,11 +168,36 @@ const AuthGuard: React.FC<React.PropsWithChildren> = ({ children }) => {
   }
 };
 
-type GradientBgProps = {
-  children: React.ReactNode;
+const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
+  children,
+}) => {
+  const pathname = usePathname();
+  const session = useSession();
+  const loading = session.status === "loading";
+  const authenticated = session.status === "authenticated";
+  const onboarded = authenticated && userIsOnboarded(session.data);
+  const excluded = ["/", "/settings"];
+  const isExcluded = excluded.indexOf(pathname) >= 0;
+
+  useEffect(() => {
+    const checkUser = () => {
+      if (!isExcluded && !loading && !onboarded) {
+        redirect("/settings");
+      }
+    };
+    void checkUser();
+  }, [isExcluded, loading, onboarded]);
+
+  if (onboarded || isExcluded) {
+    return <>{children}</>;
+  } else {
+    return null;
+  }
 };
 
-export const BaseAppShell: React.FC<GradientBgProps> = ({ children }) => {
+export const BaseAppShell: React.FC<React.PropsWithChildren> = ({
+  children,
+}) => {
   const hiPerf = true;
   const bg = hiPerf
     ? "bg-cover	bg-no-repeat bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]"
@@ -180,17 +206,16 @@ export const BaseAppShell: React.FC<GradientBgProps> = ({ children }) => {
     <SessionProvider>
       <UserSettingProvider>
         <AuthGuard>
-          <div className={`${bg} h-screen`}>{children}</div>
+          <UserOnboardingGuard>
+            <div className={`${bg} h-screen`}>{children}</div>
+          </UserOnboardingGuard>
         </AuthGuard>
       </UserSettingProvider>
     </SessionProvider>
   );
 };
 
-type AppShellProps = {
-  children: React.ReactNode;
-};
-const AppShell: React.FC<AppShellProps> = ({ children }) => {
+const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <BaseAppShell>
       <div className="flex flex-col font-normal">

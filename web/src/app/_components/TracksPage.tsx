@@ -394,6 +394,7 @@ type FlatStats = FlatStat[];
 export interface CustomSession extends DefaultSession {
   user: {
     id: string;
+    username: string | null;
   } & DefaultSession["user"];
 }
 
