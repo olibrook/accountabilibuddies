@@ -69,9 +69,6 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   const end = toDate(cursor);
   const start = subDays(end, Math.max(0, limit - 1));
 
-  console.log("__-----__-____");
-  console.log(JSON.stringify({ start, end }));
-
   const stats = await ctx.db.stat.findMany({
     where: {
       AND: [
@@ -79,7 +76,7 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
         { type },
         {
           date: {
-            gt: start,
+            gte: start,
             lte: end,
           },
         },
@@ -109,7 +106,6 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     nextCursor: toDateString(subDays(end, limit)),
     results: Array.from(new Array(limit)).map((_, idx) => {
       const date = toDateString(subDays(end, idx));
-      console.log(JSON.stringify({ date }));
       return {
         date,
         data: {},
@@ -121,11 +117,6 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     const userId = stat.userId;
     const trackName = stat.track.name;
     const offset = Math.abs(differenceInDays(stat.date, end));
-    console.log({
-      offset,
-      date: stat.date,
-      end: end,
-    });
     if (offset < 0 || offset >= ret.results.length) {
       console.error(JSON.stringify(stat, null, 2));
       console.error(
