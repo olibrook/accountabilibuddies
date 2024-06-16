@@ -19,6 +19,7 @@ import { User } from "react-feather";
 import DropdownMenu from "@buds/app/_components/DropdownMenu";
 import { debounce } from "next/dist/server/utils";
 import { Pane } from "@buds/app/_components/Pane";
+import { toDate, toDateString } from "@buds/shared/utils";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -115,17 +116,6 @@ const formatMonthYear = (date: Date) => format(date, "MMM ’yy");
 const formatDate = (date: Date) => format(date, "E d");
 const formatFullDate = (date: Date) => format(date, "PPP");
 
-const naiveDate = (date: Date) => {
-  const y = date.getFullYear();
-  const m = (date.getMonth() + 1).toString().padStart(2, "0");
-  const d = date.getDate().toString().padStart(2, "0");
-  const ds = `${y}-${m}-${d}T00:00:00Z`;
-  const date2 = new Date(ds);
-  console.log(ds);
-  console.log(date2);
-  return date2;
-};
-
 const convertWeight = (val: number, from: Measurement, to: Measurement) => {
   let multiplier = 1;
   if (from == "metric" && to === "imperial") {
@@ -163,11 +153,12 @@ const InteractiveCell = ({
     if (trackConfig.type === "number") {
       setEditing({ date, keyGroup, value, previousValue });
     } else {
-      await upsertStat.mutateAsync({
-        date: naiveDate(date),
+      const val = {
+        date: toDateString(date),
         value: !value ? 1 : 0,
         trackId,
-      });
+      };
+      await upsertStat.mutateAsync(val);
     }
   };
   const isMe = keyGroup.sortKey.user.id === session.user.id;
@@ -451,11 +442,11 @@ function TrackList({
   } = api.stat.listStats.useInfiniteQuery(
     {
       followingIds: (following ?? []).map((f) => f.id),
-      limit: 30,
+      limit: 5,
     },
     {
       enabled: !!following,
-      initialCursor: startOfDay(new Date()),
+      initialCursor: toDateString(startOfDay(new Date())),
       getNextPageParam: (prevPage) => prevPage.nextCursor,
     },
   );
@@ -470,7 +461,8 @@ function TrackList({
       await refetch({
         refetchPage: (page: StatList) => {
           const shouldRefetch =
-            page.start <= data.date && data.date <= page.end;
+            toDate(page.start) <= toDate(data.date) &&
+            toDate(data.date) <= toDate(page.end);
           if (shouldRefetch) {
             console.log("Will refetch page", data.date, page);
           }
@@ -599,7 +591,7 @@ function TrackList({
                 <tr className="font-normal">
                   <th className="py-2 text-right">
                     <div className="w-[70px]">
-                      {topmostDate && formatMonthYear(topmostDate)}
+                      {topmostDate && formatMonthYear(toDate(topmostDate))}
                     </div>
                   </th>
                   {selectedKeyGroup.childKeys.map((kg) => (
@@ -654,12 +646,12 @@ const TableRow = ({
   session: CustomSession;
 }) => {
   const date = stat.date;
-  const isWeekend = isSaturday(date) || isSunday(date);
+  const isWeekend = isSaturday(toDate(date)) || isSunday(toDate(date));
 
   return (
     <tr key={`${dateOffset}`} className={isWeekend ? "bg-gray-100" : ""}>
       <td className="w-[70px] text-right text-sm">
-        <div>{formatDate(date)}</div>
+        <div>{formatDate(toDate(date))}</div>
       </td>
       {selectedKeyGroup?.childKeys.map((keyGroup) => {
         const sk = keyGroup.sortKey;
@@ -681,7 +673,7 @@ const TableRow = ({
             className={`h-[45px] min-w-[50px] text-center`}
           >
             <InteractiveCell
-              date={date}
+              date={toDate(date)}
               keyGroup={keyGroup}
               session={session}
               setEditing={setEditing}
@@ -761,7 +753,7 @@ const EntryPopup = ({
           onClick={async () => {
             if (value) {
               await upsertStat.mutateAsync({
-                date: naiveDate(date),
+                date: toDateString(date),
                 trackId,
                 value,
               });

@@ -5,41 +5,47 @@ import {
   protectedProcedure,
 } from "@buds/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { differenceInDays, startOfDay, subDays } from "date-fns";
+import { differenceInDays, subDays } from "date-fns";
 import { StatType } from "@prisma/client";
 import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
+import {
+  DateString,
+  toDate,
+  toDateString,
+  ZDateString,
+} from "@buds/shared/utils";
 
 const ListStatsInput = z.object({
   followingIds: z.array(z.string().uuid()),
-  cursor: z.date(),
+  cursor: ZDateString,
   limit: z.number().int().positive(),
 });
 
 const ListGoalsInput = z.object({
   followingIds: z.array(z.string().uuid()),
-  cursor: z.date(),
+  cursor: ZDateString,
   limit: z.number().int().positive(),
 });
 
 const UpsertInput = z.object({
-  date: z.date(),
+  date: ZDateString,
   trackId: z.string().uuid(),
   value: z.number(),
 });
 
 type listInput = {
   followingIds: string[];
-  cursor: Date;
+  cursor: DateString;
   limit: number;
   type: StatType;
 };
 
 type StatList = {
-  start: Date;
-  end: Date;
-  nextCursor: Date;
+  start: DateString;
+  end: DateString;
+  nextCursor: DateString;
   results: Array<{
-    date: Date;
+    date: DateString;
     data: {
       [userId: string]: {
         [trackName: string]: number;
@@ -60,8 +66,16 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
     followingIds,
   });
 
-  const end = startOfDay(cursor);
-  const start = startOfDay(subDays(end, Math.max(0, limit - 1)));
+  const end = toDate(cursor);
+  const start = subDays(end, Math.max(0, limit - 1));
+
+  console.log(
+    JSON.stringify({
+      cursor,
+      start: start.toISOString(),
+      end: end.toISOString(),
+    }),
+  );
 
   const stats = await ctx.db.stat.findMany({
     where: {
@@ -70,8 +84,8 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
         { type },
         {
           date: {
-            gt: start.toISOString(),
-            lte: end.toISOString(),
+            gt: start,
+            lte: end,
           },
         },
       ],
@@ -95,12 +109,14 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   });
 
   const ret: StatList = {
-    start,
-    end,
-    nextCursor: startOfDay(subDays(end, limit)),
+    start: toDateString(start),
+    end: toDateString(end),
+    nextCursor: toDateString(subDays(end, limit)),
     results: Array.from(new Array(limit)).map((_, idx) => {
+      const date = toDateString(subDays(end, idx));
+      console.log(JSON.stringify({ date }));
       return {
-        date: subDays(end, idx),
+        date,
         data: {},
       };
     }),
@@ -109,7 +125,12 @@ const list = async ({ input, ctx }: { input: listInput; ctx: Context }) => {
   stats.forEach((stat) => {
     const userId = stat.userId;
     const trackName = stat.track.name;
-    const offset = Math.abs(differenceInDays(startOfDay(stat.date), end));
+    const offset = Math.abs(differenceInDays(stat.date, end));
+    console.log({
+      offset,
+      date: stat.date,
+      end: end,
+    });
     if (offset < 0 || offset >= ret.results.length) {
       console.error(JSON.stringify(stat, null, 2));
       console.error(
@@ -151,14 +172,15 @@ const upsert = async ({
   const data = {
     ...input,
     userId,
+    date: toDate(input.date),
   };
   return ctx.db.stat.upsert({
     where: {
       type_userId_trackId_date: {
-        date: input.date,
-        trackId: input.trackId,
+        date: data.date,
+        trackId: data.trackId,
         userId,
-        type: input.type,
+        type: data.type,
       },
     },
     create: data,
@@ -176,7 +198,11 @@ export const statRouter = createTRPCRouter({
   upsertStat: protectedProcedure
     .input(UpsertInput)
     .mutation(async ({ input, ctx }) => {
-      return upsert({ input: { ...input, type: StatType.STAT }, ctx });
+      const result = await upsert({
+        input: { ...input, type: StatType.STAT },
+        ctx,
+      });
+      return { ...result, date: toDateString(result.date) };
     }),
 
   listGoals: protectedProcedure
