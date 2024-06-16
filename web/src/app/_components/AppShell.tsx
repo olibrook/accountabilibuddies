@@ -1,7 +1,14 @@
-import React, { createContext, ReactNode, useContext, useState } from "react";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { Activity, Home, Users, X } from "react-feather";
 import MobileFooter from "@buds/app/_components/MobileFooter";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, signIn, useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 export const ToggleButton = ({
   value,
@@ -137,6 +144,29 @@ export const LeftSlider: React.FC<LeftSliderProps> = ({ closeMenu }) => {
   );
 };
 
+const AuthGuard: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const pathname = usePathname();
+  const session = useSession();
+  const authenticated = session.status === "authenticated";
+  const excluded = ["/"];
+  const isExcluded = excluded.indexOf(pathname) >= 0;
+
+  useEffect(() => {
+    const checkSession = async () => {
+      if (!isExcluded && session.status === "unauthenticated") {
+        await signIn(undefined, { callbackUrl: pathname });
+      }
+    };
+    void checkSession();
+  }, [session.status, pathname]);
+
+  if (authenticated || isExcluded) {
+    return <>{children}</>;
+  } else {
+    return null;
+  }
+};
+
 type GradientBgProps = {
   children: React.ReactNode;
 };
@@ -149,7 +179,9 @@ export const BaseAppShell: React.FC<GradientBgProps> = ({ children }) => {
   return (
     <SessionProvider>
       <UserSettingProvider>
-        <div className={`${bg} h-screen`}>{children}</div>
+        <AuthGuard>
+          <div className={`${bg} h-screen`}>{children}</div>
+        </AuthGuard>
       </UserSettingProvider>
     </SessionProvider>
   );

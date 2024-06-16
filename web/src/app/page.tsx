@@ -4,6 +4,8 @@ import Link from "next/link";
 
 import { BaseAppShell } from "@buds/app/_components/AppShell";
 import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
   return (
@@ -15,6 +17,13 @@ export default function Home() {
 
 const Inner = () => {
   const session = useSession();
+
+  useEffect(() => {
+    if (session.status === "authenticated") {
+      redirect("/users/me");
+    }
+  }, [session.status]);
+
   return (
     <div className="h-screen w-full">
       <div className="flex h-full flex-row items-center justify-center">
@@ -24,21 +33,18 @@ const Inner = () => {
             <span className="text-[hsl(280,100%,70%)]">buddies</span>
           </h1>
 
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex flex-col items-center justify-center gap-4">
-              <p className="text-l text-center text-white">
-                {session && (
-                  <span>Logged in as {session.data?.user?.name}</span>
-                )}
-              </p>
-              <Link
-                href={session ? "/api/auth/signout" : "/api/auth/signin"}
-                className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
-              >
-                {session ? "Sign out" : "Sign in"}
-              </Link>
+          {session.status === "unauthenticated" && (
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-4">
+                <Link
+                  href="/api/auth/signin"
+                  className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+                >
+                  Sign in
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
