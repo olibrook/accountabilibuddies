@@ -7,7 +7,9 @@ const MobileFooter = () => {
   const pathname = usePathname();
 
   const linkClasses = (path: string) =>
-    `hover:text-black ${pathname === path ? "text-black" : "text-gray-400"}`;
+    `link-class hover:text-black ${
+      pathname === path ? "text-black" : "text-gray-400"
+    }`;
 
   return (
     <div className="fixed bottom-0 flex w-full items-center justify-around bg-white py-4">
