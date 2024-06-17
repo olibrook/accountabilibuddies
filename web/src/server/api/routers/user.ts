@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
 import { unauthorized } from "@buds/server/api/common";
 import { startOfDay, subDays } from "date-fns";
-import { Stat } from "@prisma/client";
+import { Stat, User } from "@prisma/client";
 import { v4 as uuid4 } from "uuid";
 import { z } from "zod";
 
@@ -28,6 +28,12 @@ const UpdateMeInput = z.object({
 
 const UsernameAvailableInput = z.object({
   username: z.string(),
+});
+
+const SearchInput = z.object({
+  cursor: z.number().nonnegative(),
+  limit: z.number().nonnegative().max(50),
+  query: z.string(),
 });
 
 export const userRouter = createTRPCRouter({
@@ -197,5 +203,31 @@ export const userRouter = createTRPCRouter({
         },
       });
       return !Boolean(existing);
+    }),
+  search: protectedProcedure
+    .input(SearchInput)
+    .query(async ({ input, ctx }) => {
+      const { db } = ctx;
+      const userId = ctx?.session?.user.id;
+      if (!userId) {
+        throw unauthorized();
+      }
+      const { cursor, limit, query } = input;
+      if (query === "") {
+        return [] as User[];
+      }
+
+      return await db.$queryRaw<User[]>`
+          SELECT *,
+            GREATEST(
+              similarity(email, ${query}),
+              similarity(username, ${query})
+            ) AS similarity_score
+          FROM "User"
+          WHERE username ILIKE '%' || ${query} || '%'
+          ORDER BY similarity_score DESC
+          LIMIT ${limit}
+          OFFSET ${cursor};
+        `;
     }),
 });
