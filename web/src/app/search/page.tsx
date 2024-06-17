@@ -71,7 +71,7 @@ export default function Search() {
                     <div className="text-sm">{u.name}</div>
                   </div>
 
-                  {i % 4 !== 0 ? (
+                  {!u.following ? (
                     <div>
                       <button className="w-20 rounded-md bg-blue-500 px-3 py-2 text-xs font-semibold text-white focus:outline-none">
                         Follow
