@@ -36,6 +36,8 @@ const SearchInput = z.object({
   query: z.string(),
 });
 
+type UserWithFollowInfo = User & { following: boolean };
+
 export const userRouter = createTRPCRouter({
   seedMe: protectedProcedure.query(async ({ ctx }) => {
     const { db } = ctx;
@@ -206,7 +208,7 @@ export const userRouter = createTRPCRouter({
     }),
   search: protectedProcedure
     .input(SearchInput)
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input, ctx }): Promise<UserWithFollowInfo[]> => {
       const { db } = ctx;
       const userId = ctx?.session?.user.id;
       if (!userId) {
@@ -214,10 +216,10 @@ export const userRouter = createTRPCRouter({
       }
       const { cursor, limit, query } = input;
       if (query === "") {
-        return [] as User[];
+        return [] as UserWithFollowInfo[];
       }
 
-      return await db.$queryRaw<User[]>`
+      const users = await db.$queryRaw<User[]>`
           SELECT *,
             GREATEST(
               similarity(email, ${query}),
@@ -229,5 +231,17 @@ export const userRouter = createTRPCRouter({
           LIMIT ${limit}
           OFFSET ${cursor};
         `;
+
+      const ids = users.map((u: User) => u.id);
+
+      const follows = await db.follows.findMany({
+        where: {
+          AND: [{ followerId: userId }, { followingId: { in: ids } }],
+        },
+      });
+
+      const followingIds = new Set(follows.map((f) => f.followingId));
+
+      return users.map((u) => ({ ...u, following: followingIds.has(u.id) }));
     }),
 });
