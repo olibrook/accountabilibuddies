@@ -24,11 +24,20 @@ export default function Search() {
     setQuery(v);
   };
 
-  const { data: users } = api.user.search.useQuery({
+  const { data: users, refetch } = api.user.search.useQuery({
     cursor: 0,
     limit: 25,
     query,
   });
+
+  const setFollowing = api.user.setFollowing.useMutation();
+  const doSetFollowing = async (data: {
+    followingId: string;
+    shouldFollow: boolean;
+  }) => {
+    await setFollowing.mutateAsync(data);
+    await refetch();
+  };
 
   return (
     <AppShell>
@@ -73,13 +82,29 @@ export default function Search() {
 
                   {!u.following ? (
                     <div>
-                      <button className="w-20 rounded-md bg-blue-500 px-3 py-2 text-xs font-semibold text-white focus:outline-none">
+                      <button
+                        className="w-20 rounded-md bg-blue-500 px-3 py-2 text-xs font-semibold text-white focus:outline-none"
+                        onClick={() =>
+                          doSetFollowing({
+                            followingId: u.id,
+                            shouldFollow: true,
+                          })
+                        }
+                      >
                         Follow
                       </button>
                     </div>
                   ) : (
                     <div>
-                      <button className="w-20 rounded-md bg-gray-200 px-3 py-2 text-xs font-semibold hover:border-transparent hover:bg-blue-500 hover:text-white">
+                      <button
+                        className="w-20 rounded-md bg-gray-200 px-3 py-2 text-xs font-semibold"
+                        onClick={() =>
+                          doSetFollowing({
+                            followingId: u.id,
+                            shouldFollow: false,
+                          })
+                        }
+                      >
                         Following
                       </button>
                     </div>

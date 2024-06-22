@@ -30,6 +30,11 @@ const UsernameAvailableInput = z.object({
   username: z.string(),
 });
 
+const SetFollowingInput = z.object({
+  followingId: z.string().uuid(),
+  shouldFollow: z.boolean(),
+});
+
 const SearchInput = z.object({
   cursor: z.number().nonnegative(),
   limit: z.number().nonnegative().max(50),
@@ -226,7 +231,8 @@ export const userRouter = createTRPCRouter({
               similarity(username, ${query})
             ) AS similarity_score
           FROM "User"
-          WHERE username ILIKE '%' || ${query} || '%'
+          WHERE username ILIKE '%' || ${query} || '%' 
+                AND id != ${userId}
           ORDER BY similarity_score DESC
           LIMIT ${limit}
           OFFSET ${cursor};
@@ -239,9 +245,33 @@ export const userRouter = createTRPCRouter({
           AND: [{ followerId: userId }, { followingId: { in: ids } }],
         },
       });
-
       const followingIds = new Set(follows.map((f) => f.followingId));
-
       return users.map((u) => ({ ...u, following: followingIds.has(u.id) }));
+    }),
+  setFollowing: protectedProcedure
+    .input(SetFollowingInput)
+    .mutation(async ({ input: { followingId, shouldFollow }, ctx }) => {
+      const { db } = ctx;
+      const userId = ctx?.session?.user.id;
+      if (!userId) {
+        throw unauthorized();
+      }
+      const data = {
+        followerId: userId,
+        followingId,
+      };
+      if (shouldFollow) {
+        await db.follows.upsert({
+          where: { followerId_followingId: data },
+          create: data,
+          update: data,
+        });
+      } else {
+        await db.follows.delete({
+          where: {
+            followerId_followingId: data,
+          },
+        });
+      }
     }),
 });
