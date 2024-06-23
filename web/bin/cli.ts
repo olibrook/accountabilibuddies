@@ -1,19 +1,31 @@
 #!/usr/bin/env -S npx tsx
 
-import { $ } from "execa";
+import { $, execa } from "execa";
 import { Command, Option } from "commander";
 import p from "path";
 import { cloneDeep } from "lodash";
 
 const root = p.resolve(p.join(__dirname, "..", ".."));
-const program = new Command();
+
+const checkDeps = async () => {
+  const progs = ["docker", "doctl", "psql"];
+  for (const prog of progs) {
+    try {
+      await $`which ${prog}`;
+    } catch (e) {
+      throw new Error(
+        `This script depends on "${prog}", which isn't installed.`,
+      );
+    }
+  }
+};
 
 enum Env {
   Prod = "prod",
   Local = "local",
 }
 
-const envArray = Object.values(Env);
+const envChoices = Object.values(Env);
 
 const fail = () => {
   throw new Error("Fail");
@@ -33,6 +45,8 @@ const getDBConnectionString = async (env: Env): Promise<string> => {
     }
   }
 };
+
+const program = new Command();
 
 program.name("cli");
 
@@ -60,7 +74,7 @@ program
   .addOption(
     new Option("--env <env>", "The env to connect to")
       .default("local")
-      .choices(envArray),
+      .choices(envChoices),
   )
   .action(async ({ env }: { env: Env }) => {
     const sh = $({
@@ -75,13 +89,30 @@ program
     });
   });
 
-const checkDeps = async () => {
-  const progs = ["docker", "doctl", "psql"];
-  for (const prog of progs) {
-    const { stdout } = await $`which ${prog}`;
-    console.log(stdout);
-  }
-};
+program
+  .command("prisma")
+  .description("A wrapper around prisma")
+  .addOption(
+    new Option("--env <env>", "The env to connect to")
+      .default("local")
+      .choices(envChoices),
+  )
+  .allowUnknownOption() // Allow arg forwarding
+  .helpOption(false) // Let prisma handle --help
+  .action(async ({ env }: { env: Env }, program: Command) => {
+    // Anything not captured by the args to the wrapper gets forwarded to prisma
+    const prismaArgs = program.args;
+    const prismaEnv = {
+      ...process.env,
+      DATABASE_URL: await getDBConnectionString(env),
+    };
+
+    await execa("prisma", prismaArgs, {
+      stdio: "inherit",
+      env: prismaEnv,
+      preferLocal: true,
+    });
+  });
 
 void Promise.resolve()
   .then(checkDeps)
