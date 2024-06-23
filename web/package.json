@@ -5,10 +5,10 @@
   "scripts": {
     "build": "npm run db:generate && next build",
     "dev": "next dev",
-    "postinstall": "./bin/cli.ts prisma generate",
+    "postinstall": "./cli.ts prisma generate",
     "lint": "next lint",
     "start": "next start",
-    "test": "./bin/cli.ts prisma --env test migrate reset --force && vitest"
+    "test": "./cli.ts prisma --env test migrate reset --force && vitest"
   },
   "prisma": {
     "seed": "tsx ./prisma/seed.ts"
