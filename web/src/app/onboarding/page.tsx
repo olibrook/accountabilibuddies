@@ -1,10 +1,11 @@
 "use client";
-import { BaseAppShell } from "@buds/app/_components/AppShell";
+import { BaseAppShell, ToggleButton } from "@buds/app/_components/AppShell";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 import { Avatar, CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { FieldErrorDisplay } from "@buds/app/settings/page";
 
 // Onboarding 1 – Set up user name and settings
 
@@ -67,6 +68,10 @@ function OnboardingPane(props: { session: CustomSession }) {
   // it's available and show that in the error field of the input
   const usernameAvailable = api.user.usernameAvailable.useMutation();
   const updateMe = api.user.updateMe.useMutation();
+  const onsubmit = async (data: WritableFields) => {
+    await Promise.resolve();
+    await updateMe.mutateAsync(data);
+  };
 
   useEffect(() => {
     const inner = async (val: { username: string }) => {
@@ -120,6 +125,63 @@ function OnboardingPane(props: { session: CustomSession }) {
                 <div className="my-4 px-4 text-center ">
                   We need just a few details to get started.
                 </div>
+
+                <form onSubmit={handleSubmit(onsubmit)}>
+                  <Controller
+                    control={control}
+                    name="username"
+                    render={({ field }) => (
+                      <div>
+                        <label
+                          htmlFor="username"
+                          className="block text-sm font-medium"
+                        >
+                          Username
+                        </label>
+                        <input
+                          type="text"
+                          id="username"
+                          {...field}
+                          value={field.value}
+                          className={`mt-1 w-full rounded-md border px-4 py-2 focus:outline-none ${
+                            errors.username?.type === "error" &&
+                            "border-red-500"
+                          }`}
+                        />
+                        <FieldErrorDisplay error={errors.username} />
+                      </div>
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    render={({ field: { onChange, value } }) => (
+                      <div className="mb-2 block flex items-center py-2">
+                        <ToggleButton
+                          value={value === "⭐"}
+                          onChange={(val) => {
+                            onChange(val ? "⭐" : "💖");
+                          }}
+                          label="Use 💖 / ⭐ as progress emoji"
+                        />
+                      </div>
+                    )}
+                    name="checkMark"
+                  />
+
+                  <Controller
+                    control={control}
+                    render={({ field: { onChange, value } }) => (
+                      <div className="mb-2 block flex items-center py-2">
+                        <ToggleButton
+                          onChange={onChange}
+                          value={value}
+                          label="Use imperial / metric units?"
+                        />
+                      </div>
+                    )}
+                    name="useMetric"
+                  />
+                </form>
               </div>
             </OnboardingSlide>
           </div>
@@ -163,7 +225,7 @@ const OnboardingSlide = ({
           <div className="flex-grow">{children}</div>
           <div className="mb-6 mt-4 w-full">
             <div className="mb-4 flex w-full items-center justify-center px-4">
-              <DotNav current={slide} length={3} />
+              <DotNav current={slide} length={numSlides} />
             </div>
 
             <div className="flex w-full items-center justify-center">

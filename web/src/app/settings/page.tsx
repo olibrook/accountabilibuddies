@@ -8,7 +8,7 @@ import { Controller, FieldError, useForm } from "react-hook-form";
 import AlertDialog from "@buds/app/_components/AlertDialog";
 import { Pane } from "@buds/app/_components/Pane";
 
-const FieldErrorDisplay = ({ error }: { error?: FieldError }) => {
+export const FieldErrorDisplay = ({ error }: { error?: FieldError }) => {
   const color = error?.type === "info" ? "green" : "red";
   return (
     <p className="py-1 pr-1 text-right text-xs">
