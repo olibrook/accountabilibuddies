@@ -23,6 +23,7 @@ const checkDeps = async () => {
 enum Env {
   Prod = "prod",
   Local = "local",
+  Test = "test",
 }
 
 const envChoices = Object.values(Env);
@@ -35,6 +36,9 @@ const getDBConnectionString = async (env: Env): Promise<string> => {
   switch (env) {
     case Env.Local: {
       return "postgresql://postgres:postgres@localhost:5432/buds";
+    }
+    case Env.Test: {
+      return "postgresql://postgres:postgres@localhost:5432/test";
     }
     case Env.Prod: {
       const { stdout } =
