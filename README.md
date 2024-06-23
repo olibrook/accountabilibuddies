@@ -5,6 +5,8 @@
 
 ### TODO
 
+- Need to create User.tracks when onboarding.
+
 - Make the onboarding screen better:
   - Tells you what you have to fill in.
   - Redirects you to your activity page.
@@ -17,7 +19,7 @@
 
 - Wait for Nameservers to be transferred to Digital Ocean, then set up the Google
   Oath application again + login from scratch.
-  
+
 
 ## 😍Design
 
