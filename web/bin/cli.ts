@@ -73,6 +73,19 @@ program
   });
 
 program
+  .command("db-url")
+  .description("Open a PSQL shell")
+  .addOption(
+    new Option("--env <env>", "The env to connect to")
+      .default("local")
+      .choices(envChoices),
+  )
+  .action(async ({ env }: { env: Env }) => {
+    const connectionString = await getDBConnectionString(env);
+    console.log(connectionString);
+  });
+
+program
   .command("db-shell")
   .description("Open a PSQL shell")
   .addOption(
