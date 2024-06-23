@@ -131,23 +131,26 @@ function OnboardingPane(props: { session: CustomSession }) {
                     control={control}
                     name="username"
                     render={({ field }) => (
-                      <div>
-                        <label
-                          htmlFor="username"
-                          className="block text-sm font-medium"
-                        >
-                          Username
-                        </label>
-                        <input
-                          type="text"
-                          id="username"
-                          {...field}
-                          value={field.value}
-                          className={`mt-1 w-full rounded-md border px-4 py-2 focus:outline-none ${
-                            errors.username?.type === "error" &&
-                            "border-red-500"
-                          }`}
-                        />
+                      <div className="flex w-full flex-col">
+                        <div className="flex w-full flex-grow items-center gap-2">
+                          <label
+                            htmlFor="username"
+                            className="block text-sm font-medium"
+                          >
+                            Username
+                          </label>
+                          <input
+                            type="text"
+                            id="username"
+                            autoComplete="off"
+                            {...field}
+                            value={field.value}
+                            className={`mt-1 w-full rounded-md border px-4 py-2 focus:outline-none ${
+                              errors.username?.type === "error" &&
+                              "border-red-500"
+                            }`}
+                          />
+                        </div>
                         <FieldErrorDisplay error={errors.username} />
                       </div>
                     )}
