@@ -29,7 +29,7 @@ const Inner = () => {
     <div className="h-screen w-full">
       <div className="flex h-full flex-row items-center justify-center">
         <div className="bg-coral w-full py-3 text-center text-white">
-          <h1 className="my-2 text-3xl font-extrabold tracking-tight  drop-shadow-md sm:text-[5rem]">
+          <h1 className="my-2 text-4xl font-extrabold tracking-tight  drop-shadow-md">
             Accountabilibuddies
           </h1>
 
