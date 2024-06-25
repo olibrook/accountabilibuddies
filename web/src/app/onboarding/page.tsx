@@ -2,13 +2,13 @@
 import { BaseAppShell } from "@buds/app/_components/AppShell";
 import { useSession } from "next-auth/react";
 import React, { useState } from "react";
-import { Avatar, CustomSession } from "@buds/app/_components/TracksPage";
+import { CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { RouterOutputs } from "@buds/trpc/shared";
 import {
-  SettingsForm,
+  OnboardingSettingsForm,
   SettingsFormFields,
 } from "@buds/app/_components/SettingsForm";
 
@@ -75,10 +75,7 @@ function OnboardingPane(props: { session: CustomSession; me: Me }) {
         slide={1}
         numSlides={1}
       >
-        <div className="p-8">
-          <Greeting me={me} />
-          <SettingsForm hookForm={hookForm} />
-        </div>
+        <OnboardingSettingsForm me={me} hookForm={hookForm} />
       </OnboardingSlide>
     </div>
   );
@@ -108,23 +105,6 @@ const DotNav = ({ length, current }: { length: number; current: number }) => {
         </li>
       ))}
     </ul>
-  );
-};
-
-const Greeting = ({ me }: { me: Me }) => {
-  return (
-    <>
-      <div className="my-2 flex w-full items-center justify-center px-4 text-center">
-        <Avatar size="4xl" userName={me.name ?? ""} imageUrl={me.image} />
-      </div>
-      <div className="my-2 w-full px-4 text-center">Welcome!</div>
-      <div className="my-4 w-full px-4 text-center text-2xl font-semibold">
-        {me.name}
-      </div>
-      <div className="my-4 w-full px-4 text-center ">
-        A few details before we get started
-      </div>
-    </>
   );
 };
 

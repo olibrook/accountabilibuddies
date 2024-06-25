@@ -2,6 +2,11 @@ import { Controller, FieldError, useForm } from "react-hook-form";
 import { api } from "@buds/trpc/react";
 import React, { InputHTMLAttributes, useEffect } from "react";
 import { ToggleButton } from "@buds/app/_components/AppShell";
+import { Avatar } from "@buds/app/_components/TracksPage";
+import { RouterOutputs } from "@buds/trpc/shared";
+import { PropsOf } from "@headlessui/react/dist/types";
+
+type Me = RouterOutputs["user"]["me"];
 
 export type SettingsFormFields = {
   username?: string;
@@ -21,6 +26,36 @@ export const FieldErrorDisplay = ({ error }: { error?: FieldError }) => {
         <span>&nbsp;</span>
       )}
     </p>
+  );
+};
+
+const Greeting = ({ me }: { me: Me }) => {
+  return (
+    <>
+      <div className="my-2 flex w-full items-center justify-center px-4 text-center">
+        <Avatar size="4xl" userName={me.name ?? ""} imageUrl={me.image} />
+      </div>
+      <div className="my-2 w-full px-4 text-center">Welcome!</div>
+      <div className="my-4 w-full px-4 text-center text-2xl font-semibold">
+        {me.name}
+      </div>
+      <div className="my-4 w-full px-4 text-center ">
+        A few details before we get started
+      </div>
+    </>
+  );
+};
+
+const NeutralHeading = ({ me }: { me: Me }) => {
+  return (
+    <>
+      <div className="my-2 flex w-full items-center justify-center px-4 text-center">
+        <Avatar size="4xl" userName={me.name ?? ""} imageUrl={me.image} />
+      </div>
+      <div className="my-4 w-full px-4 text-center text-2xl font-semibold">
+        {me.name}
+      </div>
+    </>
   );
 };
 
@@ -146,3 +181,23 @@ export const SettingsForm = ({
     </div>
   );
 };
+
+export const OnboardingSettingsForm = ({
+  me,
+  ...rest
+}: { me: Me } & PropsOf<typeof SettingsForm>) => (
+  <div className="p-8">
+    <Greeting me={me} />
+    <SettingsForm {...rest} />
+  </div>
+);
+
+export const RegularSettingsForm = ({
+  me,
+  ...rest
+}: { me: Me } & PropsOf<typeof SettingsForm>) => (
+  <div className="p-8">
+    <NeutralHeading me={me} />
+    <SettingsForm {...rest} />
+  </div>
+);
