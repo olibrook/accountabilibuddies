@@ -67,7 +67,7 @@ function SettingsPane(props: { session: CustomSession; me: Me }) {
     <Pane
       headerChildren={<div className="px-4 text-xl">Settings</div>}
       mainChildren={
-        <div className="flex w-full flex-grow flex-col items-center overflow-scroll rounded-b-xl bg-gray-50 px-8 pt-8">
+        <div className="flex w-full flex-grow flex-col items-center overflow-scroll rounded-b-xl bg-gray-50">
           <RegularSettingsForm
             me={me}
             onSubmit={onSubmit}

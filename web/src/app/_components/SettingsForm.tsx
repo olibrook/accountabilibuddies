@@ -186,7 +186,7 @@ export const OnboardingSettingsForm = ({
   me,
   ...rest
 }: { me: Me } & PropsOf<typeof SettingsForm>) => (
-  <div className="p-8">
+  <div className="w-full p-8">
     <Greeting me={me} />
     <SettingsForm {...rest} />
   </div>
@@ -196,7 +196,7 @@ export const RegularSettingsForm = ({
   me,
   ...rest
 }: { me: Me } & PropsOf<typeof SettingsForm>) => (
-  <div className="p-8">
+  <div className="w-full p-8">
     <NeutralHeading me={me} />
     <SettingsForm {...rest} />
   </div>
