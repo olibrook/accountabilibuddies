@@ -6,6 +6,7 @@ import { Avatar, CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
 import { Controller, useForm } from "react-hook-form";
 import { FieldErrorDisplay } from "@buds/app/settings/page";
+import { useRouter } from "next/navigation";
 
 // Onboarding 1 – Set up user name and settings
 
@@ -44,6 +45,8 @@ type WritableFields = {
 function OnboardingPane(props: { session: CustomSession }) {
   const { data: me } = api.user.me.useQuery();
   const [alertIsOpen, setAlertIsOpen] = useState(false);
+
+  const router = useRouter();
 
   const {
     control,
@@ -109,7 +112,7 @@ function OnboardingPane(props: { session: CustomSession }) {
         nextClickEnabled={isValid}
         onNextClick={async () => {
           await save();
-          // Redirect on success
+          router.push("/users/me");
         }}
         slide={1}
         numSlides={1}
