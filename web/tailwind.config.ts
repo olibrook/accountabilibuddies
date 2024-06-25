@@ -8,6 +8,9 @@ export default {
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
       },
+      backgroundImage: {
+        "app-bg-image": "url('/accountabilibuddies.png')",
+      },
     },
   },
   plugins: [],

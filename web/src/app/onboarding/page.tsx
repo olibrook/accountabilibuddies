@@ -1,7 +1,7 @@
 "use client";
 import { BaseAppShell, ToggleButton } from "@buds/app/_components/AppShell";
 import { useSession } from "next-auth/react";
-import React, { useEffect, useState } from "react";
+import React, { InputHTMLAttributes, useEffect, useState } from "react";
 import { Avatar, CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
 import { Controller, useForm } from "react-hook-form";
@@ -48,9 +48,9 @@ function OnboardingPane(props: { session: CustomSession }) {
   const {
     control,
     formState: { errors },
-    handleSubmit,
     watch,
     setError,
+    getValues,
   } = useForm<WritableFields>({
     values: {
       username: me?.username ?? undefined,
@@ -68,8 +68,9 @@ function OnboardingPane(props: { session: CustomSession }) {
   // it's available and show that in the error field of the input
   const usernameAvailable = api.user.usernameAvailable.useMutation();
   const updateMe = api.user.updateMe.useMutation();
-  const onsubmit = async (data: WritableFields) => {
-    await Promise.resolve();
+
+  const save = async () => {
+    const data: WritableFields = getValues();
     await updateMe.mutateAsync(data);
   };
 
@@ -109,7 +110,14 @@ function OnboardingPane(props: { session: CustomSession }) {
       >
         {Array.from(new Array(3)).map((_, i) => (
           <div key={i}>
-            <OnboardingSlide nextSlide={nextSlide} slide={i} numSlides={3}>
+            <OnboardingSlide
+              onNextClick={async () => {
+                await save();
+                nextSlide();
+              }}
+              slide={i}
+              numSlides={3}
+            >
               <div className="my-4">
                 <div className="my-2 flex items-center justify-center px-4 text-center">
                   <Avatar
@@ -123,34 +131,16 @@ function OnboardingPane(props: { session: CustomSession }) {
                   {me.name}
                 </div>
                 <div className="my-4 px-4 text-center ">
-                  We need just a few details to get started.
+                  A few details before we get started
                 </div>
 
-                <form onSubmit={handleSubmit(onsubmit)}>
+                <form onSubmit={(e) => e.preventDefault()}>
                   <Controller
                     control={control}
                     name="username"
                     render={({ field }) => (
                       <div className="flex w-full flex-col">
-                        <div className="flex w-full flex-grow items-center gap-2">
-                          <label
-                            htmlFor="username"
-                            className="block text-sm font-medium"
-                          >
-                            Username
-                          </label>
-                          <input
-                            type="text"
-                            id="username"
-                            autoComplete="off"
-                            {...field}
-                            value={field.value}
-                            className={`mt-1 w-full rounded-md border px-4 py-2 focus:outline-none ${
-                              errors.username?.type === "error" &&
-                              "border-red-500"
-                            }`}
-                          />
-                        </div>
+                        <TextInput label="Username" {...field} />
                         <FieldErrorDisplay error={errors.username} />
                       </div>
                     )}
@@ -214,12 +204,12 @@ const OnboardingSlide = ({
   children,
   slide,
   numSlides,
-  nextSlide,
+  onNextClick,
 }: {
   children: React.ReactNode;
   slide: number;
   numSlides: number;
-  nextSlide: () => void;
+  onNextClick: () => void;
 }) => {
   return (
     <div key={slide}>
@@ -235,7 +225,7 @@ const OnboardingSlide = ({
               <button
                 type="button"
                 className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                onClick={nextSlide}
+                onClick={onNextClick}
               >
                 Next
               </button>
@@ -246,3 +236,29 @@ const OnboardingSlide = ({
     </div>
   );
 };
+
+const TextInput = ({
+  label,
+  className,
+  ...rest
+}: InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+}) => (
+  <div className={`relative ${className ?? ""}`}>
+    <input
+      {...rest}
+      autoComplete="off"
+      type="text"
+      id="password"
+      className="border-1 peer block w-full appearance-none rounded-lg border border-gray-300 bg-white px-2.5 pb-2.5 pt-4 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0"
+      placeholder=" "
+    />
+    <label
+      htmlFor="password"
+      className="absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform cursor-text select-none bg-white px-2 text-sm text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 peer-focus:text-blue-600"
+    >
+      {" "}
+      {label}
+    </label>
+  </div>
+);

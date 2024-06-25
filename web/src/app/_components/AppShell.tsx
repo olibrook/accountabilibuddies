@@ -198,10 +198,7 @@ const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
 export const BaseAppShell: React.FC<React.PropsWithChildren> = ({
   children,
 }) => {
-  const hiPerf = true;
-  const bg = hiPerf
-    ? "bg-cover	bg-no-repeat bg-gradient-to-bl from-[#FED5B6] to-[#7371B5]"
-    : "bg-[#FED5B6]";
+  const bg = `bg-cover bg-no-repeat bg-app-bg-image`;
   return (
     <SessionProvider>
       <UserSettingProvider>
