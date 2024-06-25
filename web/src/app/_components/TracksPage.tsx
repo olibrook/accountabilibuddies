@@ -245,7 +245,7 @@ const groupEmUp = (sortKeyLists: SortKeyList[]): KeyGroup[] => {
 };
 
 type Sized = {
-  size: "4xl" | "xl" | "lg" | "md";
+  size: "4xl" | "xl" | "lg" | "md" | "s";
 };
 
 type IconProps = {
@@ -265,6 +265,7 @@ export const Icon: React.FC<IconProps> = ({
     xl: "h-14 w-14",
     lg: "h-10 w-10",
     md: "h-8 w-8",
+    s: "h-8 w-8",
   };
   return (
     <div className={`${sizeStyles[size]} overflow-hidden rounded-full border`}>

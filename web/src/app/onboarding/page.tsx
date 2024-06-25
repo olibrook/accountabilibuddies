@@ -47,9 +47,10 @@ function OnboardingPane(props: { session: CustomSession }) {
 
   const {
     control,
-    formState: { errors },
+    formState: { errors, isValid },
     watch,
     setError,
+    clearErrors,
     getValues,
   } = useForm<WritableFields>({
     values: {
@@ -77,10 +78,10 @@ function OnboardingPane(props: { session: CustomSession }) {
   useEffect(() => {
     const inner = async (val: { username: string }) => {
       const available = await usernameAvailable.mutateAsync(val);
-      if (available) {
-        setError("username", { type: "info", message: "Username available!" });
-      } else {
+      if (!available) {
         setError("username", { type: "error", message: "Username taken" });
+      } else {
+        clearErrors("username");
       }
     };
     // TODO: Watch just the one field. Then connect up the callbacks, etc.
@@ -102,83 +103,83 @@ function OnboardingPane(props: { session: CustomSession }) {
     return false;
   }
 
+  const panes = (
+    <div key={1}>
+      <OnboardingSlide
+        nextClickEnabled={isValid}
+        onNextClick={async () => {
+          await save();
+          // Redirect on success
+        }}
+        slide={1}
+        numSlides={1}
+      >
+        <div className="my-4">
+          <div className="my-2 flex items-center justify-center px-4 text-center">
+            <Avatar size="4xl" userName={me.name ?? ""} imageUrl={me.image} />
+          </div>
+          <div className="my-2 px-4 text-center">Welcome!</div>
+          <div className="my-4 px-4 text-center text-2xl font-semibold">
+            {me.name}
+          </div>
+          <div className="my-4 px-4 text-center ">
+            A few details before we get started
+          </div>
+
+          <form onSubmit={(e) => e.preventDefault()}>
+            <Controller
+              rules={{ minLength: 5 }}
+              control={control}
+              name="username"
+              render={({ field }) => (
+                <div className="flex w-full flex-col">
+                  <TextInput label="Username" {...field} />
+                  <FieldErrorDisplay error={errors.username} />
+                </div>
+              )}
+            />
+            <Controller
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <div className="mb-2 block flex items-center py-2">
+                  <ToggleButton
+                    value={value === "⭐"}
+                    onChange={(val) => {
+                      onChange(val ? "⭐" : "💖");
+                    }}
+                    label="Use 💖 / ⭐ as progress emoji"
+                  />
+                </div>
+              )}
+              name="checkMark"
+            />
+
+            <Controller
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <div className="mb-2 block flex items-center py-2">
+                  <ToggleButton
+                    onChange={onChange}
+                    value={value}
+                    label="Use imperial / metric units?"
+                  />
+                </div>
+              )}
+              name="useMetric"
+            />
+          </form>
+        </div>
+      </OnboardingSlide>
+    </div>
+  );
+
   return (
     <div className="h-screen w-screen overflow-hidden">
       <div
         className="flex transition-transform duration-500 ease-in-out"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
-        {Array.from(new Array(3)).map((_, i) => (
-          <div key={i}>
-            <OnboardingSlide
-              onNextClick={async () => {
-                await save();
-                nextSlide();
-              }}
-              slide={i}
-              numSlides={3}
-            >
-              <div className="my-4">
-                <div className="my-2 flex items-center justify-center px-4 text-center">
-                  <Avatar
-                    size="4xl"
-                    userName={me.name ?? ""}
-                    imageUrl={me.image}
-                  />
-                </div>
-                <div className="my-2 px-4 text-center">Welcome!</div>
-                <div className="my-4 px-4 text-center text-2xl font-semibold">
-                  {me.name}
-                </div>
-                <div className="my-4 px-4 text-center ">
-                  A few details before we get started
-                </div>
-
-                <form onSubmit={(e) => e.preventDefault()}>
-                  <Controller
-                    control={control}
-                    name="username"
-                    render={({ field }) => (
-                      <div className="flex w-full flex-col">
-                        <TextInput label="Username" {...field} />
-                        <FieldErrorDisplay error={errors.username} />
-                      </div>
-                    )}
-                  />
-                  <Controller
-                    control={control}
-                    render={({ field: { onChange, value } }) => (
-                      <div className="mb-2 block flex items-center py-2">
-                        <ToggleButton
-                          value={value === "⭐"}
-                          onChange={(val) => {
-                            onChange(val ? "⭐" : "💖");
-                          }}
-                          label="Use 💖 / ⭐ as progress emoji"
-                        />
-                      </div>
-                    )}
-                    name="checkMark"
-                  />
-
-                  <Controller
-                    control={control}
-                    render={({ field: { onChange, value } }) => (
-                      <div className="mb-2 block flex items-center py-2">
-                        <ToggleButton
-                          onChange={onChange}
-                          value={value}
-                          label="Use imperial / metric units?"
-                        />
-                      </div>
-                    )}
-                    name="useMetric"
-                  />
-                </form>
-              </div>
-            </OnboardingSlide>
-          </div>
-        ))}
+        {panes}
       </div>
     </div>
   );
@@ -204,27 +205,37 @@ const OnboardingSlide = ({
   children,
   slide,
   numSlides,
+  nextClickEnabled,
   onNextClick,
 }: {
   children: React.ReactNode;
   slide: number;
   numSlides: number;
+  nextClickEnabled: boolean;
   onNextClick: () => void;
 }) => {
+  console.log(nextClickEnabled);
   return (
     <div key={slide}>
       <div className="h-screen w-screen shrink-0 overflow-hidden p-6">
         <div className="flex h-full w-full flex-col items-center justify-between rounded-xl bg-gray-50 ">
           <div className="flex-grow">{children}</div>
           <div className="mb-6 mt-4 w-full">
-            <div className="mb-4 flex w-full items-center justify-center px-4">
-              <DotNav current={slide} length={numSlides} />
-            </div>
+            {numSlides > 1 && (
+              <div className="mb-4 flex w-full items-center justify-center px-4">
+                <DotNav current={slide} length={numSlides} />
+              </div>
+            )}
 
             <div className="flex w-full items-center justify-center">
               <button
+                disabled={!nextClickEnabled}
                 type="button"
-                className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                className={`rounded-lg px-5 py-2.5 text-center text-sm font-medium text-white focus:outline-none focus:ring-4 ${
+                  nextClickEnabled
+                    ? "bg-blue-700 hover:bg-blue-800 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                    : "cursor-not-allowed bg-gray-500"
+                }`}
                 onClick={onNextClick}
               >
                 Next

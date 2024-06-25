@@ -1,9 +1,16 @@
 import React from "react";
-import { Search, Settings, User, Users } from "react-feather";
+import { Search, Settings, Users } from "react-feather";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Avatar } from "@buds/app/_components/TracksPage";
+import { api } from "@buds/trpc/react";
 
 const MobileFooter = () => {
+  const { data: me } = api.user.me.useQuery();
+
+  if (!me) {
+    return null;
+  }
   const pathname = usePathname();
 
   const linkClasses = (path: string) =>
@@ -15,7 +22,7 @@ const MobileFooter = () => {
     <div className="fixed bottom-0 flex w-full items-center justify-around bg-white py-4">
       <div className={linkClasses("/users/me")}>
         <Link href="/users/me">
-          <User size={20} />
+          <Avatar size="s" userName={me.name ?? ""} imageUrl={me.image} />
         </Link>
       </div>
       <div className={linkClasses("/tracks")}>

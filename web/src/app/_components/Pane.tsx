@@ -11,7 +11,7 @@ export const Pane = ({
 }) => {
   return (
     <main className={`h-screen font-light text-gray-600`}>
-      <div className="flex h-full w-full flex-col overflow-hidden bg-[#7371b5] shadow-xl drop-shadow-xl">
+      <div className="bg-coral flex h-full w-full flex-col overflow-hidden shadow-xl drop-shadow-xl">
         {popupChildren}
         <div className="flex min-h-[4rem] items-center justify-end font-normal text-white ">
           {headerChildren}
