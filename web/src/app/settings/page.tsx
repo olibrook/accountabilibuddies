@@ -7,7 +7,6 @@ import { api } from "@buds/trpc/react";
 import { useForm } from "react-hook-form";
 import { Pane } from "@buds/app/_components/Pane";
 import {
-  NeutralHeading,
   RegularSettingsForm,
   SettingsFormFields,
 } from "@buds/app/_components/SettingsForm";
