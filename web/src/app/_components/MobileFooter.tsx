@@ -8,10 +8,11 @@ import { api } from "@buds/trpc/react";
 const MobileFooter = () => {
   const { data: me } = api.user.me.useQuery();
 
+  const pathname = usePathname();
+
   if (!me) {
     return null;
   }
-  const pathname = usePathname();
 
   const linkClasses = (path: string) =>
     `link-class hover:text-black ${
