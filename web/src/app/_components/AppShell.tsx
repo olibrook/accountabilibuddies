@@ -1,15 +1,10 @@
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { Activity, Home, Users, X } from "react-feather";
+import React, { createContext, ReactNode, useContext, useEffect } from "react";
 import MobileFooter from "@buds/app/_components/MobileFooter";
 import { SessionProvider, signIn, useSession } from "next-auth/react";
 import { redirect, usePathname } from "next/navigation";
 import { userIsOnboarded } from "@buds/shared/utils";
+import { api } from "@buds/trpc/react";
+import { RouterOutputs } from "@buds/trpc/shared";
 
 export const ToggleButton = ({
   value,
@@ -38,110 +33,33 @@ export const ToggleButton = ({
   );
 };
 
-export type Measurement = "metric" | "imperial";
-
-export type UserSettings = {
-  measurements: Measurement;
-  checkIcon: string;
-};
-export const defaultUserSettings: UserSettings = {
-  measurements: "metric",
-  checkIcon: "⭐",
-};
-
-export type UserSettingsContextType = {
-  settings: UserSettings;
-  setUserSettings: (settings: UserSettings) => void;
-};
-export const defaultUserSettingsContext = {
-  settings: defaultUserSettings,
-  setUserSettings: () => {
-    return;
-  },
-};
-export const UserSettingsContext = createContext<UserSettingsContextType>(
-  defaultUserSettingsContext,
+export type CurrentUser = RouterOutputs["user"]["me"];
+export const CurrentUserContext = createContext<CurrentUser | undefined>(
+  undefined,
 );
 
-export const UserSettingProvider = ({ children }: { children: ReactNode }) => {
-  const [settings, setUserSettings] =
-    useState<UserSettings>(defaultUserSettings);
+export const useCurrentUser = () => {
+  const me = useContext(CurrentUserContext);
+  if (me === undefined) {
+    throw new Error(
+      "useUserSettings must be used within a UserSettingsProvider",
+    );
+  }
+  return me;
+};
+
+export const CurrentUserProvider = ({ children }: { children: ReactNode }) => {
+  const { data: me } = api.user.me.useQuery();
+  const pathname = usePathname();
+  const excluded = ["/"];
+  const isExcluded = excluded.indexOf(pathname) >= 0;
+  if (!me && !isExcluded) {
+    return null;
+  }
   return (
-    <UserSettingsContext.Provider value={{ settings, setUserSettings }}>
+    <CurrentUserContext.Provider value={me}>
       {children}
-    </UserSettingsContext.Provider>
-  );
-};
-
-export type LeftSliderProps = {
-  closeMenu: () => void;
-};
-
-export const LeftSlider: React.FC<LeftSliderProps> = ({ closeMenu }) => {
-  const { settings, setUserSettings } = useContext(UserSettingsContext);
-
-  const displayMetric = settings.measurements === "metric";
-
-  const setDisplayMetric = (useMetric: boolean) =>
-    setUserSettings({
-      ...settings,
-      measurements: useMetric ? "metric" : "imperial",
-    });
-
-  const toggleStarHeart = (useStar: boolean) =>
-    setUserSettings({
-      ...settings,
-      checkIcon: useStar ? "⭐" : "💖",
-    });
-
-  return (
-    <div>
-      <div
-        className="absolute left-0 top-0 z-10 cursor-pointer p-4"
-        onClick={closeMenu}
-      >
-        <X size={20} />
-      </div>
-
-      <a
-        href="#"
-        className="mb-2 block flex items-center px-4 py-2 hover:bg-gray-700"
-      >
-        <Home size={20} className="mr-2" />
-        Menu Item 1
-      </a>
-      <a
-        href="#"
-        className="mb-2 block flex items-center px-4 py-2 hover:bg-gray-700"
-      >
-        <Users size={20} className="mr-2" />
-        Menu Item 2
-      </a>
-      <a
-        href="#"
-        className="mb-2 block flex items-center px-4 py-2 hover:bg-gray-700"
-      >
-        <Activity size={20} className="mr-2" />
-        Menu Item 3
-      </a>
-
-      <h2 className="my-4 px-4">Settings</h2>
-
-      <div className="mb-2 block flex items-center px-4 py-2 hover:bg-gray-700">
-        <ToggleButton
-          value={settings.checkIcon === "⭐"}
-          onChange={toggleStarHeart}
-          label="💖/⭐"
-        />
-      </div>
-      <div className="mb-2 block flex items-center px-4 py-2 hover:bg-gray-700">
-        <ToggleButton
-          value={displayMetric}
-          onChange={setDisplayMetric}
-          label="Use metric?"
-        />
-      </div>
-    </div>
+    </CurrentUserContext.Provider>
   );
 };
 
@@ -201,13 +119,13 @@ export const BaseAppShell: React.FC<React.PropsWithChildren> = ({
   const bg = `bg-cover bg-no-repeat bg-app-bg-image`;
   return (
     <SessionProvider>
-      <UserSettingProvider>
-        <AuthGuard>
+      <AuthGuard>
+        <CurrentUserProvider>
           <UserOnboardingGuard>
             <div className={`${bg} h-screen`}>{children}</div>
           </UserOnboardingGuard>
-        </AuthGuard>
-      </UserSettingProvider>
+        </CurrentUserProvider>
+      </AuthGuard>
     </SessionProvider>
   );
 };

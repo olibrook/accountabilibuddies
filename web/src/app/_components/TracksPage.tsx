@@ -3,11 +3,11 @@
 import { api } from "@buds/trpc/react";
 import { format, isSaturday, isSunday, parseISO } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import React, { ReactNode, useContext, useMemo, useRef, useState } from "react";
+import React, { ReactNode, useMemo, useRef, useState } from "react";
 import AppShell, {
+  CurrentUser,
   Measurement,
-  UserSettings,
-  UserSettingsContext,
+  useCurrentUser,
 } from "@buds/app/_components/AppShell";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -177,17 +177,17 @@ const CellValue = ({
   trackName: string;
   value?: number;
 }) => {
-  const { settings } = useContext(UserSettingsContext);
+  const currentUser = useCurrentUser();
   if (!value) {
     return <span className="text-gray-300">⚬</span>;
   }
   switch (trackName) {
     case "weight":
-      const suffix = settings.measurements === "metric" ? "kg" : "lb";
+      const suffix = currentUser.useMetric ? "kg" : "lb";
       const display = convertWeight(
         value,
         "metric",
-        settings.measurements,
+        currentUser.useMetric ? "metric" : "imperial",
       ).toFixed(1);
       return (
         <>
@@ -197,7 +197,7 @@ const CellValue = ({
       );
     case "food":
     case "gym":
-      return value === 1 ? settings.checkIcon : undefined;
+      return value === 1 ? currentUser.checkMark : undefined;
     case "mood":
     default:
       return value;
@@ -692,9 +692,9 @@ const TableRow = ({
   );
 };
 
-const getUnit = (userSettings: UserSettings, trackName: string) => {
+const getUnit = (user: CurrentUser, trackName: string) => {
   if (trackName === "weight") {
-    return userSettings.measurements === "metric" ? "Kg" : "lb";
+    return user.useMetric ? "Kg" : "lb";
   } else {
     const trackConfig = trackConfigs[trackName as TrackName];
     return trackConfig.units;
@@ -710,7 +710,7 @@ const EntryPopup = ({
   setEditing: (e: Editing | undefined) => void;
   upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
 }) => {
-  const userSettingsContext = useContext(UserSettingsContext);
+  const user = useCurrentUser();
   const [value, setValue] = useState<number | undefined>(
     editing.value ?? editing.previousValue,
   );
@@ -724,10 +724,7 @@ const EntryPopup = ({
   ) : (
     false
   );
-  const unit = getUnit(
-    userSettingsContext.settings,
-    keyGroup.sortKey.track.name,
-  );
+  const unit = getUnit(user, keyGroup.sortKey.track.name);
 
   return (
     <div className="absolute bottom-0 left-0 right-0 top-0 z-50  bg-gray-100">
