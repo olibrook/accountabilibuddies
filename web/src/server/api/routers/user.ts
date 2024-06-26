@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
 import { unauthorized } from "@buds/server/api/common";
 import { startOfDay, subDays } from "date-fns";
-import { Stat, User } from "@prisma/client";
+import { PrismaClient, Stat, User } from "@prisma/client";
 import { v4 as uuid4 } from "uuid";
 import { z } from "zod";
 
@@ -42,6 +42,22 @@ const SearchInput = z.object({
 });
 
 type UserWithFollowInfo = User & { following: boolean };
+
+const upsertTracks = async (db: PrismaClient, users: { id: string }[]) => {
+  const tracks = ["weight", "mood", "food", "gym"];
+  for (const user of users) {
+    for (const name of tracks) {
+      await db.track.upsert({
+        where: { userId_name: { userId: user.id, name } },
+        create: {
+          userId: user.id,
+          name,
+        },
+        update: {},
+      });
+    }
+  }
+};
 
 export const userRouter = createTRPCRouter({
   seedMe: protectedProcedure.query(async ({ ctx }) => {
@@ -144,12 +160,14 @@ export const userRouter = createTRPCRouter({
     if (!userId) {
       throw unauthorized();
     }
-    return await db.user.findUniqueOrThrow({
+    const user = await db.user.findUniqueOrThrow({
       where: {
         id: userId,
       },
       select: privateFields,
     });
+    await upsertTracks(db, [user]);
+    return user;
   }),
   updateMe: protectedProcedure
     .input(UpdateMeInput)
@@ -178,7 +196,7 @@ export const userRouter = createTRPCRouter({
     if (!userId) {
       throw unauthorized();
     }
-    return await db.user.findMany({
+    const users = await db.user.findMany({
       where: {
         OR: [
           {
@@ -195,6 +213,8 @@ export const userRouter = createTRPCRouter({
       },
       select: publicFields,
     });
+    await upsertTracks(db, users);
+    return users;
   }),
   usernameAvailable: protectedProcedure
     .input(UsernameAvailableInput)
