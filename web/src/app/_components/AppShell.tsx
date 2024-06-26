@@ -94,13 +94,13 @@ const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
   const loading = session.status === "loading";
   const authenticated = session.status === "authenticated";
   const onboarded = authenticated && userIsOnboarded(session.data);
-  const excluded = ["/", "/settings"];
+  const excluded = ["/", "/onboarding"];
   const isExcluded = excluded.indexOf(pathname) >= 0;
 
   useEffect(() => {
     const checkUser = () => {
       if (!isExcluded && !loading && !onboarded) {
-        redirect("/settings");
+        redirect("/onboarding");
       }
     };
     void checkUser();
