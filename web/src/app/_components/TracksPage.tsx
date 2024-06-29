@@ -692,12 +692,21 @@ const TableRow = ({
   );
 };
 
-const getUnit = (user: CurrentUser, trackName: string) => {
+const getUnitName = (user: CurrentUser, trackName: string) => {
   if (trackName === "weight") {
     return user.useMetric ? "Kg" : "lb";
   } else {
     const trackConfig = trackConfigs[trackName as TrackName];
     return trackConfig.units;
+  }
+};
+
+const getMeasurement = (user: CurrentUser): Measurement => {
+  switch (user.useMetric) {
+    case true:
+      return "metric";
+    case false:
+      return "imperial";
   }
 };
 
@@ -711,8 +720,14 @@ const EntryPopup = ({
   upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
 }) => {
   const user = useCurrentUser();
-  const [value, setValue] = useState<number | undefined>(
-    editing.value ?? editing.previousValue,
+  const [valueInUserUnits, setValueInUserUnits] = useState<number | undefined>(
+    parseFloat(
+      convertWeight(
+        editing.value ?? editing.previousValue ?? 0,
+        "metric",
+        getMeasurement(user),
+      ).toFixed(1),
+    ),
   );
   const { date, keyGroup } = editing;
   const trackConfig = trackConfigs[keyGroup.sortKey.track.name as TrackName];
@@ -724,7 +739,7 @@ const EntryPopup = ({
   ) : (
     false
   );
-  const unit = getUnit(user, keyGroup.sortKey.track.name);
+  const unit = getUnitName(user, keyGroup.sortKey.track.name);
 
   return (
     <div className="absolute bottom-0 left-0 right-0 top-0 z-50  bg-gray-100">
@@ -738,8 +753,8 @@ const EntryPopup = ({
         </div>
         <div className="mb-2">
           <NumberInput
-            value={value}
-            onChange={setValue}
+            value={valueInUserUnits}
+            onChange={setValueInUserUnits}
             min={trackConfig.min}
             max={trackConfig.max}
             incr={trackConfig.incr}
@@ -750,7 +765,12 @@ const EntryPopup = ({
           type="button"
           className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           onClick={async () => {
-            if (value) {
+            if (valueInUserUnits) {
+              const value = convertWeight(
+                valueInUserUnits,
+                getMeasurement(user),
+                "metric",
+              );
               await upsertStat.mutateAsync({
                 date,
                 trackId,
