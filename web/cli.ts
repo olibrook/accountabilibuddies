@@ -153,9 +153,7 @@ program
         if (track.name === "weight" && !user.useMetric) {
           for (const stat of track.stats) {
             const value = convertWeight(stat.value, "imperial", "metric");
-            console.log(
-              JSON.stringify({ where: { id: stat.id }, data: { value } }),
-            );
+            await db.stat.update({ where: { id: stat.id }, data: { value } });
           }
         }
       }
