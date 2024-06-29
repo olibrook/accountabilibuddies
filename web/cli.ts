@@ -4,6 +4,8 @@ import { $, execa } from "execa";
 import { Command, Option } from "commander";
 import p from "path";
 import { cloneDeep } from "lodash";
+import { PrismaClient } from "@prisma/client";
+import { convertWeight, getMeasurement } from "@buds/shared/utils";
 
 const root = p.resolve(p.join(__dirname, ".."));
 
@@ -129,6 +131,45 @@ program
       env: prismaEnv,
       preferLocal: true,
     });
+  });
+
+program
+  .command("data-migrations")
+  .description("Run data (not schema) migrations")
+  .addOption(
+    new Option("--env <env>", "The env to connect to")
+      .default("local")
+      .choices(envChoices),
+  )
+  .action(async ({ env }: { env: Env }) => {
+    const datasourceUrl = await getDBConnectionString(env);
+    const db = new PrismaClient({ datasourceUrl });
+    const users = await db.user.findMany({
+      include: { tracks: { include: { stats: true } } },
+    });
+
+    for (const user of users) {
+      for (const track of user.tracks) {
+        if (track.name === "weight" && !user.useMetric) {
+          for (const stat of track.stats) {
+            const value = convertWeight(stat.value, "imperial", "metric");
+            const newStat = { ...stat, value };
+            console.log(
+              JSON.stringify(
+                {
+                  user: user.name,
+                  measure: getMeasurement(user),
+                  old: stat.value,
+                  newV: newStat.value,
+                },
+                null,
+                2,
+              ),
+            );
+          }
+        }
+      }
+    }
   });
 
 void Promise.resolve()

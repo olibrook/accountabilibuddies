@@ -6,8 +6,6 @@ import { userIsOnboarded } from "@buds/shared/utils";
 import { api } from "@buds/trpc/react";
 import { RouterOutputs } from "@buds/trpc/shared";
 
-export type Measurement = "metric" | "imperial";
-
 export const ToggleButton = ({
   value,
   onChange,

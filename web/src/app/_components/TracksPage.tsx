@@ -6,7 +6,6 @@ import { RouterOutputs } from "@buds/trpc/shared";
 import React, { ReactNode, useMemo, useRef, useState } from "react";
 import AppShell, {
   CurrentUser,
-  Measurement,
   useCurrentUser,
 } from "@buds/app/_components/AppShell";
 import Link from "next/link";
@@ -19,7 +18,13 @@ import { User } from "react-feather";
 import DropdownMenu from "@buds/app/_components/DropdownMenu";
 import { debounce } from "next/dist/server/utils";
 import { Pane } from "@buds/app/_components/Pane";
-import { DateString, toDate, toDateString } from "@buds/shared/utils";
+import {
+  convertWeight,
+  DateString,
+  getMeasurement,
+  toDate,
+  toDateString,
+} from "@buds/shared/utils";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -115,16 +120,6 @@ const trackConfigs: Record<TrackName, TrackConfig> = {
 const formatMonthYear = (date: DateString) => format(parseISO(date), "MMM ’yy");
 const formatDate = (date: DateString) => format(parseISO(date), "E d");
 const formatFullDate = (date: DateString) => format(parseISO(date), "PPP");
-
-const convertWeight = (val: number, from: Measurement, to: Measurement) => {
-  let multiplier = 1;
-  if (from == "metric" && to === "imperial") {
-    multiplier = 2.20462;
-  } else if (from == "imperial" && to === "metric") {
-    multiplier = 0.453592;
-  }
-  return val * multiplier;
-};
 
 const InteractiveCell = ({
   session,
@@ -698,15 +693,6 @@ const getUnitName = (user: CurrentUser, trackName: string) => {
   } else {
     const trackConfig = trackConfigs[trackName as TrackName];
     return trackConfig.units;
-  }
-};
-
-const getMeasurement = (user: CurrentUser): Measurement => {
-  switch (user.useMetric) {
-    case true:
-      return "metric";
-    case false:
-      return "imperial";
   }
 };
 
