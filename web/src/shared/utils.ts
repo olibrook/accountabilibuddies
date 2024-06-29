@@ -64,3 +64,11 @@ export const getMeasurement = (user: CurrentUser): Measurement => {
       return "imperial";
   }
 };
+
+export const isWeekend = (ds: DateString) => {
+  const date = new Date(ds);
+  const day = date.getUTCDay();
+  return day === 0 || day === 6;
+};
+
+export const $log = (x: any) => console.log(JSON.stringify(x, null, 2));

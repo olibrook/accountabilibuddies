@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@buds/trpc/react";
-import { format, isSaturday, isSunday, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import React, { ReactNode, useMemo, useRef, useState } from "react";
 import AppShell, {
@@ -22,6 +22,7 @@ import {
   convertWeight,
   DateString,
   getMeasurement,
+  isWeekend,
   toDate,
   toDateString,
 } from "@buds/shared/utils";
@@ -643,10 +644,8 @@ const TableRow = ({
   session: CustomSession;
 }) => {
   const date = stat.date;
-  const isWeekend = isSaturday(toDate(date)) || isSunday(toDate(date));
-
   return (
-    <tr key={`${dateOffset}`} className={isWeekend ? "bg-gray-100" : ""}>
+    <tr key={`${dateOffset}`} className={isWeekend(date) ? "bg-gray-100" : ""}>
       <td className="w-[70px] text-right text-sm">
         <div>{formatDate(date)}</div>
       </td>

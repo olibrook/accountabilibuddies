@@ -5,7 +5,7 @@ import { Command, Option } from "commander";
 import p from "path";
 import { cloneDeep } from "lodash";
 import { PrismaClient } from "@prisma/client";
-import { convertWeight, getMeasurement } from "@buds/shared/utils";
+import { convertWeight } from "@buds/shared/utils";
 
 const root = p.resolve(p.join(__dirname, ".."));
 
@@ -153,18 +153,8 @@ program
         if (track.name === "weight" && !user.useMetric) {
           for (const stat of track.stats) {
             const value = convertWeight(stat.value, "imperial", "metric");
-            const newStat = { ...stat, value };
             console.log(
-              JSON.stringify(
-                {
-                  user: user.name,
-                  measure: getMeasurement(user),
-                  old: stat.value,
-                  newV: newStat.value,
-                },
-                null,
-                2,
-              ),
+              JSON.stringify({ where: { id: stat.id }, data: { value } }),
             );
           }
         }
