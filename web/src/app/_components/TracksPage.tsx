@@ -23,6 +23,7 @@ import {
   DateString,
   getMeasurement,
   isWeekend,
+  MeasurementPreference,
   toDate,
   toDateString,
 } from "@buds/shared/utils";
@@ -704,21 +705,20 @@ const EntryPopup = ({
   setEditing: (e: Editing | undefined) => void;
   upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
 }) => {
-  const user = useCurrentUser();
-  const [valueInUserUnits, setValueInUserUnits] = useState<number | undefined>(
-    parseFloat(
-      convertWeight(
-        editing.value ?? editing.previousValue ?? 0,
-        "metric",
-        getMeasurement(user),
-      ).toFixed(1),
-    ),
-  );
   const { date, keyGroup } = editing;
-  const trackConfig = trackConfigs[keyGroup.sortKey.track.name as TrackName];
+  const trackName = keyGroup.sortKey.track.name as TrackName;
+  const trackConfig = trackConfigs[trackName];
   const trackId = keyGroup.sortKey.track.id;
-  const trackName = trackConfig.name ?? "?";
+  const trackNameDisplay = trackConfig.name ?? "?";
   const trackEmoji = trackConfig.icon ?? "?";
+
+  const user = useCurrentUser();
+  const converter = getConverter(user, trackName);
+
+  const [valueInUserUnits, setValueInUserUnits] = useState<number | undefined>(
+    converter.toDisplay(editing.value ?? editing.previousValue ?? 0),
+  );
+
   const icon = trackEmoji ? (
     <Icon fallback={trackEmoji} alt={trackEmoji} size={"xl"} />
   ) : (
@@ -731,7 +731,7 @@ const EntryPopup = ({
       <div className="flex h-full flex-col items-center justify-center px-4">
         <div className="mb-4 flex w-full flex-row items-end justify-end">
           <div className="mr-4 text-right">
-            <h2 className="text-lg font-medium">{trackName}</h2>
+            <h2 className="text-lg font-medium">{trackNameDisplay}</h2>
             <h3 className="text-sm font-light">{formatFullDate(date)}</h3>
           </div>
           {icon}
@@ -751,11 +751,7 @@ const EntryPopup = ({
           className="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           onClick={async () => {
             if (valueInUserUnits) {
-              const value = convertWeight(
-                valueInUserUnits,
-                getMeasurement(user),
-                "metric",
-              );
+              const value = converter.toStorage(valueInUserUnits);
               await upsertStat.mutateAsync({
                 date,
                 trackId,
@@ -770,4 +766,40 @@ const EntryPopup = ({
       </div>
     </div>
   );
+};
+
+interface IConverter {
+  toDisplay: (val: number) => number;
+  toStorage: (val: number) => number;
+}
+
+const noopConverter = {
+  toDisplay: (val: number) => val,
+  toStorage: (val: number) => val,
+};
+
+class WeightConverter implements IConverter {
+  user: MeasurementPreference;
+  constructor(user: MeasurementPreference) {
+    this.user = user;
+  }
+  toDisplay(val: number) {
+    return parseFloat(
+      convertWeight(val, "metric", getMeasurement(this.user)).toFixed(1),
+    );
+  }
+  toStorage(val: number) {
+    return convertWeight(val, getMeasurement(this.user), "metric");
+  }
+}
+
+const getConverter = (
+  user: MeasurementPreference,
+  trackName: string,
+): IConverter => {
+  if (trackName === "weight") {
+    return new WeightConverter(user);
+  } else {
+    return noopConverter;
+  }
 };

@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { CustomSession } from "@buds/app/_components/TracksPage";
-import { CurrentUser } from "@buds/app/_components/AppShell";
 
 export type Measurement = "metric" | "imperial";
 
@@ -56,7 +55,8 @@ export const convertWeight = (
   return val * multiplier;
 };
 
-export const getMeasurement = (user: CurrentUser): Measurement => {
+export type MeasurementPreference = { useMetric: boolean };
+export const getMeasurement = (user: MeasurementPreference): Measurement => {
   switch (user.useMetric) {
     case true:
       return "metric";
