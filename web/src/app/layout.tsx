@@ -40,7 +40,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`font-sans ${inter.variable} bg-app-bg-image bg-cover bg-no-repeat`}
+        className={`font-sans ${inter.variable} bg-gradient-to-t from-blue-200 to-pink-100`}
       >
         <TRPCReactProvider cookies={cookies().toString()}>
           {children}
