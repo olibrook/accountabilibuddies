@@ -1,12 +1,13 @@
 "use client";
 
 import React, { createContext, ReactNode, useContext, useEffect } from "react";
-import { SessionProvider, signIn, useSession } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 import { redirect, usePathname } from "next/navigation";
 import { userIsOnboarded } from "@buds/shared/utils";
 import { api } from "@buds/trpc/react";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { Pane } from "@buds/app/_components/Pane";
+import { LoginButton } from "@buds/app/_components/LoginButton";
 
 export const ToggleButton = ({
   value,
@@ -66,25 +67,13 @@ export const CurrentUserProvider = ({ children }: { children: ReactNode }) => {
 };
 
 const AuthGuard: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const pathname = usePathname();
   const session = useSession();
   const authenticated = session.status === "authenticated";
-  const excluded = ["/"];
-  const isExcluded = excluded.indexOf(pathname) >= 0;
 
-  useEffect(() => {
-    const checkSession = async () => {
-      if (!isExcluded && session.status === "unauthenticated") {
-        await signIn(undefined, { callbackUrl: pathname });
-      }
-    };
-    void checkSession();
-  }, [session.status, pathname]);
-
-  if (authenticated || isExcluded) {
+  if (authenticated) {
     return <>{children}</>;
   } else {
-    return null;
+    return <LoginButton />;
   }
 };
 
