@@ -44,8 +44,8 @@ export default function Search() {
       <Pane
         headerChildren={<div className="px-4 text-xl">Search</div>}
         mainChildren={
-          <div>
-            <div className="my-4 px-4">
+          <div className="flex h-full w-full flex-col items-center justify-between bg-gray-50">
+            <div className="w-full shrink-0 grow-0 p-4">
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
                   <SearchIcon />
@@ -60,7 +60,7 @@ export default function Search() {
               </div>
             </div>
 
-            <div className="w-full flex-grow overflow-scroll rounded-b-xl bg-gray-50">
+            <div className="w-full shrink grow overflow-y-scroll rounded-b-xl bg-gray-50">
               {users?.map((u, i) => (
                 <div
                   key={u.id}

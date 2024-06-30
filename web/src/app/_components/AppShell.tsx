@@ -1,5 +1,4 @@
 import React, { createContext, ReactNode, useContext, useEffect } from "react";
-import MobileFooter from "@buds/app/_components/MobileFooter";
 import { SessionProvider, signIn, useSession } from "next-auth/react";
 import { redirect, usePathname } from "next/navigation";
 import { userIsOnboarded } from "@buds/shared/utils";
@@ -116,13 +115,18 @@ const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
 export const BaseAppShell: React.FC<React.PropsWithChildren> = ({
   children,
 }) => {
-  const bg = `bg-cover bg-no-repeat bg-app-bg-image`;
   return (
     <SessionProvider>
       <AuthGuard>
         <CurrentUserProvider>
           <UserOnboardingGuard>
-            <div className={`${bg} h-screen`}>{children}</div>
+            <div
+              className={` flex h-screen items-center justify-center font-light`}
+            >
+              <div className="h-full w-full max-w-screen-md overflow-hidden border-red-500 bg-gray-50 font-light text-gray-600 md:h-[calc(100vh-theme(spacing.24))] md:rounded-2xl">
+                {children}
+              </div>
+            </div>
           </UserOnboardingGuard>
         </CurrentUserProvider>
       </AuthGuard>
@@ -131,14 +135,7 @@ export const BaseAppShell: React.FC<React.PropsWithChildren> = ({
 };
 
 const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
-  return (
-    <BaseAppShell>
-      <div className="flex flex-col font-normal">
-        <div className="flex-1 font-light">{children}</div>
-      </div>
-      <MobileFooter />
-    </BaseAppShell>
-  );
+  return <BaseAppShell>{children}</BaseAppShell>;
 };
 
 export default AppShell;

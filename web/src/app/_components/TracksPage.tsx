@@ -500,7 +500,7 @@ function TrackList({
     return groupEmUp(sortKeys);
   }, [following, groupBy]);
 
-  const scrollableRef = useRef<HTMLDivElement | null>(null);
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
   if (!id) {
     if (resource === "tracks") {
@@ -534,7 +534,8 @@ function TrackList({
   }
 
   const onScroll = debounce(() => {
-    const el = scrollableRef.current;
+    const thisEl = elementRef.current;
+    const el = thisEl?.closest("#pane-main-scrollable-div");
     if (el) {
       const { top, left } = el.getBoundingClientRect();
       const testTop = top + 50;
@@ -571,21 +572,17 @@ function TrackList({
         </div>
       }
       mainChildren={
-        <div
-          id="scrollableDiv"
-          className="h-full w-full overflow-scroll"
-          ref={scrollableRef}
-        >
+        <div className="h-full w-full bg-green-500" ref={elementRef}>
           <InfiniteScroll
             next={fetchNextPage}
             hasMore={!!hasNextPage}
             dataLength={flatStats.length}
-            scrollableTarget="scrollableDiv"
+            scrollableTarget="pane-main-scrollable-div"
             style={{ overflow: "none" }}
             loader={<div />}
             onScroll={onScroll}
           >
-            <table className="min-w-full">
+            <table className="min-w-full bg-gray-50">
               <thead className="sticky top-0 bg-gray-50">
                 <tr className="font-normal">
                   <th className="py-2 text-right">
