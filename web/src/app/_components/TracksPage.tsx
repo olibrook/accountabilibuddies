@@ -502,7 +502,7 @@ function TrackList({
   }
 
   if (!(following && stats)) {
-    return <div>Loading</div>;
+    return <div />;
   }
 
   let selectedKeyGroup: KeyGroup | undefined;
