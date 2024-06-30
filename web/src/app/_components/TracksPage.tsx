@@ -22,6 +22,7 @@ import {
   toDate,
   toDateString,
 } from "@buds/shared/utils";
+import { MainContent } from "@buds/app/_components/Pane";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -391,14 +392,18 @@ function TrackListWrapper({ params }: { params: Params }) {
   const session = useSession();
   const { resource, id } = params;
 
-  if (session.data && (resource === "tracks" || resource === "users")) {
-    // TODO: This is horrendous – how do we get the type properly on
-    //  the client through next-auth?
-    const custom = session.data as unknown as CustomSession;
-    return <TrackList session={custom} resource={resource} id={id} />;
-  } else {
-    return null;
-  }
+  // TODO: This is horrendous – how do we get the type properly on
+  //  the client through next-auth?
+  const ready = session.data && (resource === "tracks" || resource === "users");
+  const content = !ready ? null : (
+    <TrackList
+      session={session.data as unknown as CustomSession}
+      resource={resource}
+      id={id}
+    />
+  );
+
+  return <MainContent id="pane-main-scrollable-div">{content}</MainContent>;
 }
 
 type Editing = {

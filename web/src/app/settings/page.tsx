@@ -9,6 +9,7 @@ import {
   SettingsFormFields,
 } from "@buds/app/_components/SettingsForm";
 import { RouterOutputs } from "@buds/trpc/shared";
+import { MainContent } from "@buds/app/_components/Pane";
 
 export default function Settings() {
   return <SettingsPaneWrapper />;
@@ -63,23 +64,24 @@ function SettingsPane(props: { session: CustomSession; me: Me }) {
     //
     //   }
     // />
-
-    <div className="flex h-full w-full flex-grow flex-col items-center bg-gray-50">
-      <RegularSettingsForm
-        me={me}
-        onSubmit={onSubmit}
-        hookForm={hookForm}
-        submitButton={
-          <div className="flex w-full flex-row items-center justify-end">
-            <button
-              type="submit"
-              className="rounded-md bg-blue-500 px-4 py-2 text-white focus:outline-none"
-            >
-              Save
-            </button>
-          </div>
-        }
-      />
-    </div>
+    <MainContent>
+      <div className="flex h-full w-full flex-grow flex-col items-center bg-gray-50">
+        <RegularSettingsForm
+          me={me}
+          onSubmit={onSubmit}
+          hookForm={hookForm}
+          submitButton={
+            <div className="flex w-full flex-row items-center justify-end">
+              <button
+                type="submit"
+                className="rounded-md bg-blue-500 px-4 py-2 text-white focus:outline-none"
+              >
+                Save
+              </button>
+            </div>
+          }
+        />
+      </div>
+    </MainContent>
   );
 }

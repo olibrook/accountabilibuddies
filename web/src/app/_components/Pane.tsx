@@ -47,8 +47,8 @@ const MobileFooter = () => {
 
 const MobileHeader: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
-    <div className="bg-coral flex h-full w-full items-center justify-between font-normal text-white">
-      <h1 className="font-pacifico my-2 -rotate-3 pl-4 text-4xl tracking-tight drop-shadow-md">
+    <div className="flex h-full w-full items-center justify-between bg-coral font-normal text-white">
+      <h1 className="my-2 -rotate-3 pl-4 font-pacifico text-4xl tracking-tight drop-shadow-md">
         Bilibuddies
       </h1>
       {children}
@@ -63,12 +63,7 @@ export const Pane = ({ children }: { children?: React.ReactNode }) => {
         <MobileHeader />
       </div>
 
-      <div
-        id="pane-main-scrollable-div"
-        className="h-full w-full shrink grow overflow-auto"
-      >
-        {children}
-      </div>
+      {children}
 
       <div className="h-16 w-full shrink-0 grow-0 overflow-hidden">
         <MobileFooter />
@@ -76,3 +71,15 @@ export const Pane = ({ children }: { children?: React.ReactNode }) => {
     </div>
   );
 };
+
+export const MainContent = ({
+  id,
+  children,
+}: {
+  id?: string;
+  children?: React.ReactNode;
+}) => (
+  <div id={id} className="h-full w-full shrink grow overflow-auto">
+    {children}
+  </div>
+);
