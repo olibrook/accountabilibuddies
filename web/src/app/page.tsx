@@ -2,21 +2,12 @@
 
 import Link from "next/link";
 
-import { BaseAppShell } from "@buds/app/_components/AppShell";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";
 import { LoadingSpinner } from "@buds/app/_components/LoadingSpinner";
 
 export default function Home() {
-  return (
-    <BaseAppShell>
-      <Inner />
-    </BaseAppShell>
-  );
-}
-
-const Inner = () => {
   const session = useSession();
 
   useEffect(() => {
@@ -51,4 +42,4 @@ const Inner = () => {
       </div>
     </div>
   );
-};
+}

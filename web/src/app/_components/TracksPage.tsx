@@ -4,10 +4,7 @@ import { api } from "@buds/trpc/react";
 import { format, parseISO } from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
 import React, { ReactNode, useMemo, useRef, useState } from "react";
-import AppShell, {
-  CurrentUser,
-  useCurrentUser,
-} from "@buds/app/_components/AppShell";
+import { CurrentUser, useCurrentUser } from "@buds/app/_components/AppShell";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -15,9 +12,7 @@ import { DefaultSession } from "next-auth";
 import { NumberInput } from "@buds/app/_components/NumberInput";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { User } from "react-feather";
-import DropdownMenu from "@buds/app/_components/DropdownMenu";
 import { debounce } from "next/dist/server/utils";
-import { Pane } from "@buds/app/_components/Pane";
 import {
   convertWeight,
   DateString,
@@ -361,11 +356,7 @@ type Params = {
 };
 
 export const TracksPage = ({ params }: { params: Params }) => {
-  return (
-    <AppShell>
-      <TrackListWrapper params={params} />
-    </AppShell>
-  );
+  return <TrackListWrapper params={params} />;
 };
 
 const accessor = (
@@ -553,74 +544,74 @@ function TrackList({
   const topmostDate = flatStats?.[topmostIdx]?.date;
 
   return (
-    <Pane
-      popupChildren={
-        editing ? (
-          <EntryPopup
-            editing={editing}
-            setEditing={setEditing}
-            upsertStat={upsertStat}
-          />
-        ) : null
-      }
-      headerChildren={
-        <div className="px-4">
-          <DropdownMenu
-            selectedKeyGroup={selectedKeyGroup}
-            keyGroups={keyGroups}
-          />
-        </div>
-      }
-      mainChildren={
-        <div className="h-full w-full bg-green-500" ref={elementRef}>
-          <InfiniteScroll
-            next={fetchNextPage}
-            hasMore={!!hasNextPage}
-            dataLength={flatStats.length}
-            scrollableTarget="pane-main-scrollable-div"
-            style={{ overflow: "none" }}
-            loader={<div />}
-            onScroll={onScroll}
-          >
-            <table className="min-w-full bg-gray-50">
-              <thead className="sticky top-0 bg-gray-50">
-                <tr className="font-normal">
-                  <th className="py-2 text-right">
-                    <div className="w-[70px]">
-                      {topmostDate && formatMonthYear(topmostDate)}
-                    </div>
-                  </th>
-                  {selectedKeyGroup.childKeys.map((kg) => (
-                    <th
-                      className="py-2"
-                      key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
-                    >
-                      <div className="flex items-center justify-center">
-                        <KeyGroupLink keyGroup={kg} size="md" />
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {flatStats.map((stat, dateOffset) => (
-                  <TableRow
-                    key={dateOffset}
-                    stat={stat}
-                    flatStats={flatStats}
-                    dateOffset={dateOffset}
-                    selectedKeyGroup={selectedKeyGroup}
-                    setEditing={setEditing}
-                    upsertStat={upsertStat}
-                    session={session}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </InfiniteScroll>
-        </div>
-      }
-    />
+    // <Pane
+    //   // headerChildren={
+    //   //   <div className="px-4">
+    //   //     <DropdownMenu
+    //   //       selectedKeyGroup={selectedKeyGroup}
+    //   //       keyGroups={keyGroups}
+    //   //     />
+    //   //   </div>
+    //   // }
+    //   mainChildren={
+    //
+    //   }
+    // />
+
+    <div className="h-full w-full bg-green-500" ref={elementRef}>
+      {editing ? (
+        <EntryPopup
+          editing={editing}
+          setEditing={setEditing}
+          upsertStat={upsertStat}
+        />
+      ) : null}
+      <InfiniteScroll
+        next={fetchNextPage}
+        hasMore={!!hasNextPage}
+        dataLength={flatStats.length}
+        scrollableTarget="pane-main-scrollable-div"
+        style={{ overflow: "none" }}
+        loader={<div />}
+        onScroll={onScroll}
+      >
+        <table className="min-w-full bg-gray-50">
+          <thead className="sticky top-0 bg-gray-50">
+            <tr className="font-normal">
+              <th className="py-2 text-right">
+                <div className="w-[70px]">
+                  {topmostDate && formatMonthYear(topmostDate)}
+                </div>
+              </th>
+              {selectedKeyGroup.childKeys.map((kg) => (
+                <th
+                  className="py-2"
+                  key={`${kg.sortKey.user.id}-${kg.sortKey.track.name}`}
+                >
+                  <div className="flex items-center justify-center">
+                    <KeyGroupLink keyGroup={kg} size="md" />
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {flatStats.map((stat, dateOffset) => (
+              <TableRow
+                key={dateOffset}
+                stat={stat}
+                flatStats={flatStats}
+                dateOffset={dateOffset}
+                selectedKeyGroup={selectedKeyGroup}
+                setEditing={setEditing}
+                upsertStat={upsertStat}
+                session={session}
+              />
+            ))}
+          </tbody>
+        </table>
+      </InfiniteScroll>
+    </div>
   );
 }
 

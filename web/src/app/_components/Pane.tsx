@@ -56,28 +56,18 @@ const MobileHeader: React.FC<React.PropsWithChildren> = ({ children }) => {
   );
 };
 
-export const Pane = ({
-  popupChildren,
-  headerChildren,
-  mainChildren,
-}: {
-  popupChildren?: React.ReactNode;
-  headerChildren?: React.ReactNode;
-  mainChildren?: React.ReactNode;
-}) => {
+export const Pane = ({ children }: { children?: React.ReactNode }) => {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden shadow-xl drop-shadow-xl">
-      {popupChildren}
-
       <div className="h-20 w-full shrink-0 grow-0 overflow-hidden">
-        <MobileHeader>{headerChildren}</MobileHeader>
+        <MobileHeader />
       </div>
 
       <div
         id="pane-main-scrollable-div"
         className="h-full w-full shrink grow overflow-auto"
       >
-        {mainChildren}
+        {children}
       </div>
 
       <div className="h-16 w-full shrink-0 grow-0 overflow-hidden">

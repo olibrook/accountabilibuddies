@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 
 import { TRPCReactProvider } from "@buds/trpc/react";
 import { ServiceWorkerInstaller } from "@buds/app/_components/ServiceWorkerInstaller";
+import { AppShell } from "@buds/app/_components/AppShell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -43,7 +44,7 @@ export default function RootLayout({
         className={`font-sans ${inter.variable} bg-gradient-to-t from-blue-200 to-pink-100`}
       >
         <TRPCReactProvider cookies={cookies().toString()}>
-          {children}
+          <AppShell>{children}</AppShell>
         </TRPCReactProvider>
         <ServiceWorkerInstaller />
       </body>

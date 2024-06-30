@@ -1,9 +1,12 @@
+"use client";
+
 import React, { createContext, ReactNode, useContext, useEffect } from "react";
 import { SessionProvider, signIn, useSession } from "next-auth/react";
 import { redirect, usePathname } from "next/navigation";
 import { userIsOnboarded } from "@buds/shared/utils";
 import { api } from "@buds/trpc/react";
 import { RouterOutputs } from "@buds/trpc/shared";
+import { Pane } from "@buds/app/_components/Pane";
 
 export const ToggleButton = ({
   value,
@@ -112,9 +115,7 @@ const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
   }
 };
 
-export const BaseAppShell: React.FC<React.PropsWithChildren> = ({
-  children,
-}) => {
+export const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <SessionProvider>
       <AuthGuard>
@@ -124,7 +125,7 @@ export const BaseAppShell: React.FC<React.PropsWithChildren> = ({
               className={` flex h-screen items-center justify-center font-light`}
             >
               <div className="h-full w-full max-w-screen-md overflow-hidden border-red-500 bg-gray-50 font-light text-gray-600 md:h-[calc(100vh-theme(spacing.24))] md:rounded-2xl">
-                {children}
+                <Pane>{children}</Pane>
               </div>
             </div>
           </UserOnboardingGuard>
@@ -133,9 +134,3 @@ export const BaseAppShell: React.FC<React.PropsWithChildren> = ({
     </SessionProvider>
   );
 };
-
-const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
-  return <BaseAppShell>{children}</BaseAppShell>;
-};
-
-export default AppShell;
