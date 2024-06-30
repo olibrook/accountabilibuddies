@@ -11,11 +11,14 @@
   "theme_color": "#f88379",
   "icons": [
     {
-      "src": "/accountabilibuddies-icon-512.png"
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
     },
     {
       "src": "/accountabilibuddies-icon-512.png",
-      "type": "image/x-icon"
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
   "id": "bilibuddies",
