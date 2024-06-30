@@ -1,0 +1,28 @@
+{
+  "background_color": "#ffffff",
+  "description": "Friends keep you accountable.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "bilibuddies",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "bilibuddies",
+  "start_url": "/",
+  "theme_color": "#f88379",
+  "icons": [
+    {
+      "src": "/accountabilibuddies-icon-512.png"
+    },
+    {
+      "src": "/accountabilibuddies-icon-512.png",
+      "type": "image/x-icon"
+    }
+  ],
+  "id": "bilibuddies",
+  "lang": "en",
+  "categories": [
+    "entertainment",
+    "health",
+    "lifestyle"
+  ]
+}

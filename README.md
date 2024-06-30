@@ -5,10 +5,12 @@
 
 ### TODO
 
-- Verify bilibuddies.app app domain on Google.
-
 - Go through the PWA checklist and make sure this thing can be installed on a phone
   homescreen.
+
+- Fix broken onboarding screen (merge it with settings page).
+
+- Verify bilibuddies.app app domain on Google.
 
 
 ## 😍Design
