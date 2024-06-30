@@ -47,7 +47,7 @@ const MobileFooter = () => {
 
 const MobileHeader: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
-    <div className="flex h-full w-full items-center justify-between font-normal text-white ">
+    <div className="bg-coral flex h-full w-full items-center justify-between font-normal text-white">
       <h1 className="font-pacifico my-2 -rotate-3 pl-4 text-4xl tracking-tight drop-shadow-md">
         Bilibuddies
       </h1>
@@ -66,7 +66,7 @@ export const Pane = ({
   mainChildren?: React.ReactNode;
 }) => {
   return (
-    <div className="bg-coral flex h-full w-full flex-col overflow-hidden shadow-xl drop-shadow-xl">
+    <div className="flex h-full w-full flex-col overflow-hidden shadow-xl drop-shadow-xl">
       {popupChildren}
 
       <div className="h-20 w-full shrink-0 grow-0 overflow-hidden">
