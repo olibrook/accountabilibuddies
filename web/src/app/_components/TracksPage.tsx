@@ -22,7 +22,10 @@ import {
   toDate,
   toDateString,
 } from "@buds/shared/utils";
-import { MainContent } from "@buds/app/_components/Pane";
+import {
+  DefaultMainContentAnimation,
+  MainContent,
+} from "@buds/app/_components/Pane";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -396,11 +399,13 @@ function TrackListWrapper({ params }: { params: Params }) {
   //  the client through next-auth?
   const ready = session.data && (resource === "tracks" || resource === "users");
   const content = !ready ? null : (
-    <TrackList
-      session={session.data as unknown as CustomSession}
-      resource={resource}
-      id={id}
-    />
+    <DefaultMainContentAnimation>
+      <TrackList
+        session={session.data as unknown as CustomSession}
+        resource={resource}
+        id={id}
+      />
+    </DefaultMainContentAnimation>
   );
 
   return <MainContent id="pane-main-scrollable-div">{content}</MainContent>;

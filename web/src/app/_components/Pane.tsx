@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const MobileFooter = () => {
   const { data: me } = api.user.me.useQuery();
@@ -82,4 +83,21 @@ export const MainContent = ({
   <div id={id} className="h-full w-full shrink grow overflow-auto">
     {children}
   </div>
+);
+
+export const DefaultMainContentAnimation = ({
+  children,
+}: {
+  children?: React.ReactNode;
+}) => (
+  <AnimatePresence>
+    <motion.div
+      className="h-full w-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      {children}
+    </motion.div>
+  </AnimatePresence>
 );
