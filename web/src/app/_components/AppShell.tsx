@@ -1,9 +1,8 @@
 "use client";
 
-import React, { createContext, ReactNode, useContext, useEffect } from "react";
+import React, { createContext, ReactNode, useContext } from "react";
 import { SessionProvider, useSession } from "next-auth/react";
-import { redirect, usePathname } from "next/navigation";
-import { userIsOnboarded } from "@buds/shared/utils";
+import { usePathname } from "next/navigation";
 import { api } from "@buds/trpc/react";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { Pane } from "@buds/app/_components/Pane";
@@ -81,24 +80,18 @@ const AuthGuard: React.FC<React.PropsWithChildren> = ({ children }) => {
 const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
   children,
 }) => {
-  const pathname = usePathname();
   const session = useSession();
   const loading = session.status === "loading";
   const authenticated = session.status === "authenticated";
-  const onboarded = authenticated && userIsOnboarded(session.data);
-  const excluded = ["/", "/onboarding"];
-  const isExcluded = excluded.indexOf(pathname) >= 0;
 
-  useEffect(() => {
-    const checkUser = () => {
-      if (!isExcluded && !loading && !onboarded) {
-        redirect("/onboarding");
-      }
-    };
-    void checkUser();
-  }, [isExcluded, loading, onboarded]);
+  const { data: me } = api.user.me.useQuery(undefined, {
+    enabled: authenticated,
+  });
+  const onboarded = me && Boolean(me.username);
 
-  if (onboarded) {
+  if (loading) {
+    return null;
+  } else if (onboarded) {
     return <>{children}</>;
   } else {
     return <Onboarding />;

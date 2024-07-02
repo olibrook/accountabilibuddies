@@ -3,10 +3,9 @@ import { useSession } from "next-auth/react";
 import React from "react";
 import { CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
-import { useForm } from "react-hook-form";
 import {
   RegularSettingsForm,
-  SettingsFormFields,
+  useSettingsFormProps,
 } from "@buds/app/_components/SettingsForm";
 import { RouterOutputs } from "@buds/trpc/shared";
 import {
@@ -42,24 +41,7 @@ type Me = RouterOutputs["user"]["me"];
 
 function SettingsPane(props: { session: CustomSession; me: Me }) {
   const { me } = props;
-  const updateMe = api.user.updateMe.useMutation();
-
-  const onSubmit = async (data: WritableFields) => {
-    await updateMe.mutateAsync(data);
-  };
-
-  const hookForm = useForm<SettingsFormFields>({
-    values: {
-      username: me.username ?? undefined,
-      useMetric: me.useMetric,
-      checkMark: me.checkMark,
-    },
-    defaultValues: {
-      username: undefined,
-      useMetric: true,
-      checkMark: "⭐",
-    },
-  });
+  const { onSubmit, hookForm } = useSettingsFormProps(me);
   return (
     // <Pane
     //   // headerChildren={<div className="px-4 text-xl">Settings</div>}

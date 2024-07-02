@@ -201,3 +201,36 @@ export const RegularSettingsForm = ({
     <SettingsForm {...rest} />
   </div>
 );
+
+type WritableFields = {
+  username?: string;
+  useMetric: boolean;
+  checkMark: string;
+};
+
+export const useSettingsFormProps = (me: Me) => {
+  const utils = api.useUtils();
+  const updateMe = api.user.updateMe.useMutation();
+
+  const onSubmit = async (data: WritableFields) => {
+    await updateMe.mutateAsync(data, {
+      onSuccess: () => {
+        void utils.user.me.invalidate();
+      },
+    });
+  };
+
+  const hookForm = useForm<SettingsFormFields>({
+    values: {
+      username: me.username ?? undefined,
+      useMetric: me.useMetric,
+      checkMark: me.checkMark,
+    },
+    defaultValues: {
+      username: undefined,
+      useMetric: true,
+      checkMark: "⭐",
+    },
+  });
+  return { onSubmit, hookForm };
+};

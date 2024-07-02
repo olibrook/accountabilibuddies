@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { CustomSession } from "@buds/app/_components/TracksPage";
 
 export type Measurement = "metric" | "imperial";
 
@@ -35,10 +34,6 @@ export const toDateString = (d: Date): DateString => {
   const day = d.getUTCDate().toString().padStart(2, "0");
   const dateString = `${year}-${month}-${day}`;
   return ZDateString.parse(dateString);
-};
-
-export const userIsOnboarded = (session?: CustomSession) => {
-  return Boolean(session?.user.username);
 };
 
 export const convertWeight = (
