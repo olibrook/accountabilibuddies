@@ -1,7 +1,6 @@
 import { Controller, FieldError, useForm } from "react-hook-form";
 import { api } from "@buds/trpc/react";
 import React, { InputHTMLAttributes, useEffect } from "react";
-import { ToggleButton } from "@buds/app/_components/AppShell";
 import { Avatar } from "@buds/app/_components/TracksPage";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { PropsOf } from "@headlessui/react/dist/types";
@@ -142,36 +141,57 @@ export const SettingsForm = ({
           control={control}
           name="username"
           render={({ field }) => (
-            <div className="flex w-full flex-col">
-              <TextInput label="Username" {...field} />
+            <div className="mb flex flex-col">
+              <div className=" flex items-center justify-between">
+                <label>Username</label>
+                <div className="input input-bordered flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="h-4 w-4 opacity-70"
+                  >
+                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
+                  </svg>
+                  <input type="text" className="grow" {...field} />
+                </div>
+              </div>
               <FieldErrorDisplay error={errors.username} />
             </div>
           )}
         />
         <Controller
           control={control}
-          render={({ field: { onChange, value } }) => (
-            <div className="mb-2 block flex items-center py-2">
-              <ToggleButton
-                value={value === "⭐"}
-                onChange={(val) => {
-                  onChange(val ? "⭐" : "💖");
-                }}
-                label="Use 💖 / ⭐ as progress emoji"
-              />
+          render={({ field }) => (
+            <div className="mb-2 flex items-center justify-between py-2">
+              <label>Emoji</label>
+              <select
+                className="select select-bordered w-full max-w-xs"
+                {...field}
+              >
+                <option value="⭐">⭐</option>
+                <option value="💖">💖</option>
+              </select>
             </div>
           )}
           name="checkMark"
         />
         <Controller
           control={control}
-          render={({ field: { onChange, value } }) => (
-            <div className="mb-2 block flex items-center py-2">
-              <ToggleButton
-                onChange={onChange}
-                value={value}
-                label="Use imperial / metric units?"
-              />
+          render={({ field }) => (
+            <div className="mb-2 flex items-center justify-between py-2">
+              <label>Units</label>
+              <select
+                className="select select-bordered w-full max-w-xs"
+                value={field.value ? "true" : "false"}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  field.onChange(v === "true" ? true : false);
+                }}
+              >
+                <option value="true">Metric (Kg)</option>
+                <option value="false">Imperial (lb)</option>
+              </select>
             </div>
           )}
           name="useMetric"

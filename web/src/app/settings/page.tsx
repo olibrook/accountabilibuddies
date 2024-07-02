@@ -58,10 +58,7 @@ function SettingsPane(props: { session: CustomSession; me: Me }) {
             hookForm={hookForm}
             submitButton={
               <div className="flex w-full flex-row items-center justify-end">
-                <button
-                  type="submit"
-                  className="rounded-md bg-blue-500 px-4 py-2 text-white focus:outline-none"
-                >
+                <button type="submit" className="btn btn-primary">
                   Save
                 </button>
               </div>
