@@ -8,6 +8,7 @@ import { api } from "@buds/trpc/react";
 import { RouterOutputs } from "@buds/trpc/shared";
 import { Pane } from "@buds/app/_components/Pane";
 import { LoginButton } from "@buds/app/_components/LoginButton";
+import { Onboarding } from "@buds/app/_components/Onboarding";
 
 export const ToggleButton = ({
   value,
@@ -97,10 +98,10 @@ const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
     void checkUser();
   }, [isExcluded, loading, onboarded]);
 
-  if (onboarded || isExcluded) {
+  if (onboarded) {
     return <>{children}</>;
   } else {
-    return null;
+    return <Onboarding />;
   }
 };
 
