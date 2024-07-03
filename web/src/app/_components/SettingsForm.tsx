@@ -135,7 +135,7 @@ export const SettingsForm = ({
 
   return (
     <div className="mx-auto mt-12 max-w-md">
-      <form className="" onSubmit={handleSubmit(onSubmit)}>
+      <form className="px-4" onSubmit={handleSubmit(onSubmit)}>
         <Controller
           rules={{ minLength: 5 }}
           control={control}
@@ -153,7 +153,7 @@ export const SettingsForm = ({
                   >
                     <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
                   </svg>
-                  <input type="text" className="grow" {...field} />
+                  <input type="text" className="min-w-24 grow" {...field} />
                 </div>
               </div>
               <FieldErrorDisplay error={errors.username} />
@@ -165,13 +165,15 @@ export const SettingsForm = ({
           render={({ field }) => (
             <div className="mb-2 flex items-center justify-between py-2">
               <label>Emoji</label>
-              <select
-                className="select select-bordered w-full max-w-xs"
-                {...field}
-              >
-                <option value="⭐">⭐</option>
-                <option value="💖">💖</option>
-              </select>
+              <div className="w-36">
+                <select
+                  className="select select-bordered w-full max-w-xs"
+                  {...field}
+                >
+                  <option value="⭐">⭐</option>
+                  <option value="💖">💖</option>
+                </select>
+              </div>
             </div>
           )}
           name="checkMark"
@@ -181,17 +183,19 @@ export const SettingsForm = ({
           render={({ field }) => (
             <div className="mb-2 flex items-center justify-between py-2">
               <label>Units</label>
-              <select
-                className="select select-bordered w-full max-w-xs"
-                value={field.value ? "true" : "false"}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  field.onChange(v === "true" ? true : false);
-                }}
-              >
-                <option value="true">Metric (Kg)</option>
-                <option value="false">Imperial (lb)</option>
-              </select>
+              <div className="w-36">
+                <select
+                  className="select select-bordered w-full max-w-xs"
+                  value={field.value ? "true" : "false"}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    field.onChange(v === "true" ? true : false);
+                  }}
+                >
+                  <option value="true">Metric (Kg)</option>
+                  <option value="false">Imperial (lb)</option>
+                </select>
+              </div>
             </div>
           )}
           name="useMetric"
