@@ -240,23 +240,30 @@ export const userRouter = createTRPCRouter({
         throw unauthorized();
       }
       const { cursor, limit, query } = input;
-      if (query === "") {
-        return [] as UserWithFollowInfo[];
-      }
 
-      const users = await db.$queryRaw<User[]>`
-          SELECT *,
-            GREATEST(
-              similarity(email, ${query}),
-              similarity(username, ${query})
-            ) AS similarity_score
-          FROM "User"
-          WHERE username ILIKE '%' || ${query} || '%' 
-                AND id != ${userId}
-          ORDER BY similarity_score DESC
-          LIMIT ${limit}
-          OFFSET ${cursor};
-        `;
+      let users: User[] = [];
+      if (query === "") {
+        users = await db.user.findMany({
+          where: { followedBy: { some: { followerId: userId } } },
+          take: limit,
+          skip: cursor,
+          orderBy: { username: "asc" },
+        });
+      } else {
+        users = await db.$queryRaw<User[]>`
+            SELECT *,
+              GREATEST(
+                similarity(email, ${query}),
+                similarity(username, ${query})
+              ) AS similarity_score
+            FROM "User"
+            WHERE username ILIKE '%' || ${query} || '%' 
+                  AND id != ${userId}
+            ORDER BY similarity_score DESC
+            LIMIT ${limit}
+            OFFSET ${cursor};
+          `;
+      }
 
       const ids = users.map((u: User) => u.id);
 

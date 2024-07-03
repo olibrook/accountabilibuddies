@@ -1,6 +1,5 @@
 "use client";
 import { api } from "@buds/trpc/react";
-import { Search as SearchIcon } from "react-feather";
 import { Avatar } from "@buds/app/_components/TracksPage";
 import React, { useCallback, useState } from "react";
 import { debounce } from "next/dist/server/utils";
@@ -41,30 +40,32 @@ export default function Search() {
     await refetch();
   };
 
-  //   {/*<Pane*/}
-  // {/*  // headerChildren={<div className="px-4 text-xl">Search</div>}*/}
-  // {/*  mainChildren={*/}
-  // {/*    */}
-  // {/*  }*/}
-  // {/*/>*/}
-
   return (
     <MainContent>
       <DefaultMainContentAnimation>
         <div className="flex h-full w-full flex-col items-center justify-between bg-gray-50">
           <div className="w-full shrink-0 grow-0 p-4">
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-                <SearchIcon />
-              </div>
+            <label className="input input-bordered flex items-center gap-2">
               <input
-                type="search"
-                className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-4 ps-10 text-sm text-gray-900 outline-0"
-                placeholder="Search username"
+                type="text"
+                className="grow"
+                placeholder="Search"
                 value={queryInputValue}
                 onChange={(e) => setQueryInputValue(e.target.value)}
               />
-            </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="h-4 w-4 opacity-70"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </label>
           </div>
 
           <div className="w-full shrink grow overflow-y-scroll rounded-b-xl bg-gray-50">
