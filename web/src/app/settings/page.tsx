@@ -51,7 +51,7 @@ function SettingsPane(props: { session: CustomSession; me: Me }) {
     // />
     <MainContent>
       <DefaultMainContentAnimation>
-        <div className="flex h-full w-full flex-grow flex-col items-center bg-gray-50">
+        <div className="flex h-full w-full flex-grow flex-col items-center justify-center bg-gray-50">
           <RegularSettingsForm
             me={me}
             onSubmit={onSubmit}

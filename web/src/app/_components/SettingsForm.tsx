@@ -134,8 +134,8 @@ export const SettingsForm = ({
   }
 
   return (
-    <div className="my-4 w-full">
-      <form onSubmit={handleSubmit(onSubmit)}>
+    <div className="mx-auto mt-12 max-w-md">
+      <form className="" onSubmit={handleSubmit(onSubmit)}>
         <Controller
           rules={{ minLength: 5 }}
           control={control}
@@ -206,7 +206,7 @@ export const OnboardingSettingsForm = ({
   me,
   ...rest
 }: { me: Me } & PropsOf<typeof SettingsForm>) => (
-  <div className="w-full p-8">
+  <div className="w-full">
     <Greeting me={me} />
     <SettingsForm {...rest} />
   </div>
@@ -216,7 +216,7 @@ export const RegularSettingsForm = ({
   me,
   ...rest
 }: { me: Me } & PropsOf<typeof SettingsForm>) => (
-  <div className="w-full p-8">
+  <div className="w-full">
     <NeutralHeading me={me} />
     <SettingsForm {...rest} />
   </div>

@@ -31,10 +31,10 @@ function OnboardingContent(props: { session: CustomSession; me: Me }) {
   const { onSubmit, hookForm } = useSettingsFormProps(me);
 
   return (
-    <div className=" h-screen w-full">
+    <div className="h-screen w-full">
       <DefaultMainContentAnimation>
         <div className="flex h-full w-full flex-col items-center justify-center gap-8">
-          <div className="flex w-full max-w-screen-md flex-col items-center justify-center overflow-hidden rounded-3xl bg-gray-50 py-3 text-center">
+          <div className="flex w-full max-w-screen-md flex-col items-center justify-center overflow-hidden rounded-3xl bg-gray-50 py-3 py-8 text-center">
             <OnboardingSettingsForm
               me={me}
               onSubmit={onSubmit}
