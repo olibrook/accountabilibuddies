@@ -9,6 +9,8 @@ import { Pane } from "@buds/app/_components/Pane";
 import { LoginButton } from "@buds/app/_components/LoginButton";
 import { Onboarding } from "@buds/app/_components/Onboarding";
 
+const PUBLIC_PAGES = ["/test", "/"];
+
 export const ToggleButton = ({
   value,
   onChange,
@@ -53,10 +55,8 @@ export const useCurrentUser = () => {
 
 export const CurrentUserProvider = ({ children }: { children: ReactNode }) => {
   const { data: me } = api.user.me.useQuery();
-  const pathname = usePathname();
-  const excluded = ["/"];
-  const isExcluded = excluded.indexOf(pathname) >= 0;
-  if (!me && !isExcluded) {
+  const isPublic = useIsPathPublic();
+  if (!me && !isPublic) {
     return null;
   }
   return (
@@ -70,11 +70,17 @@ const AuthGuard: React.FC<React.PropsWithChildren> = ({ children }) => {
   const session = useSession();
   const authenticated = session.status === "authenticated";
 
-  if (authenticated) {
+  const isPublic = useIsPathPublic();
+  if (isPublic || authenticated) {
     return <>{children}</>;
   } else {
     return <LoginButton />;
   }
+};
+
+const useIsPathPublic = () => {
+  const pathName = usePathname();
+  return PUBLIC_PAGES.indexOf(pathName) >= 0;
 };
 
 const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
@@ -88,6 +94,11 @@ const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
     enabled: authenticated,
   });
   const onboarded = me && Boolean(me.username);
+
+  const isPublic = useIsPathPublic();
+  if (isPublic) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return null;
