@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 export default function Home() {
   useEffect(() => {
-    redirect("/users/me");
+    redirect("/app/users/me");
   });
   return <MainContent />;
 }

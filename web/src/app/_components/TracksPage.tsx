@@ -375,9 +375,9 @@ const accessor = (
 export const hrefForKeyGroup = (kg: KeyGroup) => {
   switch (kg.sortKey.kind) {
     case "track":
-      return `/tracks/${kg.sortKey.track.name}`;
+      return `/app//tracks/${kg.sortKey.track.name}`;
     case "user":
-      return `/users/${kg.sortKey.user.id}`;
+      return `/app/users/${kg.sortKey.user.id}`;
   }
 };
 
@@ -505,9 +505,9 @@ function TrackList({
 
   if (!id) {
     if (resource === "tracks") {
-      router.replace("/tracks");
+      router.replace("/app/tracks");
     } else {
-      router.replace("/users/me");
+      router.replace("/app/users/me");
     }
   }
 

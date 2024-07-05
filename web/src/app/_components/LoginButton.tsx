@@ -26,7 +26,7 @@ export const LoginButton = () => {
 
   useEffect(() => {
     if (session.status === "authenticated") {
-      redirect("/users/me");
+      redirect("/app/users/me");
     }
   }, [session.status]);
 

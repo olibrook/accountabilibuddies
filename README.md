@@ -3,15 +3,37 @@
 - Hosted on Digital Ocean + their managed Postgres instance
 - Domain is registered through https://porkbun.com
 
-### TODO
 
-- Go through the PWA checklist and make sure this thing can be installed on a phone
-  homescreen.
 
-- Fix broken onboarding screen (merge it with settings page).
 
-- Verify bilibuddies.app app domain on Google.
+## Roadmap
 
+#### Setting up custom habits
+
+- Should allow for different types (eg. numeric, boolean)
+- Should allow you to write a little piece of text about your
+  motivations/goals.
+
+#### Schedules
+
+#### Score-keeping
+
+#### Groups
+
+We can't just show the stats for everyone you follow - the UI doesn't
+really work. So, instead, let users create groups that they add a small
+number of friends to.
+
+#### Emotionally engaging :star: buttons
+
+#### User profiles
+
+#### Public-facing views of user profiles
+
+Make these shareable/embeddable and branded.
+
+- Support HTML embed
+- Support JPEG/whatver embed – think about folks sharing in Slack, etc.
 
 ## 😍Design
 

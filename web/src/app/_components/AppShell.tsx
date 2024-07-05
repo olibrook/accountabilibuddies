@@ -9,8 +9,6 @@ import { Pane } from "@buds/app/_components/Pane";
 import { LoginButton } from "@buds/app/_components/LoginButton";
 import { Onboarding } from "@buds/app/_components/Onboarding";
 
-const PUBLIC_PAGES = ["/test", "/"];
-
 export const ToggleButton = ({
   value,
   onChange,
@@ -55,8 +53,7 @@ export const useCurrentUser = () => {
 
 export const CurrentUserProvider = ({ children }: { children: ReactNode }) => {
   const { data: me } = api.user.me.useQuery();
-  const isPublic = useIsPathPublic();
-  if (!me && !isPublic) {
+  if (!me) {
     return null;
   }
   return (
@@ -70,17 +67,11 @@ const AuthGuard: React.FC<React.PropsWithChildren> = ({ children }) => {
   const session = useSession();
   const authenticated = session.status === "authenticated";
 
-  const isPublic = useIsPathPublic();
-  if (isPublic || authenticated) {
+  if (authenticated) {
     return <>{children}</>;
   } else {
     return <LoginButton />;
   }
-};
-
-const useIsPathPublic = () => {
-  const pathName = usePathname();
-  return PUBLIC_PAGES.indexOf(pathName) >= 0;
 };
 
 const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
@@ -95,11 +86,6 @@ const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
   });
   const onboarded = me && Boolean(me.username);
 
-  const isPublic = useIsPathPublic();
-  if (isPublic) {
-    return <>{children}</>;
-  }
-
   if (loading) {
     return null;
   } else if (onboarded) {
@@ -109,22 +95,33 @@ const UserOnboardingGuard: React.FC<React.PropsWithChildren> = ({
   }
 };
 
-export const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
-  return (
-    <SessionProvider>
-      <AuthGuard>
-        <CurrentUserProvider>
-          <UserOnboardingGuard>
-            <div
-              className={` flex h-screen items-center justify-center font-light`}
-            >
-              <div className="h-full w-full max-w-screen-md overflow-hidden border-red-500 bg-gray-50 font-light text-gray-600 md:h-[calc(100vh-theme(spacing.24))] md:rounded-2xl">
-                <Pane>{children}</Pane>
-              </div>
+export const BasicPage: React.FC<React.PropsWithChildren> = ({ children }) => (
+  <div className={` flex h-screen items-center justify-center font-light`}>
+    {children}
+  </div>
+);
+
+export const AppPage: React.FC<React.PropsWithChildren> = ({ children }) => (
+  <SessionProvider>
+    <AuthGuard>
+      <CurrentUserProvider>
+        <UserOnboardingGuard>
+          <BasicPage>
+            <div className="h-full w-full max-w-screen-md overflow-hidden border-red-500 bg-gray-50 font-light text-gray-600 md:h-[calc(100vh-theme(spacing.24))] md:rounded-2xl">
+              <Pane>{children}</Pane>
             </div>
-          </UserOnboardingGuard>
-        </CurrentUserProvider>
-      </AuthGuard>
-    </SessionProvider>
-  );
+          </BasicPage>
+        </UserOnboardingGuard>
+      </CurrentUserProvider>
+    </AuthGuard>
+  </SessionProvider>
+);
+
+export const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const pathName = usePathname();
+  if (pathName.startsWith("/app")) {
+    return <AppPage>{children}</AppPage>;
+  } else {
+    return <BasicPage>{children}</BasicPage>;
+  }
 };

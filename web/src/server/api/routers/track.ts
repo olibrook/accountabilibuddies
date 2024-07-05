@@ -3,7 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
 import { isFollowingAllOrThrow } from "@buds/server/api/common";
 
 const ListTracksInput = z.object({
-  followingId: z.string().uuid(),
+  userId: z.string().uuid(),
 });
 
 const CreateTrackInput = z.object({
@@ -25,17 +25,17 @@ export const trackRouter = createTRPCRouter({
   list: protectedProcedure
     .input(ListTracksInput)
     .query(async ({ input, ctx }) => {
-      const { followingId } = input;
+      const { userId } = input;
       const followerId = ctx.session.user.id;
       await isFollowingAllOrThrow({
         db: ctx.db,
         followerId,
-        followingIds: [followingId],
+        followingIds: [userId],
       });
 
       return ctx.db.track.findMany({
         where: {
-          userId: followingId,
+          userId: userId,
         },
         orderBy: [{ createdAt: "desc" }],
         include,
