@@ -215,7 +215,10 @@ const PricingCard = ({ title, price, description }) => {
 
 const Footer = () => {
   return (
-    <footer id="footer" className="h-[66vh] bg-blue-600 py-8 text-white">
+    <footer
+      id="footer"
+      className="bg-footer-image h-[66vh] bg-blue-600 bg-cover bg-bottom bg-no-repeat py-8 text-white"
+    >
       <div className="container mx-auto text-center">
         <p className="mb-4">© 2024 YourApp. All rights reserved.</p>
         <p>Contact us: info@yourapp.com</p>

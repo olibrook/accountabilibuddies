@@ -15,6 +15,7 @@ export default {
       },
       backgroundImage: {
         "app-bg-image": "url('/accountabilibuddies.png')",
+        "footer-image": "url('/footer.svg')",
       },
     },
   },
