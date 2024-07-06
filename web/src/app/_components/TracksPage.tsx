@@ -128,8 +128,8 @@ const InteractiveCell = ({
   keyGroup,
   children,
   setEditing,
-  value,
-  previousValue,
+  entry,
+  previousEntry,
   upsertStat,
 }: {
   session: CustomSession;
@@ -137,12 +137,14 @@ const InteractiveCell = ({
   keyGroup: KeyGroup;
   children: ReactNode;
   setEditing: (e: Editing | undefined) => void;
-  value: number | undefined;
-  previousValue: number | undefined;
+  entry: Entry | undefined;
+  previousEntry: Entry | undefined;
   upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
 }) => {
   const onClick = async (e: MouseEvent) => {
     e.preventDefault();
+    const value = entry?.value ?? undefined;
+    const previousValue = previousEntry?.value ?? undefined;
     const trackName = keyGroup.sortKey.track.name as TrackName;
     const trackId = keyGroup.sortKey.track.id;
     const trackConfig = trackConfigs[trackName];
@@ -168,14 +170,20 @@ const InteractiveCell = ({
 
 const CellValue = ({
   trackName,
-  value,
+  entry,
 }: {
   trackName: string;
-  value?: number;
+  entry?: Entry;
 }) => {
+  const value = entry?.value;
+  const scheduled = entry?.scheduled ?? false;
   const currentUser = useCurrentUser();
   if (!value) {
-    return <span className="text-gray-300">⚬</span>;
+    if (scheduled) {
+      return <span className="text-gray-300">●</span>;
+    } else {
+      return <span className="text-gray-300">⚬</span>;
+    }
   }
   switch (trackName) {
     case "weight":
@@ -363,13 +371,14 @@ export const TracksPage = ({ params }: { params: Params }) => {
   return <TrackListWrapper params={params} />;
 };
 
+type Entry = { scheduled: boolean; value: number | null };
 const accessor = (
   flatStats: FlatStats,
   userId: string,
   trackName: string,
   offset: number,
-): number | undefined => {
-  return flatStats[offset]?.data?.[userId]?.[trackName] ?? undefined;
+): Entry | undefined => {
+  return flatStats[offset]?.data?.[userId]?.[trackName];
 };
 
 export const hrefForKeyGroup = (kg: KeyGroup) => {
@@ -554,20 +563,6 @@ function TrackList({
   const topmostDate = flatStats?.[topmostIdx]?.date;
 
   return (
-    // <Pane
-    //   // headerChildren={
-    //   //   <div className="px-4">
-    //   //     <DropdownMenu
-    //   //       selectedKeyGroup={selectedKeyGroup}
-    //   //       keyGroups={keyGroups}
-    //   //     />
-    //   //   </div>
-    //   // }
-    //   mainChildren={
-    //
-    //   }
-    // />
-
     <div className="h-full w-full bg-green-500" ref={elementRef}>
       {editing ? (
         <EntryPopup
@@ -650,13 +645,13 @@ const TableRow = ({
       </td>
       {selectedKeyGroup?.childKeys.map((keyGroup) => {
         const sk = keyGroup.sortKey;
-        const value = accessor(
+        const entry = accessor(
           flatStats,
           sk.user.id,
           sk.track.name,
           dateOffset,
         );
-        const previousValue = accessor(
+        const previousEntry = accessor(
           flatStats,
           sk.user.id,
           sk.track.name,
@@ -672,11 +667,11 @@ const TableRow = ({
               keyGroup={keyGroup}
               session={session}
               setEditing={setEditing}
-              previousValue={previousValue}
-              value={value}
+              previousEntry={previousEntry}
+              entry={entry}
               upsertStat={upsertStat}
             >
-              <CellValue trackName={sk.track.name} value={value} />
+              <CellValue trackName={sk.track.name} entry={entry} />
             </InteractiveCell>
           </td>
         );

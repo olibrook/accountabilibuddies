@@ -8,18 +8,9 @@ const ListTracksInput = z.object({
 
 const CreateTrackInput = z.object({
   name: z.string(),
-  schedule: z.object({
-    monday: z.boolean().optional().default(false),
-    tuesday: z.boolean().optional().default(false),
-    wednesday: z.boolean().optional().default(false),
-    thursday: z.boolean().optional().default(false),
-    friday: z.boolean().optional().default(false),
-    saturday: z.boolean().optional().default(false),
-    sunday: z.boolean().optional().default(false),
-  }),
 });
 
-const include = { schedule: true };
+const include = { schedules: true };
 
 export const trackRouter = createTRPCRouter({
   list: protectedProcedure
@@ -45,23 +36,16 @@ export const trackRouter = createTRPCRouter({
   create: protectedProcedure
     .input(CreateTrackInput)
     .query(async ({ input, ctx }) => {
-      const { schedule, ...track } = input;
+      const { ...track } = input;
 
       const userId = ctx.session.user.id;
       const trackData = {
         ...track,
         userId,
       };
-      const scheduleData = {
-        ...schedule,
-        userId,
-      };
       return ctx.db.track.create({
         data: {
           ...trackData,
-          schedule: {
-            create: scheduleData,
-          },
         },
         include,
       });

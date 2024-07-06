@@ -107,8 +107,13 @@ export const userRouter = createTRPCRouter({
           saturday: false,
           sunday: false,
         };
-        await db.schedule.upsert({
+        const schedule = await db.schedule.findFirst({
           where: { trackId: track.id },
+          orderBy: { createdAt: "desc" },
+        });
+        const scheduleId = schedule?.id ?? uuid4();
+        await db.schedule.upsert({
+          where: { id: scheduleId },
           create: sched,
           update: sched,
         });

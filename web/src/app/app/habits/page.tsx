@@ -75,7 +75,7 @@ const HabitForm = ({ track }: { track: TrackListItem }) => {
     saturday: false,
     sunday: false,
   };
-  const schedule = track.schedule ?? defaultSchedule;
+  const schedule = track.schedules?.[0] ?? defaultSchedule;
   const form = useForm<HabitFields>({
     values: {
       name: track.name,
@@ -117,7 +117,7 @@ const HabitForm = ({ track }: { track: TrackListItem }) => {
           </label>
         )}
       />
-      {track.schedule && (
+      {track.schedules?.[0] && (
         <div className="items center flex w-full justify-between gap-2 px-4">
           {days.map(([k, day]) => (
             <div
