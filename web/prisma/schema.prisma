@@ -110,7 +110,7 @@ model Track {
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name     String
   stats    Stat[]
-  schedule Schedule?
+  schedules Schedule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,14 +118,14 @@ model Track {
   @@unique([userId, name])
 }
 
-// Schedule->Track is 1-1 because I think it might expand to N-1 in future.
-// Otherwise I'd put put the fields on Track directly.
 model Schedule {
   id     String @id @default(uuid())
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Gloriously dumb
+  effectiveFrom DateTime @db.Date @default("2000-01-01T00:00:00.000Z")
+  effectiveTo DateTime? @db.Date  /// Null means no expiry – an ongoing schedule.
+
   monday    Boolean @default(false)
   tuesday   Boolean @default(false)
   wednesday Boolean @default(false)
@@ -135,7 +135,7 @@ model Schedule {
   sunday    Boolean @default(false)
 
   track   Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
-  trackId String @unique
+  trackId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -14,6 +14,7 @@ import {
   toDateString,
   ZDateString,
 } from "@buds/shared/utils";
+import { calendarView } from "@buds/server/api/routers/calendar";
 
 type ListInput = {
   followingIds: string[];
@@ -48,15 +49,17 @@ type StatList = {
     date: DateString;
     data: {
       [userId: string]: {
-        [trackName: string]: number;
+        [trackName: string]: { value: number; scheduled: boolean };
       };
     };
   }>;
 };
 
 const list = async ({ input, ctx }: { input: ListInput; ctx: Context }) => {
-  const { cursor, limit, followingIds, type } = input;
+  const { db } = ctx;
+  const { cursor, limit, followingIds } = input;
   const followerId = ctx?.session?.user.id;
+
   if (!followerId) {
     throw unauthorized();
   }
@@ -69,36 +72,7 @@ const list = async ({ input, ctx }: { input: ListInput; ctx: Context }) => {
   const end = toDate(cursor);
   const start = subDays(end, Math.max(0, limit - 1));
 
-  const stats = await ctx.db.stat.findMany({
-    where: {
-      AND: [
-        { userId: { in: followingIds } },
-        { type },
-        {
-          date: {
-            gte: start,
-            lte: end,
-          },
-        },
-      ],
-    },
-    select: {
-      userId: true,
-      value: true,
-      date: true,
-      track: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-    orderBy: [
-      {
-        date: "desc",
-      },
-    ],
-  });
+  const stats = await calendarView(db, followingIds, start, end);
 
   const ret: StatList = {
     start: toDateString(start),
@@ -115,7 +89,7 @@ const list = async ({ input, ctx }: { input: ListInput; ctx: Context }) => {
 
   stats.forEach((stat) => {
     const userId = stat.userId;
-    const trackName = stat.track.name;
+    const trackName = stat.trackName;
     const offset = Math.abs(differenceInDays(stat.date, end));
     if (offset < 0 || offset >= ret.results.length) {
       console.error(JSON.stringify(stat, null, 2));
@@ -134,9 +108,11 @@ const list = async ({ input, ctx }: { input: ListInput; ctx: Context }) => {
       throw new Error(`Bounds check`);
     }
     ret.results[offset]!.data[userId] = ret.results[offset]!.data[userId] ?? {};
-    ret.results[offset]!.data[userId]![trackName] = stat.value;
+    ret.results[offset]!.data[userId]![trackName] = {
+      value: stat.value,
+      scheduled: stat.scheduled,
+    };
   });
-
   return ret;
 };
 
@@ -189,12 +165,6 @@ export const statRouter = createTRPCRouter({
         ctx,
       });
       return { ...result, date: toDateString(result.date) };
-    }),
-
-  listGoals: protectedProcedure
-    .input(ListGoalsInput)
-    .query(async ({ input, ctx }) => {
-      return list({ input: { ...input, type: StatType.GOAL }, ctx });
     }),
 
   upsertGoal: protectedProcedure

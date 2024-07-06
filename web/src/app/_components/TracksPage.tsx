@@ -19,6 +19,7 @@ import {
   getMeasurement,
   isWeekend,
   MeasurementPreference,
+  randomFromSeed,
   toDate,
   toDateString,
 } from "@buds/shared/utils";
@@ -26,6 +27,7 @@ import {
   DefaultMainContentAnimation,
   MainContent,
 } from "@buds/app/_components/Pane";
+import { Calendar } from "@buds/app/_components/Calendar";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -118,7 +120,8 @@ const trackConfigs: Record<TrackName, TrackConfig> = {
   },
 };
 
-const formatMonthYear = (date: DateString) => format(parseISO(date), "MMM ’yy");
+const formatMonth = (date: DateString) => format(parseISO(date), "MMM");
+const formatYear = (date: DateString) => format(parseISO(date), "yyyy");
 const formatDate = (date: DateString) => format(parseISO(date), "E d");
 const formatFullDate = (date: DateString) => format(parseISO(date), "PPP");
 
@@ -128,8 +131,8 @@ const InteractiveCell = ({
   keyGroup,
   children,
   setEditing,
-  value,
-  previousValue,
+  entry,
+  previousEntry,
   upsertStat,
 }: {
   session: CustomSession;
@@ -137,12 +140,14 @@ const InteractiveCell = ({
   keyGroup: KeyGroup;
   children: ReactNode;
   setEditing: (e: Editing | undefined) => void;
-  value: number | undefined;
-  previousValue: number | undefined;
+  entry: Entry | undefined;
+  previousEntry: Entry | undefined;
   upsertStat: ReturnType<typeof api.stat.upsertStat.useMutation>;
 }) => {
   const onClick = async (e: MouseEvent) => {
     e.preventDefault();
+    const value = entry?.value ?? undefined;
+    const previousValue = previousEntry?.value ?? undefined;
     const trackName = keyGroup.sortKey.track.name as TrackName;
     const trackId = keyGroup.sortKey.track.id;
     const trackConfig = trackConfigs[trackName];
@@ -167,15 +172,26 @@ const InteractiveCell = ({
 };
 
 const CellValue = ({
+  date,
   trackName,
-  value,
+  entry,
 }: {
+  date: DateString;
   trackName: string;
-  value?: number;
+  entry?: Entry;
 }) => {
+  const value = entry?.value;
+  const scheduled = entry?.scheduled ?? false;
   const currentUser = useCurrentUser();
+  const seed = date + trackName;
+  const rotationDirection = randomFromSeed(seed, 1) === 1 ? 1 : -1;
+  const rotation = randomFromSeed(seed, 20) * rotationDirection;
   if (!value) {
-    return <span className="text-gray-300">⚬</span>;
+    if (scheduled) {
+      return <span className="text-2xl text-gray-300">●</span>;
+    } else {
+      return <span className="text-gray-300">⚬</span>;
+    }
   }
   switch (trackName) {
     case "weight":
@@ -193,7 +209,14 @@ const CellValue = ({
       );
     case "food":
     case "gym":
-      return value === 1 ? currentUser.checkMark : undefined;
+      return value === 1 ? (
+        <div
+          style={{ transform: `rotate(${rotation}deg)` }}
+          className={`text-2xl`}
+        >
+          {currentUser.checkMark}
+        </div>
+      ) : undefined;
     case "mood":
     default:
       return value;
@@ -363,13 +386,14 @@ export const TracksPage = ({ params }: { params: Params }) => {
   return <TrackListWrapper params={params} />;
 };
 
+type Entry = { scheduled: boolean; value: number | null };
 const accessor = (
   flatStats: FlatStats,
   userId: string,
   trackName: string,
   offset: number,
-): number | undefined => {
-  return flatStats[offset]?.data?.[userId]?.[trackName] ?? undefined;
+): Entry | undefined => {
+  return flatStats[offset]?.data?.[userId]?.[trackName];
 };
 
 export const hrefForKeyGroup = (kg: KeyGroup) => {
@@ -539,7 +563,7 @@ function TrackList({
     const el = thisEl?.closest("#pane-main-scrollable-div");
     if (el) {
       const { top, left } = el.getBoundingClientRect();
-      const testTop = top + 50;
+      const testTop = top + 80;
       const testleft = left + 5;
       const topmost = el.ownerDocument.elementFromPoint(testleft, testTop);
       const tr = topmost?.closest("tr");
@@ -554,20 +578,6 @@ function TrackList({
   const topmostDate = flatStats?.[topmostIdx]?.date;
 
   return (
-    // <Pane
-    //   // headerChildren={
-    //   //   <div className="px-4">
-    //   //     <DropdownMenu
-    //   //       selectedKeyGroup={selectedKeyGroup}
-    //   //       keyGroups={keyGroups}
-    //   //     />
-    //   //   </div>
-    //   // }
-    //   mainChildren={
-    //
-    //   }
-    // />
-
     <div className="h-full w-full bg-green-500" ref={elementRef}>
       {editing ? (
         <EntryPopup
@@ -586,12 +596,18 @@ function TrackList({
         onScroll={onScroll}
       >
         <table className="min-w-full bg-gray-50">
-          <thead className="sticky top-0 bg-gray-50">
+          <thead
+            className="sticky top-0 z-50 bg-gray-50"
+            style={{ transform: "rotate(0)" }}
+          >
             <tr className="font-normal">
               <th className="py-2 text-right">
-                <div className="w-[70px]">
-                  {topmostDate && formatMonthYear(topmostDate)}
-                </div>
+                <Calendar
+                  className="ml-4 -rotate-3"
+                  year={topmostDate && formatYear(topmostDate)}
+                  month={topmostDate && formatMonth(topmostDate)}
+                />
+                {/*{topmostDate && formatMonthYear(topmostDate)}*/}
               </th>
               {selectedKeyGroup.childKeys.map((kg) => (
                 <th
@@ -650,13 +666,13 @@ const TableRow = ({
       </td>
       {selectedKeyGroup?.childKeys.map((keyGroup) => {
         const sk = keyGroup.sortKey;
-        const value = accessor(
+        const entry = accessor(
           flatStats,
           sk.user.id,
           sk.track.name,
           dateOffset,
         );
-        const previousValue = accessor(
+        const previousEntry = accessor(
           flatStats,
           sk.user.id,
           sk.track.name,
@@ -672,11 +688,11 @@ const TableRow = ({
               keyGroup={keyGroup}
               session={session}
               setEditing={setEditing}
-              previousValue={previousValue}
-              value={value}
+              previousEntry={previousEntry}
+              entry={entry}
               upsertStat={upsertStat}
             >
-              <CellValue trackName={sk.track.name} value={value} />
+              <CellValue date={date} trackName={sk.track.name} entry={entry} />
             </InteractiveCell>
           </td>
         );
