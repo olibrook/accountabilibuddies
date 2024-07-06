@@ -67,3 +67,21 @@ export const isWeekend = (ds: DateString) => {
 };
 
 export const $log = (x: any) => console.log(JSON.stringify(x, null, 2));
+
+function stringToSeed(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+export function randomFromSeed(seedString: string, range: number): number {
+  return Math.floor(seededRandom(stringToSeed(seedString)) * range) + 1;
+}

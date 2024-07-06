@@ -19,6 +19,7 @@ import {
   getMeasurement,
   isWeekend,
   MeasurementPreference,
+  randomFromSeed,
   toDate,
   toDateString,
 } from "@buds/shared/utils";
@@ -169,18 +170,21 @@ const InteractiveCell = ({
 };
 
 const CellValue = ({
+  date,
   trackName,
   entry,
 }: {
+  date: DateString;
   trackName: string;
   entry?: Entry;
 }) => {
   const value = entry?.value;
   const scheduled = entry?.scheduled ?? false;
   const currentUser = useCurrentUser();
+  const rotation = randomFromSeed(date + trackName, 11);
   if (!value) {
     if (scheduled) {
-      return <span className="text-gray-300">●</span>;
+      return <span className="text-2xl text-gray-300">●</span>;
     } else {
       return <span className="text-gray-300">⚬</span>;
     }
@@ -201,7 +205,9 @@ const CellValue = ({
       );
     case "food":
     case "gym":
-      return value === 1 ? currentUser.checkMark : undefined;
+      return value === 1 ? (
+        <div className={`text-2xl`}>{currentUser.checkMark}</div>
+      ) : undefined;
     case "mood":
     default:
       return value;
@@ -671,7 +677,7 @@ const TableRow = ({
               entry={entry}
               upsertStat={upsertStat}
             >
-              <CellValue trackName={sk.track.name} entry={entry} />
+              <CellValue date={date} trackName={sk.track.name} entry={entry} />
             </InteractiveCell>
           </td>
         );
