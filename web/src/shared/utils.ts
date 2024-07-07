@@ -83,5 +83,5 @@ function seededRandom(seed: number): number {
 }
 
 export function randomFromSeed(seedString: string, range: number): number {
-  return Math.floor(seededRandom(stringToSeed(seedString)) * range) + 1;
+  return Math.round(seededRandom(stringToSeed(seedString)) * range) + 1;
 }

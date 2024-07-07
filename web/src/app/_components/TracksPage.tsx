@@ -27,6 +27,7 @@ import {
   DefaultMainContentAnimation,
   MainContent,
 } from "@buds/app/_components/Pane";
+import { Calendar } from "@buds/app/_components/Calendar";
 
 type StatList = RouterOutputs["stat"]["listStats"];
 type FollowingList = RouterOutputs["user"]["listFollowing"];
@@ -119,7 +120,8 @@ const trackConfigs: Record<TrackName, TrackConfig> = {
   },
 };
 
-const formatMonthYear = (date: DateString) => format(parseISO(date), "MMM ’yy");
+const formatMonth = (date: DateString) => format(parseISO(date), "MMM");
+const formatYear = (date: DateString) => format(parseISO(date), "yyyy");
 const formatDate = (date: DateString) => format(parseISO(date), "E d");
 const formatFullDate = (date: DateString) => format(parseISO(date), "PPP");
 
@@ -181,7 +183,9 @@ const CellValue = ({
   const value = entry?.value;
   const scheduled = entry?.scheduled ?? false;
   const currentUser = useCurrentUser();
-  const rotation = randomFromSeed(date + trackName, 11);
+  const seed = date + trackName;
+  const rotationDirection = randomFromSeed(seed, 1) === 1 ? 1 : -1;
+  const rotation = randomFromSeed(seed, 20) * rotationDirection;
   if (!value) {
     if (scheduled) {
       return <span className="text-2xl text-gray-300">●</span>;
@@ -206,7 +210,12 @@ const CellValue = ({
     case "food":
     case "gym":
       return value === 1 ? (
-        <div className={`text-2xl`}>{currentUser.checkMark}</div>
+        <div
+          style={{ transform: `rotate(${rotation}deg)` }}
+          className={`text-2xl`}
+        >
+          {currentUser.checkMark}
+        </div>
       ) : undefined;
     case "mood":
     default:
@@ -554,7 +563,7 @@ function TrackList({
     const el = thisEl?.closest("#pane-main-scrollable-div");
     if (el) {
       const { top, left } = el.getBoundingClientRect();
-      const testTop = top + 50;
+      const testTop = top + 80;
       const testleft = left + 5;
       const topmost = el.ownerDocument.elementFromPoint(testleft, testTop);
       const tr = topmost?.closest("tr");
@@ -587,12 +596,18 @@ function TrackList({
         onScroll={onScroll}
       >
         <table className="min-w-full bg-gray-50">
-          <thead className="sticky top-0 bg-gray-50">
+          <thead
+            className="sticky top-0 z-50 bg-gray-50"
+            style={{ transform: "rotate(0)" }}
+          >
             <tr className="font-normal">
               <th className="py-2 text-right">
-                <div className="w-[70px]">
-                  {topmostDate && formatMonthYear(topmostDate)}
-                </div>
+                <Calendar
+                  className="ml-4 -rotate-3"
+                  year={topmostDate && formatYear(topmostDate)}
+                  month={topmostDate && formatMonth(topmostDate)}
+                />
+                {/*{topmostDate && formatMonthYear(topmostDate)}*/}
               </th>
               {selectedKeyGroup.childKeys.map((kg) => (
                 <th

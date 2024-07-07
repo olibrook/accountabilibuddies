@@ -8,7 +8,6 @@ import { useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useState } from "react";
 import { CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
-import { Plus } from "react-feather";
 import { RouterInputs, RouterOutputs } from "@buds/trpc/shared";
 import { Controller, useForm } from "react-hook-form";
 import eq from "lodash/eq";
@@ -69,12 +68,12 @@ const Habits = ({ session }: { session: CustomSession }) => {
                 upsertTrack={upsertTrack}
               />
             ))}
-            <div className="flex w-full items-center justify-center">
-              <div className="btn btn-primary flex items-center">
-                <Plus size="24" />
-                <h3 className="text-lg font-bold">New habit</h3>
-              </div>
-            </div>
+            {/*<div className="flex w-full items-center justify-center">*/}
+            {/*  <div className="btn btn-primary flex items-center">*/}
+            {/*    <Plus size="24" />*/}
+            {/*    <h3 className="text-lg font-bold">New habit</h3>*/}
+            {/*  </div>*/}
+            {/*</div>*/}
           </div>
         </div>
       </DefaultMainContentAnimation>

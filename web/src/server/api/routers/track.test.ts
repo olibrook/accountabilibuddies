@@ -12,15 +12,17 @@ test("Creating and listing tracks", async () => {
   const data = {
     id: uuid4(),
     name: "weight-loss",
-    schedule: {
-      monday: true,
-      tuesday: true,
-      wednesday: true,
-      thursday: true,
-      friday: true,
-      saturday: true,
-      sunday: true,
-    },
+    schedules: [
+      {
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: true,
+        sunday: true,
+      },
+    ],
   };
   const track = await trpc.track.upsert(data);
 
