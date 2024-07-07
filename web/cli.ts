@@ -5,7 +5,6 @@ import { Command, Option } from "commander";
 import p from "path";
 import { cloneDeep } from "lodash";
 import { PrismaClient } from "@prisma/client";
-import { convertWeight } from "@buds/shared/utils";
 
 const root = p.resolve(p.join(__dirname, ".."));
 
@@ -144,18 +143,28 @@ program
   .action(async ({ env }: { env: Env }) => {
     const datasourceUrl = await getDBConnectionString(env);
     const db = new PrismaClient({ datasourceUrl });
-    const users = await db.user.findMany({
-      include: { tracks: { include: { stats: true } } },
-    });
 
-    for (const user of users) {
-      for (const track of user.tracks) {
-        if (track.name === "weight" && !user.useMetric) {
-          for (const stat of track.stats) {
-            const value = convertWeight(stat.value, "imperial", "metric");
-            await db.stat.update({ where: { id: stat.id }, data: { value } });
-          }
-        }
+    const tracks = await db.track.findMany({ include: { schedules: true } });
+
+    for (const track of tracks) {
+      if (track.schedules.length === 0) {
+        await db.schedule.create({
+          data: {
+            trackId: track.id,
+            userId: track.userId,
+            effectiveFrom: new Date("2000-01-01"),
+            effectiveTo: null,
+            monday: true,
+            tuesday: true,
+            wednesday: true,
+            thursday: true,
+            friday: true,
+            saturday: true,
+            sunday: true,
+          },
+        });
+      } else {
+        console.log("Track has schedule");
       }
     }
   });
