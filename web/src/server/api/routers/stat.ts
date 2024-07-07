@@ -49,7 +49,7 @@ type StatList = {
     date: DateString;
     data: {
       [userId: string]: {
-        [trackName: string]: { value: number; scheduled: boolean };
+        [trackName: string]: { value: number | null; scheduled: boolean };
       };
     };
   }>;

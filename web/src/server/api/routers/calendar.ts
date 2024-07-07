@@ -1,12 +1,20 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 
+type Entry = {
+  date: Date;
+  name: string;
+  scheduled: boolean;
+  value: number | null;
+  userId: string;
+};
+
 export async function calendarView(
   prisma: PrismaClient,
   userIds: string[],
   start: Date,
   end: Date,
 ) {
-  const result = await prisma.$queryRaw`
+  const result = await prisma.$queryRaw<Entry[]>`
     WITH date_series AS (SELECT generate_series(${start}::date, ${end}::date, '1 day') AS "date"),
          "calendar" AS (SELECT "date", EXTRACT(DOW FROM "date") dow FROM "date_series" ORDER BY "date" DESC),
          "schedules" AS (SELECT c."date"::date,
@@ -69,11 +77,11 @@ export async function calendarView(
     SELECT * FROM "entries";
   `;
 
-  return (result as any[]).map((r) => ({
-    date: r.date as Date,
-    trackName: r.name as string,
-    scheduled: r.scheduled as boolean,
-    value: r.value as number,
-    userId: r.userId as string,
+  return result.map((r) => ({
+    date: r.date,
+    trackName: r.name,
+    scheduled: r.scheduled,
+    value: r.value,
+    userId: r.userId,
   }));
 }
