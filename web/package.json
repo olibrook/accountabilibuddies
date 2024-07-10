@@ -20,7 +20,6 @@
     "@prisma/client": "^5.1.1",
     "@t3-oss/env-nextjs": "^0.7.0",
     "@tanstack/react-query": "^4.32.6",
-    "@tanstack/react-query-devtools": "^5.14.6",
     "@trpc/client": "^10.37.1",
     "@trpc/next": "^10.37.1",
     "@trpc/react-query": "^10.37.1",
@@ -71,7 +70,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.1.6",
     "vitest": "^0.34.6",
-    "vitest-environment-vprisma": "^1.2.1"
+    "vitest-environment-vprisma": "^1.3.0"
   },
   "ct3aMetadata": {
     "initVersion": "7.23.1"

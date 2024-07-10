@@ -22,10 +22,12 @@ test("Creating and listing tracks", async () => {
   const firstCaller = await trpcCaller(first);
   const firstFollowing = await firstCaller.user.listFollowing();
   expect(new Set(firstFollowing.map((u) => u.id))).toEqual(
-    new Set([second.id, third.id]),
+    new Set([first.id, second.id, third.id]),
   );
 
   const thirdCaller = await trpcCaller(third);
   const thirdFollowing = await thirdCaller.user.listFollowing();
-  expect(new Set(thirdFollowing.map((u) => u.id))).toEqual(new Set([first.id]));
+  expect(new Set(thirdFollowing.map((u) => u.id))).toEqual(
+    new Set([first.id, third.id]),
+  );
 });
