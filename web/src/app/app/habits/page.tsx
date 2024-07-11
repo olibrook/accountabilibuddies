@@ -11,6 +11,7 @@ import { api } from "@buds/trpc/react";
 import { RouterInputs, RouterOutputs } from "@buds/trpc/shared";
 import { Controller, useForm } from "react-hook-form";
 import eq from "lodash/eq";
+import { toDateString } from "@buds/shared/utils";
 
 type TrackUpsert = RouterInputs["track"]["upsert"];
 type TrackListItem = RouterOutputs["track"]["list"][0];
@@ -52,7 +53,7 @@ const Habits = ({ session }: { session: CustomSession }) => {
 
     apiContext.track.list.setData({ userId: session.user.id }, (oldData) => {
       if (!oldData) return oldData;
-      return oldData.map((old) => (old.id === track.id ? track : old));
+      return oldData.map((old) => (old.id === updated.id ? updated : old));
     });
   };
 
@@ -125,7 +126,13 @@ const HabitForm = ({
       const updateData = {
         id: track.id,
         name: name ?? "",
-        schedules: [{ ...defaultSchedule, ...schedule }],
+        schedules: [
+          {
+            ...defaultSchedule,
+            ...schedule,
+            effectiveFrom: toDateString(new Date()),
+          },
+        ],
       };
       doUpsertTrack(updateData);
     });

@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
 import { isFollowingAllOrThrow } from "@buds/server/api/common";
-import { v4 as uuid4 } from "uuid";
+import { Prisma } from "@prisma/client";
+import { toDate, toDateString, ZDateString } from "@buds/shared/utils";
+import { TRPCError } from "@trpc/server";
 
 const ListTracksInput = z.object({
   userId: z.string().uuid(),
@@ -13,6 +15,7 @@ const UpsertTrackInput = z.object({
   schedules: z
     .array(
       z.object({
+        effectiveFrom: ZDateString,
         monday: z.boolean(),
         tuesday: z.boolean(),
         wednesday: z.boolean(),
@@ -30,6 +33,7 @@ const select = {
   name: true,
   schedules: {
     select: {
+      effectiveFrom: true,
       monday: true,
       tuesday: true,
       wednesday: true,
@@ -38,8 +42,24 @@ const select = {
       saturday: true,
       sunday: true,
     },
+    take: 1,
+    orderBy: {
+      createdAt: "desc" as const,
+    },
   },
 };
+
+type DeepTrack = Prisma.TrackGetPayload<{
+  select: typeof select;
+}>;
+
+const mapTrack = (track: DeepTrack) => ({
+  ...track,
+  schedules: track.schedules.map((sched) => ({
+    ...sched,
+    effectiveFrom: toDateString(sched.effectiveFrom),
+  })),
+});
 
 export const trackRouter = createTRPCRouter({
   list: protectedProcedure
@@ -53,13 +73,14 @@ export const trackRouter = createTRPCRouter({
         followingIds: [userId],
       });
 
-      return ctx.db.track.findMany({
+      const tracks = await ctx.db.track.findMany({
         where: {
           userId: userId,
         },
         orderBy: [{ createdAt: "desc" }],
         select,
       });
+      return tracks.map(mapTrack);
     }),
 
   upsert: protectedProcedure
@@ -67,6 +88,9 @@ export const trackRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { schedules, ...trackData } = input;
       const scheduleData = schedules[0];
+      if (!scheduleData) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
 
       const userId = ctx.session.user.id;
       const trackUpsertData = {
@@ -79,24 +103,21 @@ export const trackRouter = createTRPCRouter({
         update: trackUpsertData,
         select,
       });
-      const existingSchedule = await ctx.db.schedule.findFirst({
-        where: { trackId: track.id },
-        orderBy: { createdAt: "desc" },
+      await ctx.db.schedule.deleteMany({
+        where: { effectiveFrom: { gte: toDate(scheduleData.effectiveFrom) } },
       });
-      const scheduleUpsertData = {
-        ...scheduleData,
-        userId,
-        id: existingSchedule?.id ?? uuid4(),
-        trackId: track.id,
-      };
-      await ctx.db.schedule.upsert({
-        where: { id: scheduleUpsertData.id },
-        create: scheduleUpsertData,
-        update: scheduleUpsertData,
+      await ctx.db.schedule.create({
+        data: {
+          ...scheduleData,
+          userId,
+          trackId: track.id,
+          effectiveFrom: toDate(scheduleData.effectiveFrom),
+        },
       });
-      return ctx.db.track.findUniqueOrThrow({
+      const ret = await ctx.db.track.findUniqueOrThrow({
         where: { id: track.id },
         select,
       });
+      return mapTrack(ret);
     }),
 });

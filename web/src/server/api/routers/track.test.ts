@@ -1,6 +1,7 @@
 import { test } from "vitest";
 import { mkUser, trpcCaller } from "@buds/test-utils";
 import { v4 as uuid4 } from "uuid";
+import { toDateString } from "@buds/shared/utils";
 
 test("Creating and listing tracks", async () => {
   const user = await mkUser();
@@ -14,6 +15,7 @@ test("Creating and listing tracks", async () => {
     name: "weight-loss",
     schedules: [
       {
+        effectiveFrom: toDateString(new Date()),
         monday: true,
         tuesday: true,
         wednesday: true,
