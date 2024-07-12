@@ -216,7 +216,7 @@ const ScheduleStartDisplay = ({
 }) => {
   const effectiveFromDate = toDate(schedule.effectiveFrom);
   const todayDateLocal = toDate(toDateStringLocal(new Date()));
-  const startsInFuture = effectiveFromDate >= todayDateLocal;
+  const startsInFuture = effectiveFromDate > todayDateLocal;
 
   return (
     <div className="px-4 py-2 text-right text-sm">

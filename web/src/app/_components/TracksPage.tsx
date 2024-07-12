@@ -1,9 +1,15 @@
 "use client";
 
 import { api } from "@buds/trpc/react";
-import { format, parseISO } from "date-fns";
+import {
+  format,
+  lastDayOfMonth,
+  parseISO,
+  setDate,
+  startOfDay,
+} from "date-fns";
 import { RouterOutputs } from "@buds/trpc/shared";
-import React, { ReactNode, useMemo, useRef, useState } from "react";
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { CurrentUser, useCurrentUser } from "@buds/app/_components/AppShell";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -23,6 +29,7 @@ import {
   randomFromSeed,
   toDate,
   toDateStringLocal,
+  toDateStringUTC,
 } from "@buds/shared/utils";
 import {
   DefaultMainContentAnimation,
@@ -535,6 +542,30 @@ function TrackList({
     }
   }
 
+  // ------ This calculates date-ranges for aggregrate score queries as you scroll. -----
+
+  const topmostDateString = flatStats?.[topmostIdx]?.date;
+  const topmostDate = topmostDateString && toDate(topmostDateString);
+  const now = new Date();
+
+  const start = topmostDate && setDate(new Date(topmostDate), 0);
+  const showingCurrentMonth = now.getMonth() === topmostDate?.getMonth();
+  const end = showingCurrentMonth
+    ? startOfDay(now)
+    : topmostDate && startOfDay(lastDayOfMonth(topmostDate));
+
+  const startTs = start?.getTime();
+  const endTs = end?.getTime();
+
+  // ------ TODO: Write the aggregate API call and hook it up here -----
+  useEffect(() => {
+    if (startTs && endTs) {
+      const startDS = toDateStringUTC(new Date(startTs));
+      const endDS = toDateStringUTC(new Date(endTs));
+      console.log(startDS, endDS);
+    }
+  }, [startTs, endTs]);
+
   if (!(following && stats)) {
     return <div />;
   }
@@ -575,8 +606,6 @@ function TrackList({
     }
   }, 200);
 
-  const topmostDate = flatStats?.[topmostIdx]?.date;
-
   return (
     <div className="h-full w-full bg-green-500" ref={elementRef}>
       {editing ? (
@@ -604,8 +633,8 @@ function TrackList({
               <th className="py-2 text-right">
                 <Calendar
                   className="ml-4 -rotate-3"
-                  year={topmostDate && formatYear(topmostDate)}
-                  month={topmostDate && formatMonth(topmostDate)}
+                  year={topmostDateString && formatYear(topmostDateString)}
+                  month={topmostDateString && formatMonth(topmostDateString)}
                 />
                 {/*{topmostDate && formatMonthYear(topmostDate)}*/}
               </th>
