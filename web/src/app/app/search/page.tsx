@@ -7,6 +7,7 @@ import {
   DefaultMainContentAnimation,
   MainContent,
 } from "@buds/app/_components/Pane";
+import Link from "next/link";
 
 export default function Search() {
   const [queryInputValue, _setQueryInputValue] = useState<string>("");
@@ -74,19 +75,20 @@ export default function Search() {
                 key={u.id}
                 className="flex items-center justify-between gap-4 px-4 py-2"
               >
-                <div>
+                <Link href={`/app/users/${u.id}`}>
                   <Avatar
                     size="lg"
                     userName={u.name ?? "???"}
                     imageUrl={u.image}
                   />
-                </div>
-                <div className="flex-grow">
+                </Link>
+
+                <Link className="flex-grow" href={`/app/users/${u.id}`}>
                   <div className="font-mono text-lg font-bold">
                     {u.username ?? "???"}
                   </div>
                   <div className="text-sm">{u.name}</div>
-                </div>
+                </Link>
 
                 {!u.following ? (
                   <div>
