@@ -104,6 +104,11 @@ model Stat {
   @@unique([type, userId, trackId, date])
 }
 
+enum TrackVisibility {
+  Private
+  Public
+}
+
 model Track {
   id       String    @id @default(uuid())
   userId   String
@@ -111,6 +116,7 @@ model Track {
   name     String
   stats    Stat[]
   schedules Schedule[]
+  visibility TrackVisibility @default(Public)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

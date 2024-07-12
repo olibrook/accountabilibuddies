@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
 import { isFollowingAllOrThrow } from "@buds/server/api/common";
-import { Prisma } from "@prisma/client";
+import { $Enums, Prisma } from "@prisma/client";
 import { toDate, toDateStringUTC, ZDateString } from "@buds/shared/utils";
 import { TRPCError } from "@trpc/server";
 import { addDays } from "date-fns";
+import TrackVisibility = $Enums.TrackVisibility;
 
 const ListTracksInput = z.object({
   userId: z.string().uuid(),
@@ -74,9 +75,16 @@ export const trackRouter = createTRPCRouter({
         followingIds: [userId],
       });
 
+      const viewingMyOwnTracks = userId === followerId;
+
       const tracks = await ctx.db.track.findMany({
         where: {
           userId: userId,
+          visibility: {
+            in: viewingMyOwnTracks
+              ? [TrackVisibility.Private, TrackVisibility.Public]
+              : [TrackVisibility.Public],
+          },
         },
         orderBy: [{ createdAt: "desc" }],
         select,

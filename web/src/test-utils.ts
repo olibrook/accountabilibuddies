@@ -35,3 +35,9 @@ export const mkUser = () => {
     },
   });
 };
+
+export const mkUserWithTRPC = async () => {
+  const user = await mkUser();
+  const trpc = await trpcCaller(user);
+  return { user, trpc };
+};

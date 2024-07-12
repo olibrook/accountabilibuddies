@@ -8,6 +8,14 @@
 
 ## Roadmap
 
+#### Private Tracks
+
+Some folks are embarrassed about the things they are logging. Support private
+tracks:
+
+- If users are following each other, they can view each others PUBLIC tracks ONLY.
+- No users can ever see each others private tracks.
+
 #### Setting up custom habits
 
 - Should allow for different types (eg. numeric, boolean)

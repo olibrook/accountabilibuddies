@@ -1,5 +1,5 @@
 import { describe, test } from "vitest";
-import { mkUser, trpcCaller } from "@buds/test-utils";
+import { mkUser, mkUserWithTRPC, trpcCaller } from "@buds/test-utils";
 import { v4 as uuid4 } from "uuid";
 import { toDateStringUTC } from "@buds/shared/utils";
 import { addDays } from "date-fns";
@@ -157,5 +157,54 @@ describe("Creating Tracks", () => {
         value: null,
       },
     ]);
+  });
+
+  test("List tracks – track visibility", async () => {
+    const u1 = await mkUserWithTRPC();
+    const u2 = await mkUserWithTRPC();
+
+    for (const u of [u1, u2]) {
+      await db.track.create({
+        data: {
+          userId: u.user.id,
+          name: "embarrassing",
+          visibility: "Private",
+        },
+      });
+      await db.track.create({
+        data: {
+          userId: u.user.id,
+          name: "not-embarrassing",
+          visibility: "Public",
+        },
+      });
+    }
+
+    await db.follows.create({
+      data: { followerId: u1.user.id, followingId: u2.user.id },
+    });
+    await db.follows.create({
+      data: { followerId: u2.user.id, followingId: u1.user.id },
+    });
+
+    const pairs = [
+      { self: u1, other: u2 },
+      { self: u2, other: u1 },
+    ];
+    for (const pair of pairs) {
+      const { self, other } = pair;
+
+      const ownTracks = await self.trpc.track.list({ userId: self.user.id });
+      expect(new Set(ownTracks.map((t) => t.name))).toEqual(
+        new Set(["embarrassing", "not-embarrassing"]),
+      );
+
+      const othersTracks = await self.trpc.track.list({
+        userId: other.user.id,
+      });
+      expect(new Set(othersTracks.map((t) => t.name))).toEqual(
+        new Set(["not-embarrassing"]),
+      );
+    }
   });
 });
