@@ -11,7 +11,7 @@ import { isFollowingAllOrThrow, unauthorized } from "@buds/server/api/common";
 import {
   DateString,
   toDate,
-  toDateString,
+  toDateStringUTC,
   ZDateString,
 } from "@buds/shared/utils";
 import { calendarView } from "@buds/server/api/routers/calendar";
@@ -75,11 +75,11 @@ const list = async ({ input, ctx }: { input: ListInput; ctx: Context }) => {
   const stats = await calendarView(db, followingIds, start, end);
 
   const ret: StatList = {
-    start: toDateString(start),
-    end: toDateString(end),
-    nextCursor: toDateString(subDays(end, limit)),
+    start: toDateStringUTC(start),
+    end: toDateStringUTC(end),
+    nextCursor: toDateStringUTC(subDays(end, limit)),
     results: Array.from(new Array(limit)).map((_, idx) => {
-      const date = toDateString(subDays(end, idx));
+      const date = toDateStringUTC(subDays(end, idx));
       return {
         date,
         data: {},
@@ -164,7 +164,7 @@ export const statRouter = createTRPCRouter({
         input: { ...input, type: StatType.STAT },
         ctx,
       });
-      return { ...result, date: toDateString(result.date) };
+      return { ...result, date: toDateStringUTC(result.date) };
     }),
 
   upsertGoal: protectedProcedure

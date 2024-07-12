@@ -2,8 +2,9 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
 import { isFollowingAllOrThrow } from "@buds/server/api/common";
 import { Prisma } from "@prisma/client";
-import { toDate, toDateString, ZDateString } from "@buds/shared/utils";
+import { toDate, toDateStringUTC, ZDateString } from "@buds/shared/utils";
 import { TRPCError } from "@trpc/server";
+import { addDays } from "date-fns";
 
 const ListTracksInput = z.object({
   userId: z.string().uuid(),
@@ -44,7 +45,7 @@ const select = {
     },
     take: 1,
     orderBy: {
-      createdAt: "desc" as const,
+      effectiveFrom: "desc" as const,
     },
   },
 };
@@ -57,7 +58,7 @@ const mapTrack = (track: DeepTrack) => ({
   ...track,
   schedules: track.schedules.map((sched) => ({
     ...sched,
-    effectiveFrom: toDateString(sched.effectiveFrom),
+    effectiveFrom: toDateStringUTC(sched.effectiveFrom),
   })),
 });
 
@@ -104,8 +105,17 @@ export const trackRouter = createTRPCRouter({
         select,
       });
       await ctx.db.schedule.deleteMany({
-        where: { effectiveFrom: { gte: toDate(scheduleData.effectiveFrom) } },
+        where: {
+          trackId: track.id,
+          effectiveFrom: { gte: toDate(scheduleData.effectiveFrom) },
+        },
       });
+
+      await ctx.db.schedule.updateMany({
+        where: { trackId: track.id },
+        data: { effectiveTo: addDays(toDate(scheduleData.effectiveFrom), -1) },
+      });
+
       await ctx.db.schedule.create({
         data: {
           ...scheduleData,

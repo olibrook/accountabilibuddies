@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { format, parseISO } from "date-fns";
 
 export type Measurement = "metric" | "imperial";
 
@@ -28,10 +29,18 @@ export const toDate = (ds: DateString): Date => {
   return d;
 };
 
-export const toDateString = (d: Date): DateString => {
+export const toDateStringUTC = (d: Date): DateString => {
   const year = d.getUTCFullYear();
   const month = (d.getUTCMonth() + 1).toString().padStart(2, "0");
   const day = d.getUTCDate().toString().padStart(2, "0");
+  const dateString = `${year}-${month}-${day}`;
+  return ZDateString.parse(dateString);
+};
+
+export const toDateStringLocal = (d: Date): DateString => {
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const day = d.getDate().toString().padStart(2, "0");
   const dateString = `${year}-${month}-${day}`;
   return ZDateString.parse(dateString);
 };
@@ -85,3 +94,6 @@ function seededRandom(seed: number): number {
 export function randomFromSeed(seedString: string, range: number): number {
   return Math.round(seededRandom(stringToSeed(seedString)) * range) + 1;
 }
+
+export const formatFullDate = (date: DateString) =>
+  format(parseISO(date), "PPP");

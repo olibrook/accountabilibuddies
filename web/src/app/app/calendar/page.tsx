@@ -9,7 +9,7 @@ import React from "react";
 import { CustomSession } from "@buds/app/_components/TracksPage";
 import { api } from "@buds/trpc/react";
 import { RouterOutputs } from "@buds/trpc/shared";
-import { toDateString } from "@buds/shared/utils";
+import { toDateStringUTC } from "@buds/shared/utils";
 
 type TrackListItem = RouterOutputs["track"]["list"][0];
 
@@ -40,7 +40,7 @@ const Wrapper = () => {
 const Calendar = ({ session }: { session: CustomSession }) => {
   const { data: calendar } = api.stat.listStats.useQuery({
     followingIds: [session.user.id],
-    cursor: toDateString(new Date()),
+    cursor: toDateStringUTC(new Date()),
     limit: 30,
   });
   if (!calendar) {

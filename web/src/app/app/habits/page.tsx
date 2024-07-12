@@ -11,7 +11,12 @@ import { api } from "@buds/trpc/react";
 import { RouterInputs, RouterOutputs } from "@buds/trpc/shared";
 import { Controller, useForm } from "react-hook-form";
 import eq from "lodash/eq";
-import { toDateString } from "@buds/shared/utils";
+import {
+  formatFullDate,
+  toDate,
+  toDateStringLocal,
+  toDateStringUTC,
+} from "@buds/shared/utils";
 
 type TrackUpsert = RouterInputs["track"]["upsert"];
 type TrackListItem = RouterOutputs["track"]["list"][0];
@@ -130,7 +135,7 @@ const HabitForm = ({
           {
             ...defaultSchedule,
             ...schedule,
-            effectiveFrom: toDateString(new Date()),
+            effectiveFrom: toDateStringUTC(new Date()),
           },
         ],
       };
@@ -148,6 +153,8 @@ const HabitForm = ({
     ["saturday", "Sat"],
     ["sunday", "Sun"],
   ];
+
+  const latestSchedule = track.schedules?.[0];
 
   return (
     <div
@@ -170,7 +177,7 @@ const HabitForm = ({
           </label>
         )}
       />
-      {track.schedules?.[0] && (
+      {latestSchedule && (
         <div className="items center flex w-full justify-between gap-2 px-4">
           {days.map(([k, day]) => (
             <div
@@ -195,6 +202,28 @@ const HabitForm = ({
             </div>
           ))}
         </div>
+      )}
+
+      {latestSchedule && <ScheduleStartDisplay schedule={latestSchedule} />}
+    </div>
+  );
+};
+
+const ScheduleStartDisplay = ({
+  schedule,
+}: {
+  schedule: TrackListItem["schedules"][0];
+}) => {
+  const effectiveFromDate = toDate(schedule.effectiveFrom);
+  const todayDateLocal = toDate(toDateStringLocal(new Date()));
+  const startsInFuture = effectiveFromDate >= todayDateLocal;
+
+  return (
+    <div className="px-4 py-2 text-right text-sm">
+      {startsInFuture ? (
+        <>New schedule starts {formatFullDate(schedule.effectiveFrom)}</>
+      ) : (
+        <>Started {formatFullDate(schedule.effectiveFrom)}</>
       )}
     </div>
   );

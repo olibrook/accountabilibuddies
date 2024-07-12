@@ -15,13 +15,13 @@ import { User } from "react-feather";
 import { debounce } from "next/dist/server/utils";
 import {
   convertWeight,
-  DateString,
+  DateString, formatFullDate,
   getMeasurement,
   isWeekend,
   MeasurementPreference,
   randomFromSeed,
   toDate,
-  toDateString,
+  toDateStringUTC,
 } from "@buds/shared/utils";
 import {
   DefaultMainContentAnimation,
@@ -123,7 +123,7 @@ const trackConfigs: Record<TrackName, TrackConfig> = {
 const formatMonth = (date: DateString) => format(parseISO(date), "MMM");
 const formatYear = (date: DateString) => format(parseISO(date), "yyyy");
 const formatDate = (date: DateString) => format(parseISO(date), "E d");
-const formatFullDate = (date: DateString) => format(parseISO(date), "PPP");
+
 
 const InteractiveCell = ({
   session,
@@ -470,7 +470,7 @@ function TrackList({
     },
     {
       enabled: !!following,
-      initialCursor: toDateString(new Date()),
+      initialCursor: toDateStringUTC(new Date()),
       getNextPageParam: (prevPage) => prevPage.nextCursor,
     },
   );
