@@ -8,18 +8,26 @@ type Entry = {
   userId: string;
 };
 
-export async function calendarView(
-  prisma: PrismaClient,
-  userIds: string[],
-  start: Date,
-  end: Date,
-) {
+export async function calendarView({
+  prisma,
+  viewingUserId,
+  userIds,
+  start,
+  end,
+}: {
+  prisma: PrismaClient;
+  viewingUserId: string;
+  userIds: string[];
+  start: Date;
+  end: Date;
+}) {
   const result = await prisma.$queryRaw<Entry[]>`
     WITH date_series AS (SELECT generate_series(${start}::date, ${end}::date, '1 day') AS "date"),
          "calendar" AS (SELECT "date", EXTRACT(DOW FROM "date") dow FROM "date_series" ORDER BY "date" DESC),
          "schedules" AS (SELECT c."date"::date,
                                 c.dow,
                                 t.name,
+                                t.visibility,
                                 s.*,
                                 ROW_NUMBER()
                                 OVER (PARTITION BY s."trackId", s."userId", c."date" ORDER BY s."createdAt" DESC)::int AS "row_num"
@@ -62,6 +70,7 @@ export async function calendarView(
                        from effective_schedules es
                                 left join "Stat" s on es."trackId" = s."trackId" and es.date = s.date
                        where es."userId" IN (${Prisma.join(userIds)})
+                       and (es."visibility" = 'Public' or (es."visibility" = 'Private' and es."userId" = ${viewingUserId})) 
                        order by es.date desc)
     
     

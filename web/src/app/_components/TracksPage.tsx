@@ -84,7 +84,7 @@ const trackConfigs: Record<TrackName, TrackConfig> = {
   mood: {
     icon: "🙂",
     name: "Mood",
-    units: "nuggets",
+    units: "jollies",
     type: "number",
     incr: 1,
     min: 0,

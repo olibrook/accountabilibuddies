@@ -72,7 +72,13 @@ const list = async ({ input, ctx }: { input: ListInput; ctx: Context }) => {
   const end = toDate(cursor);
   const start = subDays(end, Math.max(0, limit - 1));
 
-  const stats = await calendarView(db, followingIds, start, end);
+  const stats = await calendarView({
+    prisma: db,
+    userIds: followingIds,
+    viewingUserId: followerId,
+    start,
+    end,
+  });
 
   const ret: StatList = {
     start: toDateStringUTC(start),

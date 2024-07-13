@@ -88,8 +88,6 @@ describe("Creating Tracks", () => {
       },
     });
 
-    console.error(JSON.stringify(completeTrack, null, 2));
-
     // The schedule changes over time
     expect(completeTrack).toEqual({
       id: data.id,
@@ -119,7 +117,13 @@ describe("Creating Tracks", () => {
     });
 
     // And it's reflected in queries for the stat
-    const stats = await calendarView(db, [user.id], enthusasticStart, now);
+    const stats = await calendarView({
+      prisma: db,
+      userIds: [user.id],
+      viewingUserId: user.id,
+      start: enthusasticStart,
+      end: now,
+    });
     expect(stats).toEqual([
       {
         date: new Date("2024-02-10T00:00:00.000Z"),
