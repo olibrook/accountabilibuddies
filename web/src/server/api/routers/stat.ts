@@ -80,6 +80,8 @@ const list = async ({ input, ctx }: { input: ListInput; ctx: Context }) => {
     end,
   });
 
+  console.error(JSON.stringify(stats, null, 2));
+
   const ret: StatList = {
     start: toDateStringUTC(start),
     end: toDateStringUTC(end),

@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "@buds/server/api/trpc";
 import { unauthorized } from "@buds/server/api/common";
-import { PrismaClient, TrackVisibility, User } from "@prisma/client";
+import { PrismaClient, User } from "@prisma/client";
 import { z } from "zod";
 
 const privateFields = {
@@ -121,7 +121,7 @@ export const userRouter = createTRPCRouter({
                 userId: userId,
               },
               {
-                visibility: TrackVisibility.Public,
+                visibility: "Public",
               },
             ],
           },
